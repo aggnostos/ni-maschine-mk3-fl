@@ -30,7 +30,7 @@ class Controller:
         self._sync_mixer_controls()
 
     def OnDeInit(self) -> None:
-        pass
+        self._deinit_led_states()
 
     def OnRefresh(self, flags: int) -> None:
         pass
