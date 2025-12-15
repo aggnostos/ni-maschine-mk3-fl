@@ -1,5 +1,6 @@
 # name=NI Maschine MK3 by Aggnostos
 
+from fl_classes import FlMidiMsg
 
 from controller import Controller
 
@@ -35,3 +36,13 @@ def OnRefresh(flags: int) -> None:
         flags (int): flags to represent the changes in FL Studio's state.
     """
     controller.OnRefresh(flags)
+
+
+def OnControlChange(msg: FlMidiMsg) -> None:
+    """
+    Called after callbacks.OnMidiMsg() for control change (CC) MIDI events.
+
+    Args:
+        msg (fl_classes.FlMidiMsg): incoming control change MIDI message.
+    """
+    controller.OnControlChange(msg)

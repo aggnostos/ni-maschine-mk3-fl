@@ -3,8 +3,10 @@
 import ui
 import midi
 import mixer
+import general
 import channels
 import transport
+from fl_classes import FlMidiMsg
 
 from colors import *
 from controls import *
@@ -18,6 +20,9 @@ class Controller:
 
     _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
+
+    _shifting: bool
+    """Indicates whether the shift button is currently pressed"""
 
     _plugin_picker_active: bool
     """Indicates whether the plugin picker is currently active"""
@@ -70,6 +75,49 @@ class Controller:
             if not self._plugin_picker_active:
                 self._sync_channel_rack_controls()
 
+    def OnControlChange(self, msg: FlMidiMsg) -> None:
+        cc_num, cc_val = msg.controlNum, msg.controlVal
+        print(f"CC Num: {cc_num}, CC Val: {cc_val}")
+        match cc_num:
+            # ---- TRASPORT SECTION ---- #
+            case CC.RESTART if self._shifting:  # LOOP
+                transport.setLoopMode()
+            case CC.RESTART:
+                transport.stop()
+                transport.start()
+
+            case CC.ERASE:
+                ui.delete()
+
+            case CC.TAP if self._shifting:  # METRO
+                transport.globalTransport(midi.FPT_Metronome, 1)
+            case CC.TAP:
+                if cc_val:
+                    transport.globalTransport(midi.FPT_TapTempo, 1)
+
+            case CC.PLAY:
+                transport.start()
+
+            case CC.REC if self._shifting:  # Count-in
+                transport.globalTransport(midi.FPT_CountDown, 1)
+            case CC.REC:
+                transport.record()
+
+            case CC.STOP:
+                transport.stop()
+
+            # ---- SHIFT ---- #
+            case CC.SHIFT:
+                self._shifting = bool(cc_val)
+
+            case _:
+                return
+
+        # We will reach here if a case matched and was handled
+        # so we don't have to explicitly set event.handled = True in each case
+        # otherwise we would have returned earlier to let FL Studio handle it itself
+        msg.handled = True
+
     def _init_led_states(self) -> None:
         self._deinit_led_states()
 
@@ -92,17 +140,16 @@ class Controller:
 
     def _sync_led_states(self) -> None:
         """Syncs the LED states with the current FL Studio state"""
-
         # fmt: off
+        _midi_out_msg_control_change(CC.RESTART,  _on_off(bool(transport.getLoopMode())))
+        _midi_out_msg_control_change(CC.TAP,      _on_off(general.getUseMetronome()))
+        _midi_out_msg_control_change(CC.PLAY,     _on_off(transport.isPlaying()))
+        _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
+        _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
         _midi_out_msg_control_change(CC.CHANNEL,  _on_off(ui.getVisible(midi.widChannelRack)))
         _midi_out_msg_control_change(CC.ARRANGER, _on_off(ui.getVisible(midi.widPlaylist)))
         _midi_out_msg_control_change(CC.MIXER,    _on_off(ui.getVisible(midi.widMixer)))
         _midi_out_msg_control_change(CC.SAMPLING, _on_off(ui.getVisible(midi.widBrowser)))
-        _midi_out_msg_control_change(CC.PLAY,     _on_off(transport.isPlaying()))
-        _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
-        _midi_out_msg_control_change(CC.FOLLOW,   _on_off(ui.isMetronomeEnabled()))
-        _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
-        _midi_out_msg_control_change(CC.LOOP,     _on_off(bool(transport.getLoopMode())))
         _midi_out_msg_control_change(CC.LOCK,     _on_off(ui.getSnapMode() != 3))
         # fmt: on
 
