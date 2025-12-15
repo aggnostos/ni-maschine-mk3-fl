@@ -58,7 +58,7 @@ class CC(IntEnum):
     # -------- PAD SECTION -------- #
     FIXED_VEL = 80
 
-    # Pad Modes
+    # PAD MODES
     PAD_MODE = 81
     KEYBOARD_MODE = 82
     STEP_MODE = 83
@@ -74,11 +74,13 @@ class CC(IntEnum):
     MUTE = 92
 
     # ---- KNOB PAGE SECTION ---- #
+    # BUTTONS
     OCTAVE_DOWN = 26
     OCTAVE_UP = 27
     SEMI_DOWN = 28
     SEMI_UP = 29
 
+    # KNOBS
     MIX_TRACK = 70
     MIX_VOLUME = 71
     MIX_PAN = 72

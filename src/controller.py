@@ -21,16 +21,24 @@ class Controller:
     _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
 
+    _fixed_velocity: int
+    """Fixed velocity value for pads when fixed velocity mode is enabled"""
+
+    _is_fixed_velocity: bool
+    """Indicates whether fixed velocity mode is enabled"""
+
     _shifting: bool
     """Indicates whether the shift button is currently pressed"""
 
-    _plugin_picker_active: bool
+    _is_plugin_picker_active: bool
     """Indicates whether the plugin picker is currently active"""
 
     def __init__(self):
         self._channel_page = 0
+        self._fixed_velocity = 100
+        self._is_fixed_velocity = False
         self._shifting = False
-        self._plugin_picker_active = False
+        self._is_plugin_picker_active = False
 
     def OnInit(self) -> None:
         self._init_led_states()
@@ -49,6 +57,8 @@ class Controller:
             print("midi.HW_Dirty_Mixer_Display")
         if flags & midi.HW_Dirty_Mixer_Controls:
             print("midi.HW_Dirty_Mixer_Controls")
+            if not self._is_plugin_picker_active:
+                self._sync_mixer_controls()
         if flags & midi.HW_Dirty_FocusedWindow:
             print("midi.HW_Dirty_FocusedWindow")
         if flags & midi.HW_Dirty_Performance:
@@ -62,7 +72,7 @@ class Controller:
             print("midi.HW_Dirty_Tracks")
         if flags & midi.HW_Dirty_ControlValues:
             print("midi.HW_Dirty_ControlValues")
-            if not self._plugin_picker_active:
+            if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
         if flags & midi.HW_Dirty_Colors:
             print("midi.HW_Dirty_Colors")
@@ -73,7 +83,7 @@ class Controller:
         if flags & midi.HW_ChannelEvent:
             print("midi.HW_ChannelEvent")
             self._sync_channel_rack_pads()
-            if not self._plugin_picker_active:
+            if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
 
     def OnControlChange(self, msg: FlMidiMsg) -> None:
@@ -103,7 +113,7 @@ class Controller:
                     ui.showWindow(midi.widMixer)
 
             case CC.BROWSER if self._shifting:  # PLUGIN PICKER
-                self._plugin_picker_active = not self._plugin_picker_active
+                self._is_plugin_picker_active = not self._is_plugin_picker_active
                 transport.globalTransport(midi.FPT_F8, 1)
             case CC.BROWSER:
                 if ui.getVisible(midi.widBrowser):
@@ -146,6 +156,37 @@ class Controller:
 
             case CC.GRID:
                 ui.snapOnOff()
+
+            # ---- KNOB PAGE SECTION ---- #
+            # KNOBS
+            case CC.MIX_TRACK:
+                mixer.setTrackNumber(cc_val)
+
+            case CC.MIX_VOLUME:
+                mixer.setTrackVolume(mixer.trackNumber(), cc_val / 125)
+
+            case CC.MIX_PAN:
+                mixer.setTrackPan(mixer.trackNumber(), (cc_val - 50) / 50)
+
+            case CC.MIX_STEREO:
+                mixer.setTrackStereoSep(mixer.trackNumber(), (cc_val / 50) - 1)
+
+            case CC.CHAN_SEL:
+                if cc_val < channels.channelCount():
+                    channels.selectOneChannel(cc_val)
+                else:
+                    _midi_out_msg_control_change(
+                        CC.CHAN_SEL, channels.selectedChannel()
+                    )
+
+            case CC.CHAN_VOL:
+                channels.setChannelVolume(channels.selectedChannel(), cc_val / 100)
+
+            case CC.CHAN_PAN:
+                channels.setChannelPan(channels.selectedChannel(), (cc_val - 50) / 50)
+
+            case CC.FIX_VEL:
+                self._fixed_velocity = cc_val
 
             # -------- SHIFT -------- #
             case CC.SHIFT:
