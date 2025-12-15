@@ -56,13 +56,13 @@ class CC(IntEnum):
     STOP = 59
 
     # -------- PAD SECTION -------- #
-    FIXED_VEL = 80
+    FIXED_VEL = 81
 
     # PAD MODES
-    PAD_MODE = 81
+    PAD_MODE = 80
     KEYBOARD_MODE = 82
-    STEP_MODE = 83
     CHORDS_MODE = 84
+    STEP_MODE = 83
 
     SCENE = 85
     PATTERN = 86
