@@ -77,10 +77,10 @@ class Controller:
             _midi_out_msg_control_change(i, Green3)
 
         # fmt: off
-        _midi_out_msg_control_change(CC_TOUCH_STRIP, int(transport.getSongPos() * 127))
-        _midi_out_msg_control_change(CC_PAD_GROUP_A, White1)
-        _midi_out_msg_control_change(CC_PAD_MODE, 127)
-        _midi_out_msg_control_change(CC_FIX_VEL, 100)
+        _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 127))
+        _midi_out_msg_control_change(CC.PAD_GROUP_A, White1)
+        _midi_out_msg_control_change(CC.PAD_MODE, 127)
+        _midi_out_msg_control_change(CC.FIX_VEL, 100)
         # fmt: on
 
     @staticmethod
@@ -94,16 +94,16 @@ class Controller:
         """Syncs the LED states with the current FL Studio state"""
 
         # fmt: off
-        _midi_out_msg_control_change(CC_CHANNEL,  _on_off(ui.getVisible(midi.widChannelRack)))
-        _midi_out_msg_control_change(CC_ARRANGER, _on_off(ui.getVisible(midi.widPlaylist)))
-        _midi_out_msg_control_change(CC_MIXER,    _on_off(ui.getVisible(midi.widMixer)))
-        _midi_out_msg_control_change(CC_SAMPLING, _on_off(ui.getVisible(midi.widBrowser)))
-        _midi_out_msg_control_change(CC_PLAY,     _on_off(transport.isPlaying()))
-        _midi_out_msg_control_change(CC_REC,      _on_off(transport.isRecording()))
-        _midi_out_msg_control_change(CC_FOLLOW,   _on_off(ui.isMetronomeEnabled()))
-        _midi_out_msg_control_change(CC_STOP,     _on_off(not transport.isPlaying()))
-        _midi_out_msg_control_change(CC_LOOP,     _on_off(bool(transport.getLoopMode())))
-        _midi_out_msg_control_change(CC_LOCK,     _on_off(ui.getSnapMode() != 3))
+        _midi_out_msg_control_change(CC.CHANNEL,  _on_off(ui.getVisible(midi.widChannelRack)))
+        _midi_out_msg_control_change(CC.ARRANGER, _on_off(ui.getVisible(midi.widPlaylist)))
+        _midi_out_msg_control_change(CC.MIXER,    _on_off(ui.getVisible(midi.widMixer)))
+        _midi_out_msg_control_change(CC.SAMPLING, _on_off(ui.getVisible(midi.widBrowser)))
+        _midi_out_msg_control_change(CC.PLAY,     _on_off(transport.isPlaying()))
+        _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
+        _midi_out_msg_control_change(CC.FOLLOW,   _on_off(ui.isMetronomeEnabled()))
+        _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
+        _midi_out_msg_control_change(CC.LOOP,     _on_off(bool(transport.getLoopMode())))
+        _midi_out_msg_control_change(CC.LOCK,     _on_off(ui.getSnapMode() != 3))
         # fmt: on
 
         self._sync_channel_rack_pads()
@@ -138,9 +138,9 @@ class Controller:
         selected_channel = channels.selectedChannel()
 
         # fmt: off
-        _midi_out_msg_control_change(CC_CHAN_SEL, selected_channel)
-        _midi_out_msg_control_change(CC_CHAN_VOL, round(channels.getChannelVolume(selected_channel) * 100))
-        _midi_out_msg_control_change(CC_CHAN_PAN, round((channels.getChannelPan(selected_channel) * 50) + 50))
+        _midi_out_msg_control_change(CC.CHAN_SEL, selected_channel)
+        _midi_out_msg_control_change(CC.CHAN_VOL, round(channels.getChannelVolume(selected_channel) * 100))
+        _midi_out_msg_control_change(CC.CHAN_PAN, round((channels.getChannelPan(selected_channel) * 50) + 50))
         # fmt: on
 
     @staticmethod
@@ -150,8 +150,8 @@ class Controller:
         track_number = mixer.trackNumber()
 
         # fmt: off
-        _midi_out_msg_control_change(CC_MIX_TRACK, track_number)
-        _midi_out_msg_control_change(CC_MIX_VOLUME, round(mixer.getTrackVolume(track_number) * 125))
-        _midi_out_msg_control_change(CC_MIX_PAN, round((mixer.getTrackPan(track_number) * 50) + 50))
-        _midi_out_msg_control_change(CC_MIX_STEREO, round((mixer.getTrackStereoSep(track_number) + 1) * 50))
+        _midi_out_msg_control_change(CC.MIX_TRACK, track_number)
+        _midi_out_msg_control_change(CC.MIX_VOLUME, round(mixer.getTrackVolume(track_number) * 125))
+        _midi_out_msg_control_change(CC.MIX_PAN, round((mixer.getTrackPan(track_number) * 50) + 50))
+        _midi_out_msg_control_change(CC.MIX_STEREO, round((mixer.getTrackStereoSep(track_number) + 1) * 50))
         # fmt: on
