@@ -6,9 +6,8 @@ import mixer
 import channels
 import transport
 
-from src.colors import *
-from src.controls import *
-
+from colors import *
+from controls import *
 from utilities import *
 
 __all__ = ["Controller"]
@@ -17,11 +16,15 @@ __all__ = ["Controller"]
 class Controller:
     """Represents the state of the Maschine MK3 controller"""
 
-    channel_page: int
+    _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
 
+    _plugin_picker_active: bool
+    """Indicates whether the plugin picker is currently active"""
+
     def __init__(self):
-        self.channel_page = 0
+        self._channel_page = 0
+        self._plugin_picker_active = False
 
     def OnInit(self) -> None:
         self._init_led_states()
@@ -33,7 +36,39 @@ class Controller:
         self._deinit_led_states()
 
     def OnRefresh(self, flags: int) -> None:
-        pass
+        print(f"flags: {flags}")
+        if flags & midi.HW_Dirty_Mixer_Sel:
+            print("flags & midi.HW_Dirty_Mixer_Sel")
+        if flags & midi.HW_Dirty_Mixer_Display:
+            print("midi.HW_Dirty_Mixer_Display")
+        if flags & midi.HW_Dirty_Mixer_Controls:
+            print("midi.HW_Dirty_Mixer_Controls")
+        if flags & midi.HW_Dirty_FocusedWindow:
+            print("midi.HW_Dirty_FocusedWindow")
+        if flags & midi.HW_Dirty_Performance:
+            print("midi.HW_Dirty_Performance")
+        if flags & midi.HW_Dirty_LEDs:
+            print("midi.HW_Dirty_LEDs")
+            self._sync_led_states()
+        if flags & midi.HW_Dirty_Patterns:
+            print("midi.HW_Dirty_Patterns")
+        if flags & midi.HW_Dirty_Tracks:
+            print("midi.HW_Dirty_Tracks")
+        if flags & midi.HW_Dirty_ControlValues:
+            print("midi.HW_Dirty_ControlValues")
+            if not self._plugin_picker_active:
+                self._sync_channel_rack_controls()
+        if flags & midi.HW_Dirty_Colors:
+            print("midi.HW_Dirty_Colors")
+        if flags & midi.HW_Dirty_Names:
+            print("midi.HW_Dirty_Names")
+        if flags & midi.HW_Dirty_ChannelRackGroup:
+            print("midi.HW_Dirty_ChannelRackGroup")
+        if flags & midi.HW_ChannelEvent:
+            print("midi.HW_ChannelEvent")
+            self._sync_channel_rack_pads()
+            if not self._plugin_picker_active:
+                self._sync_channel_rack_controls()
 
     def _init_led_states(self) -> None:
         self._deinit_led_states()
@@ -80,7 +115,7 @@ class Controller:
         for i in range(127):
             _midi_out_msg_note_on(i, Black0)
 
-        lower_channel = self.channel_page * 16
+        lower_channel = self._channel_page * 16
         channel_count = channels.channelCount()
         selected_channel = channels.selectedChannel()
 
