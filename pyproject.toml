@@ -1,0 +1,26 @@
+[project]
+name = "ni-maschine-mk3-fl"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Mark Rybin",email = "aggnostos4@gmail.com"}
+]
+readme = "README.md"
+requires-python = "<4.0,>=3.10"
+dependencies = [
+    "fl-studio-api-stubs (>=37.0.1,<38.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.dev.dependencies]
+black = "^25.12.0"
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+target-version = ['py310']
+skip-string-normalization = true
