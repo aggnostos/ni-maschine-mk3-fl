@@ -8,6 +8,7 @@ import channels
 import transport
 from fl_classes import FlMidiMsg
 
+from enums import *
 from colors import *
 from controls import *
 from utilities import *
@@ -17,6 +18,9 @@ __all__ = ["Controller"]
 
 class Controller:
     """Represents the state of the Maschine MK3 controller"""
+
+    _pad_mode: PadMode
+    """Current pad mode. See PadMode Enum"""
 
     _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
@@ -34,6 +38,7 @@ class Controller:
     """Indicates whether the plugin picker is currently active"""
 
     def __init__(self):
+        self._pad_mode = PadMode.OMNI
         self._channel_page = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
@@ -217,12 +222,14 @@ class Controller:
     @staticmethod
     def _deinit_led_states() -> None:
         """De-initializes the LED states on the Maschine MK3 device"""
-        for i in range(127):
+
+        for i in range(128):
             _midi_out_msg_control_change(i, Black0)
             _midi_out_msg_note_on(i, Black0)
 
     def _sync_led_states(self) -> None:
         """Syncs the LED states with the current FL Studio state"""
+
         # fmt: off
         _midi_out_msg_control_change(CC.RESTART,  _on_off(bool(transport.getLoopMode())))
         _midi_out_msg_control_change(CC.TAP,      _on_off(general.getUseMetronome()))
@@ -242,7 +249,7 @@ class Controller:
         """Syncs the channel rack state with the pad LEDs on the Maschine MK3 device"""
 
         # NOTE: Need to check range later
-        for i in range(127):
+        for i in range(128):
             _midi_out_msg_note_on(i, Black0)
 
         lower_channel = self._channel_page * 16
