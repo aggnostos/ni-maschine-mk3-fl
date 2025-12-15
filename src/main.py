@@ -7,7 +7,7 @@ from controller import Controller
 controller = Controller()
 
 
-def OnInit():
+def OnInit() -> None:
     """
     Called when FL Studio initializes the script.
 
@@ -17,7 +17,7 @@ def OnInit():
     controller.OnInit()
 
 
-def OnDeInit():
+def OnDeInit() -> None:
     """
     Called before FL Studio de-initializes the script.
 
