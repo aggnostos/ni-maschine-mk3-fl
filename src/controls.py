@@ -12,10 +12,8 @@ class CC(IntEnum):
     ARRANGER = 36
     MIXER = 37
     BROWSER = 38
-    SAMPLING = 39
     FILE_SAVE = 40
     SETTINGS = 41
-    MACRO_SET = 43
 
     # -------- EDIT (ENCODER) SECTION -------- #
     ENCODER_PUSH = 7
@@ -53,6 +51,7 @@ class CC(IntEnum):
     ERASE = 54
     TAP = 55
     PLAY = 57
+    GRID = 56
     REC = 58
     STOP = 59
 
@@ -91,4 +90,4 @@ class CC(IntEnum):
 
     # Original Shift button is reserved by Maschine
     # so we assign it to another CC that is not used (FOLLOW)
-    SHIFT = 56
+    SHIFT = 46

@@ -29,6 +29,7 @@ class Controller:
 
     def __init__(self):
         self._channel_page = 0
+        self._shifting = False
         self._plugin_picker_active = False
 
     def OnInit(self) -> None:
@@ -79,7 +80,44 @@ class Controller:
         cc_num, cc_val = msg.controlNum, msg.controlVal
         print(f"CC Num: {cc_num}, CC Val: {cc_val}")
         match cc_num:
-            # ---- TRASPORT SECTION ---- #
+            # -------- CONTROL BUTTONS SECTION -------- #
+            case CC.CHANNEL:
+                if ui.getVisible(midi.widChannelRack):
+                    ui.hideWindow(midi.widChannelRack)
+                else:
+                    ui.showWindow(midi.widChannelRack)
+
+            case CC.PLUGIN:
+                channels.showCSForm(channels.selectedChannel(), -1)
+
+            case CC.ARRANGER:
+                if ui.getVisible(midi.widPlaylist):
+                    ui.hideWindow(midi.widPlaylist)
+                else:
+                    ui.showWindow(midi.widPlaylist)
+
+            case CC.MIXER:
+                if ui.getVisible(midi.widMixer):
+                    ui.hideWindow(midi.widMixer)
+                else:
+                    ui.showWindow(midi.widMixer)
+
+            case CC.BROWSER if self._shifting:  # PLUGIN PICKER
+                self._plugin_picker_active = not self._plugin_picker_active
+                transport.globalTransport(midi.FPT_F8, 1)
+            case CC.BROWSER:
+                if ui.getVisible(midi.widBrowser):
+                    ui.hideWindow(midi.widBrowser)
+                else:
+                    ui.showWindow(midi.widBrowser)
+
+            case CC.FILE_SAVE:
+                transport.globalTransport(midi.FPT_Save, 1)
+
+            case CC.SETTINGS:
+                transport.globalTransport(midi.FPT_F10, 1)
+
+            # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._shifting:  # LOOP
                 transport.setLoopMode()
             case CC.RESTART:
@@ -106,10 +144,14 @@ class Controller:
             case CC.STOP:
                 transport.stop()
 
-            # ---- SHIFT ---- #
+            case CC.GRID:
+                ui.snapOnOff()
+
+            # -------- SHIFT -------- #
             case CC.SHIFT:
                 self._shifting = bool(cc_val)
 
+            # -------- DEFAULT -------- #
             case _:
                 return
 
@@ -146,11 +188,11 @@ class Controller:
         _midi_out_msg_control_change(CC.PLAY,     _on_off(transport.isPlaying()))
         _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
         _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
+        _midi_out_msg_control_change(CC.GRID,     _on_off(ui.getSnapMode() != 3))
         _midi_out_msg_control_change(CC.CHANNEL,  _on_off(ui.getVisible(midi.widChannelRack)))
         _midi_out_msg_control_change(CC.ARRANGER, _on_off(ui.getVisible(midi.widPlaylist)))
         _midi_out_msg_control_change(CC.MIXER,    _on_off(ui.getVisible(midi.widMixer)))
-        _midi_out_msg_control_change(CC.SAMPLING, _on_off(ui.getVisible(midi.widBrowser)))
-        _midi_out_msg_control_change(CC.LOCK,     _on_off(ui.getSnapMode() != 3))
+        _midi_out_msg_control_change(CC.BROWSER,  _on_off(ui.getVisible(midi.widBrowser)))
         # fmt: on
 
         self._sync_channel_rack_pads()
