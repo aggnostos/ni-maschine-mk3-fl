@@ -49,10 +49,9 @@ class CC(IntEnum):
     PAD_GROUP_H = 107
 
     # -------- TRANSPORT SECTION -------- #
-    RESTART = LOOP = 53
+    RESTART = 53
     ERASE = 54
     TAP = 55
-    FOLLOW = 56
     PLAY = 57
     REC = 58
     STOP = 59
@@ -89,3 +88,7 @@ class CC(IntEnum):
     CHAN_VOL = 75
     CHAN_PAN = 76
     FIX_VEL = 77
+
+    # Original Shift button is reserved by Maschine
+    # so we assign it to another CC that is not used (FOLLOW)
+    SHIFT = 56
