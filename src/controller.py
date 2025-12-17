@@ -11,6 +11,7 @@ import transport
 from fl_classes import FlMidiMsg
 
 from enums import *
+from notes import *
 from consts import *
 from colors import *
 from controls import *
@@ -427,6 +428,24 @@ class Controller:
         if msg.handled:
             return
 
+        match self._pad_mode:
+            case PadMode.OMNI:
+                real_note = C5 + self._get_semi_offset()
+                chan_idx = note_num + self._channel_page * 16
+                if chan_idx >= channels.channelCount():
+                    return
+                if note_vel:
+                    channels.midiNoteOn(
+                        chan_idx,
+                        real_note,
+                        self._fixed_velocity if self._is_fixed_velocity else note_vel,
+                    )
+                    channels.selectOneChannel(chan_idx)
+                else:
+                    channels.midiNoteOn(chan_idx, real_note, 0)
+            case _:
+                return
+
         msg.handled = True
 
         print(f"Note Num: {note_num}, Note Vel: {note_vel}")
@@ -602,3 +621,7 @@ class Controller:
                 pass  # TODO
             case TouchStripMode.DISABLED:
                 _midi_out_msg_control_change(CC.TOUCH_STRIP, 0)
+
+    def _get_semi_offset(self) -> int:
+        """Returns the current semitone offset"""
+        return self._octave_offset * SEMITONES + self._semi_offset + SEMITONES
