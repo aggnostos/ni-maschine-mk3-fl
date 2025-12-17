@@ -13,7 +13,6 @@ from fl_classes import FlMidiMsg
 from enums import *
 from notes import *
 from consts import *
-from colors import *
 from controls import *
 from utilities import *
 
@@ -32,7 +31,7 @@ class Controller:
     _touch_strip_mode: TouchStripMode
     """Current touch strip mode. See TouchStripMode Enum"""
 
-    _active_group: Group
+    _active_group: PadGroup
     """Current selected group (A-H)"""
 
     _channel_page: int
@@ -63,7 +62,7 @@ class Controller:
         self._pad_mode = PadMode.OMNI
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.DISABLED
-        self._active_group = Group.A
+        self._active_group = PadGroup.A
         self._channel_page = 0
         self._step_page = 0
         self._semi_offset = 0
@@ -252,7 +251,14 @@ class Controller:
                 | CC.GROUP_H
             ):
                 for cc in GROUPS_RANGE:
-                    _midi_out_msg_control_change(cc, White1 if cc == cc_num else Black0)
+                    _midi_out_msg_control_change(
+                        cc,
+                        (
+                            ControllerColor.WHITE_1
+                            if cc == cc_num
+                            else ControllerColor.BLACK_0
+                        ),
+                    )
 
                 page_idx = cc_num - 100
 
@@ -264,7 +270,7 @@ class Controller:
                     case _:
                         return
 
-                self._active_group = Group(cc_num)
+                self._active_group = PadGroup(cc_num)
 
                 self._sync_channel_rack_pads()
 
@@ -306,7 +312,7 @@ class Controller:
                 for cc in (CC.PAD_MODE, CC.KEYBOARD_MODE, CC.CHORDS_MODE, CC.STEP_MODE):
                     _midi_out_msg_control_change(cc, 127 if cc == cc_num else 0)
 
-                active_group = Group.A.value
+                active_group = PadGroup.A.value
                 match cc_num:
                     case CC.PAD_MODE:
                         self._pad_mode = PadMode.OMNI
@@ -325,22 +331,27 @@ class Controller:
                     case _:
                         pass
 
-                self._active_group = Group(active_group)
-                for g in GROUPS_RANGE:
+                self._active_group = PadGroup(active_group)
+                for cc in GROUPS_RANGE:
                     _midi_out_msg_control_change(
-                        g, White1 if g == self._active_group.value else Black0
+                        cc,
+                        (
+                            ControllerColor.WHITE_1
+                            if cc == self._active_group.value
+                            else ControllerColor.BLACK_0
+                        ),
                     )
 
                 self._sync_channel_rack_pads()
 
             case CC.PATTERN:
                 for p in range(16):
-                    _midi_out_msg_note_on(p, Black0)
+                    _midi_out_msg_note_on(p, ControllerColor.BLACK_0)
 
                 if cc_val:
                     self._is_selecting_pattern = True
                     for pattern in range(patterns.patternCount()):
-                        _midi_out_msg_note_on(pattern, Lime1)
+                        _midi_out_msg_note_on(pattern, ControllerColor.ORANGE_0)
                 else:
                     self._is_selecting_pattern = False
                     if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
@@ -488,7 +499,7 @@ class Controller:
 
         # fmt: off
         _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 127))
-        _midi_out_msg_control_change(CC.GROUP_A, White1)
+        _midi_out_msg_control_change(CC.GROUP_A, ControllerColor.WHITE_1)
         _midi_out_msg_control_change(CC.PAD_MODE, 127)
         _midi_out_msg_control_change(CC.FIX_VEL, 100)
         # fmt: on
@@ -498,8 +509,8 @@ class Controller:
         """De-initializes the LED states on the Maschine MK3 device"""
 
         for i in range(128):
-            _midi_out_msg_control_change(i, Black0)
-            _midi_out_msg_note_on(i, Black0)
+            _midi_out_msg_control_change(i, ControllerColor.BLACK_0)
+            _midi_out_msg_note_on(i, ControllerColor.BLACK_0)
 
     def _sync_led_states(self) -> None:
         """Syncs the LED states with the current FL Studio state"""
@@ -524,7 +535,7 @@ class Controller:
 
         # NOTE: Need to check range later
         for i in range(128):
-            _midi_out_msg_note_on(i, Black0)
+            _midi_out_msg_note_on(i, ControllerColor.BLACK_0)
 
         selected_channel = channels.selectedChannel()
 
@@ -553,9 +564,9 @@ class Controller:
                 _midi_out_msg_note_on(
                     idx,
                     (
-                        White1
+                        ControllerColor.WHITE_1
                         if channels.getGridBit(selected_channel, gridbit)
-                        else Black0
+                        else ControllerColor.BLACK_0
                     ),
                 )
 

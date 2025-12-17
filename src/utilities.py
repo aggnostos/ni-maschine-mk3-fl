@@ -29,7 +29,7 @@ def _get_channel_color(
     Returns:
         MIDI color value for the pad LED.
     """
-    color = PluginColors if plugins.isValid(channel) else ChannelColors
+    color = PluginColor if plugins.isValid(channel) else ChannelColor
     return color.HIGHLIGHTED.value if highlighted else color.DEFAULT.value  # type: ignore[attr-defined]
 
 
