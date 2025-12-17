@@ -360,9 +360,6 @@ class Controller:
     def _init_led_states(self) -> None:
         self._deinit_led_states()
 
-        for i in (CC.ENCODER_UP, CC.ENCODER_RIGHT, CC.ENCODER_DOWN, CC.ENCODER_LEFT):
-            _midi_out_msg_control_change(i, Green3)
-
         # fmt: off
         _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 127))
         _midi_out_msg_control_change(CC.PAD_GROUP_A, White1)
