@@ -11,8 +11,8 @@ __all__ = [
 
 GROUPS_RANGE = range(100, 108)  # CC numbers for groups A to H
 
-MIN_OCTAVE = -3
-MAX_OCTAVE = 3
+MIN_OCTAVE = -5
+MAX_OCTAVE = 5
 
 SEMITONES = 12
 
