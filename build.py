@@ -22,6 +22,7 @@ PACKAGES: List[str] = []
 
 MODULES: List[str] = [
     "consts",
+    "notes",
     "colors",
     "controls",
     "enums",
