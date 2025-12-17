@@ -253,7 +253,7 @@ class Controller:
                     case PadMode.OMNI:
                         self._channel_page = page_idx
                     case PadMode.STEP:
-                        self._step_channel_page = page_idx
+                        self._step_seq_page = page_idx
                     case _:
                         return
                     
@@ -443,6 +443,16 @@ class Controller:
                     channels.selectOneChannel(chan_idx)
                 else:
                     channels.midiNoteOn(chan_idx, real_note, 0)
+
+            case PadMode.STEP if note_vel:
+                chan_idx = note_num + self._step_seq_page * 16
+                selected_channel = channels.selectedChannel()
+                channels.setGridBit(
+                    selected_channel,
+                    chan_idx,
+                    not channels.getGridBit(selected_channel, chan_idx),
+                )
+
             case _:
                 return
 
@@ -517,11 +527,13 @@ class Controller:
             # turn on pads for step sequencer grid bits
             for gridbit in range(lower_step, lower_step + 16):
                 idx = gridbit - lower_step
-                if idx == 16:
-                    break
                 _midi_out_msg_note_on(
                     idx,
-                    Lime1 if channels.getGridBit(selected_channel, gridbit) else Black0,
+                    (
+                        White1
+                        if channels.getGridBit(selected_channel, gridbit)
+                        else Black0
+                    ),
                 )
 
     @staticmethod
