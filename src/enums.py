@@ -11,6 +11,7 @@ __all__ = [
     "PadMode",
     "FourDEncoderMode",
     "TouchStripMode",
+    "Group",
 ]
 
 
@@ -58,3 +59,16 @@ class TouchStripMode(IntEnum):
     MOD = 2
     PERFORM = 3
     NOTES = 4
+
+
+class Group(IntEnum):
+    """Pad Groups"""
+
+    A = 0
+    B = 1
+    C = 2
+    D = 3
+    E = 4
+    F = 5
+    G = 6
+    H = 7

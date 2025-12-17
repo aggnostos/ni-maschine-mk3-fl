@@ -30,6 +30,9 @@ class Controller:
     _touch_strip_mode: TouchStripMode
     """Current touch strip mode. See TouchStripMode Enum"""
 
+    _selected_group: Group
+    """Current selected group (A-H)"""
+
     _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
 
@@ -52,6 +55,7 @@ class Controller:
         self._pad_mode = PadMode.OMNI
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.DISABLED
+        self._selected_group = Group.A
         self._channel_page = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
@@ -385,7 +389,7 @@ class Controller:
 
         # fmt: off
         _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 127))
-        _midi_out_msg_control_change(CC.PAD_GROUP_A, White1)
+        _midi_out_msg_control_change(CC.GROUP_A, White1)
         _midi_out_msg_control_change(CC.PAD_MODE, 127)
         _midi_out_msg_control_change(CC.FIX_VEL, 100)
         # fmt: on

@@ -37,14 +37,14 @@ class CC(IntEnum):
     TOUCH_STRIP_NOTES = 52
 
     # -------- GROUP SECTION -------- #
-    PAD_GROUP_A = 100
-    PAD_GROUP_B = 101
-    PAD_GROUP_C = 102
-    PAD_GROUP_D = 103
-    PAD_GROUP_E = 104
-    PAD_GROUP_F = 105
-    PAD_GROUP_G = 106
-    PAD_GROUP_H = 107
+    GROUP_A = 100
+    GROUP_B = 101
+    GROUP_C = 102
+    GROUP_D = 103
+    GROUP_E = 104
+    GROUP_F = 105
+    GROUP_G = 106
+    GROUP_H = 107
 
     # -------- TRANSPORT SECTION -------- #
     RESTART = 53
