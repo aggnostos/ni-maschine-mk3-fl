@@ -341,7 +341,10 @@ class Controller:
                 if ui.getFocused(midi.widChannelRack):
                     channels.soloChannel(channels.selectedChannel())
                 elif ui.getFocused(midi.widMixer):
-                    mixer.soloTrack(mixer.trackNumber())
+                    if self._shifting:
+                        mixer.soloTrack(mixer.trackNumber(), -1, midi.fxSoloModeWithSourceTracks)
+                    else:
+                        mixer.soloTrack(mixer.trackNumber(), -1, midi.fxSoloModeWithDestTracks)
 
             case CC.MUTE:
                 if ui.getFocused(midi.widChannelRack):
@@ -351,7 +354,7 @@ class Controller:
 
             # ---- KNOB PAGE SECTION ---- #
             # BUTTONS
-            case CC.PRESET_NEXT | CC.PRESET_PREV:
+            case CC.PRESET_NEXT | CC.PRESET_PREV: # TODO: add mixer logic
                 selected_channel = channels.selectedChannel()
                 
                 if not plugins.isValid(selected_channel):
