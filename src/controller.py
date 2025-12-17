@@ -238,6 +238,18 @@ class Controller:
                 for cc in GROUPS_RANGE:
                     _midi_out_msg_control_change(cc, White1 if cc == cc_num else Black0)
 
+                page_idx = cc_num - 100
+
+                match self._pad_mode:
+                    case PadMode.OMNI:
+                        self._channel_page = page_idx
+                    case PadMode.STEP:
+                        self._step_channel_page = page_idx
+                    case _:
+                        return
+                    
+                self._sync_channel_rack_pads()
+
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._shifting:  # LOOP
                 transport.setLoopMode()
