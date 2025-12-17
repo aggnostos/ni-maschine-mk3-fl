@@ -4,6 +4,7 @@ import ui
 import midi
 import mixer
 import general
+import patterns
 import channels
 import transport
 from fl_classes import FlMidiMsg
@@ -37,6 +38,9 @@ class Controller:
     _is_plugin_picker_active: bool
     """Indicates whether the plugin picker is currently active"""
 
+    _is_selecting_pattern: bool
+    """Indicates whether the user is currently selecting a pattern"""
+
     def __init__(self):
         self._pad_mode = PadMode.OMNI
         self._channel_page = 0
@@ -44,6 +48,7 @@ class Controller:
         self._is_fixed_velocity = False
         self._shifting = False
         self._is_plugin_picker_active = False
+        self._is_selecting_pattern = False
 
     def OnInit(self) -> None:
         self._init_led_states()
@@ -73,6 +78,7 @@ class Controller:
             self._sync_led_states()
         if flags & midi.HW_Dirty_Patterns:
             print("midi.HW_Dirty_Patterns")
+            self._sync_channel_rack_pads()
         if flags & midi.HW_Dirty_Tracks:
             print("midi.HW_Dirty_Tracks")
         if flags & midi.HW_Dirty_ControlValues:
@@ -162,6 +168,44 @@ class Controller:
             case CC.GRID:
                 ui.snapOnOff()
 
+            # -------- PAD SECTION -------- #
+            case CC.FIXED_VEL:
+                self._is_fixed_velocity = bool(cc_val)
+
+            # TODO PAD MODES
+            case CC.PAD_MODE | CC.KEYBOARD_MODE | CC.CHORDS_MODE | CC.STEP_MODE:
+                for cc in (CC.PAD_MODE, CC.KEYBOARD_MODE, CC.CHORDS_MODE, CC.STEP_MODE):
+                    _midi_out_msg_control_change(cc, 127 if cc == cc_num else 0)
+
+                match cc_num:
+                    case CC.PAD_MODE:
+                        self._pad_mode = PadMode.OMNI
+
+                    case CC.KEYBOARD_MODE:
+                        self._pad_mode = PadMode.KEYBOARD
+
+                    case CC.CHORDS_MODE:
+                        self._pad_mode = PadMode.CHORDS
+
+                    case CC.STEP_MODE:
+                        self._pad_mode = PadMode.STEP
+
+                    case _:
+                        pass
+
+            case CC.PATTERN:
+                for p in range(16):
+                    _midi_out_msg_note_on(p, Black0)
+
+                if cc_val:
+                    self._is_selecting_pattern = True
+                    for pattern in range(patterns.patternCount()):
+                        _midi_out_msg_note_on(pattern, Lime1)
+                else:
+                    self._is_selecting_pattern = False
+                    if self._pad_mode == PadMode.OMNI:
+                        self._sync_channel_rack_pads()
+
             # ---- KNOB PAGE SECTION ---- #
             # KNOBS
             case CC.MIX_TRACK:
@@ -209,7 +253,7 @@ class Controller:
     def _init_led_states(self) -> None:
         self._deinit_led_states()
 
-        for i in range(30, 34):
+        for i in (CC.ENCODER_UP, CC.ENCODER_RIGHT, CC.ENCODER_DOWN, CC.ENCODER_LEFT):
             _midi_out_msg_control_change(i, Green3)
 
         # fmt: off
