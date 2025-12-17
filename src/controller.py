@@ -37,6 +37,9 @@ class Controller:
     _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
 
+    _step_channel_page: int
+    """Current channel page (0-15) for step mode pad display"""
+
     _fixed_velocity: int
     """Fixed velocity value for pads when fixed velocity mode is enabled"""
 
@@ -58,6 +61,7 @@ class Controller:
         self._touch_strip_mode = TouchStripMode.DISABLED
         self._selected_group = Group.A
         self._channel_page = 0
+        self._step_channel_page = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
         self._shifting = False
@@ -289,6 +293,8 @@ class Controller:
                     case _:
                         pass
 
+                self._sync_channel_rack_pads()
+
             case CC.PATTERN:
                 for p in range(16):
                     _midi_out_msg_note_on(p, Black0)
@@ -435,21 +441,36 @@ class Controller:
         for i in range(128):
             _midi_out_msg_note_on(i, Black0)
 
-        lower_channel = self._channel_page * 16
-        channel_count = channels.channelCount()
         selected_channel = channels.selectedChannel()
 
-        # turn on pads for available channels
-        for channel in range(lower_channel, channel_count):
-            idx = channel - lower_channel
-            if idx == 16:
-                break
-            _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
+        if self._pad_mode == PadMode.OMNI:
+            lower_channel = self._channel_page * 16
+            channel_count = channels.channelCount()
 
-        # highlight selected channel pad
-        if selected_channel in range(lower_channel, channel_count):
-            channel = selected_channel - lower_channel
-            _midi_out_msg_note_on(channel, _get_channel_color(channel, True))
+            # turn on pads for available channels
+            for channel in range(lower_channel, channel_count):
+                idx = channel - lower_channel
+                if idx == 16:
+                    break
+                _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
+
+            # highlight selected channel pad
+            if selected_channel in range(lower_channel, channel_count):
+                channel = selected_channel - lower_channel
+                _midi_out_msg_note_on(channel, _get_channel_color(channel, True))
+
+        if self._pad_mode == PadMode.STEP:
+            lower_step = self._step_channel_page * 16
+
+            # turn on pads for step sequencer grid bits
+            for gridbit in range(lower_step, lower_step + 16):
+                idx = gridbit - lower_step
+                if idx == 16:
+                    break
+                _midi_out_msg_note_on(
+                    idx,
+                    Lime1 if channels.getGridBit(selected_channel, gridbit) else Black0,
+                )
 
     @staticmethod
     def _sync_channel_rack_controls() -> None:
