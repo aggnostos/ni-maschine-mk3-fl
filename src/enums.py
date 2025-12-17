@@ -1,6 +1,6 @@
 """Enums for the Maschine MK3 FL Studio MIDI script"""
 
-from enum import Enum
+from enum import Enum, IntEnum
 
 from colors import *
 
@@ -32,7 +32,7 @@ class ChannelColors(Enum):
 # ------------------------------------------------------------------------------------------------------------------------
 
 
-class PadMode(Enum):
+class PadMode(IntEnum):
     """Pad Modes"""
 
     OMNI = 0
@@ -41,7 +41,7 @@ class PadMode(Enum):
     STEP = 3
 
 
-class FourDEncoderMode(Enum):
+class FourDEncoderMode(IntEnum):
     """4D Encoder Modes"""
 
     JOG = 0
@@ -50,7 +50,7 @@ class FourDEncoderMode(Enum):
     TEMPO = 3
 
 
-class TouchStripMode(Enum):
+class TouchStripMode(IntEnum):
     """Touch Strip Modes"""
 
     DISABLED = 0
