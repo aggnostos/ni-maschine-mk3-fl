@@ -38,7 +38,7 @@ class Controller:
     _channel_page: int
     """Current channel page (0-15) for OMNI mode pad display"""
 
-    _step_seq_page: int
+    _step_page: int
     """Current step sequence page (0-15) for STEP mode pad display"""
 
     _octave_offset: int
@@ -68,7 +68,7 @@ class Controller:
         self._touch_strip_mode = TouchStripMode.DISABLED
         self._selected_group = Group.A
         self._channel_page = 0
-        self._step_seq_page = 0
+        self._step_page = 0
         self._octave_offset = 0
         self._semi_offset = 0
         self._fixed_velocity = 100
@@ -253,7 +253,7 @@ class Controller:
                     case PadMode.OMNI:
                         self._channel_page = page_idx
                     case PadMode.STEP:
-                        self._step_seq_page = page_idx
+                        self._step_page = page_idx
                     case _:
                         return
                     
@@ -293,7 +293,6 @@ class Controller:
             case CC.FIXED_VEL:
                 self._is_fixed_velocity = bool(cc_val)
 
-            # TODO PAD MODES
             case CC.PAD_MODE | CC.KEYBOARD_MODE | CC.CHORDS_MODE | CC.STEP_MODE:
                 for cc in (CC.PAD_MODE, CC.KEYBOARD_MODE, CC.CHORDS_MODE, CC.STEP_MODE):
                     _midi_out_msg_control_change(cc, 127 if cc == cc_num else 0)
@@ -445,7 +444,7 @@ class Controller:
                     channels.midiNoteOn(chan_idx, real_note, 0)
 
             case PadMode.STEP if note_vel:
-                chan_idx = note_num + self._step_seq_page * 16
+                chan_idx = note_num + self._step_page * 16
                 selected_channel = channels.selectedChannel()
                 channels.setGridBit(
                     selected_channel,
@@ -522,7 +521,7 @@ class Controller:
                 _midi_out_msg_note_on(channel, _get_channel_color(channel, True))
 
         if self._pad_mode == PadMode.STEP:
-            lower_step = self._step_seq_page * 16
+            lower_step = self._step_page * 16
 
             # turn on pads for step sequencer grid bits
             for gridbit in range(lower_step, lower_step + 16):
