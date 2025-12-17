@@ -318,13 +318,13 @@ class Controller:
             case CC.MIX_TRACK:
                 mixer.setTrackNumber(cc_val)
 
-            case CC.MIX_VOLUME:
+            case CC.MIX_VOL:
                 mixer.setTrackVolume(mixer.trackNumber(), cc_val / 125)
 
             case CC.MIX_PAN:
                 mixer.setTrackPan(mixer.trackNumber(), (cc_val - 50) / 50)
 
-            case CC.MIX_STEREO:
+            case CC.MIX_SS:
                 mixer.setTrackStereoSep(mixer.trackNumber(), (cc_val / 50) - 1)
 
             case CC.CHAN_SEL:
@@ -438,9 +438,9 @@ class Controller:
 
         # fmt: off
         _midi_out_msg_control_change(CC.MIX_TRACK, track_number)
-        _midi_out_msg_control_change(CC.MIX_VOLUME, round(mixer.getTrackVolume(track_number) * 125))
+        _midi_out_msg_control_change(CC.MIX_VOL, round(mixer.getTrackVolume(track_number) * 125))
         _midi_out_msg_control_change(CC.MIX_PAN, round((mixer.getTrackPan(track_number) * 50) + 50))
-        _midi_out_msg_control_change(CC.MIX_STEREO, round((mixer.getTrackStereoSep(track_number) + 1) * 50))
+        _midi_out_msg_control_change(CC.MIX_SS, round((mixer.getTrackStereoSep(track_number) + 1) * 50))
         _midi_out_msg_control_change(CC.SOLO, _on_off(mixer.isTrackSolo(track_number)))
         _midi_out_msg_control_change(CC.MUTE, _on_off(mixer.isTrackMuted(track_number)))
         # fmt: on

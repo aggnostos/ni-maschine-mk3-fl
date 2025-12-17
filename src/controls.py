@@ -84,9 +84,9 @@ class CC(IntEnum):
 
     # KNOBS
     MIX_TRACK = 70
-    MIX_VOLUME = 71
+    MIX_VOL = 71
     MIX_PAN = 72
-    MIX_STEREO = 73
+    MIX_SS = 73
     CHAN_SEL = 74
     CHAN_VOL = 75
     CHAN_PAN = 76
