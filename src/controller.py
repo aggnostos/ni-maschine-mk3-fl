@@ -40,8 +40,11 @@ class Controller:
     _step_seq_page: int
     """Current step sequence page (0-15) for STEP mode pad display"""
 
-    _octave: int
+    _octave_offset: int
     """Current octave"""
+
+    _semi_offset: int
+    """Current semitone offset"""
 
     _fixed_velocity: int
     """Fixed velocity value for pads when fixed velocity mode is enabled"""
@@ -65,7 +68,8 @@ class Controller:
         self._selected_group = Group.A
         self._channel_page = 0
         self._step_seq_page = 0
-        self._octave = 0
+        self._octave_offset = 0
+        self._semi_offset = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
         self._shifting = False
@@ -350,11 +354,17 @@ class Controller:
                     plugins.prevPreset(selected_channel)
 
 
-            case CC.OCTAVE_DOWN if self._octave >= MIN_OCTAVE:
-                self._octave -= 1
+            case CC.OCTAVE_DOWN if self._octave_offset > MIN_OCTAVE:
+                self._octave_offset -= 1
 
-            case CC.OCTAVE_UP if self._octave <= MAX_OCTAVE:
-                self._octave += 1
+            case CC.OCTAVE_UP if self._octave_offset < MAX_OCTAVE:
+                self._octave_offset += 1
+
+            case CC.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+                self._semi_offset -= 1
+
+            case CC.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
+                self._semi_offset += 1
 
             # KNOBS
             case CC.MIX_TRACK:
