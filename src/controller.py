@@ -3,6 +3,7 @@
 import ui
 import midi
 import mixer
+import plugins
 import general
 import patterns
 import channels
@@ -301,6 +302,18 @@ class Controller:
                     mixer.muteTrack(mixer.trackNumber())
 
             # ---- KNOB PAGE SECTION ---- #
+            # BUTTONS
+            case CC.PRESET_NEXT | CC.PRESET_PREV:
+                selected_channel = channels.selectedChannel()
+                
+                if not plugins.isValid(selected_channel):
+                    return
+                
+                if cc_num == CC.PRESET_NEXT:
+                    plugins.nextPreset(selected_channel)
+                else:
+                    plugins.prevPreset(selected_channel)
+
             # KNOBS
             case CC.MIX_TRACK:
                 mixer.setTrackNumber(cc_val)
