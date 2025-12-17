@@ -41,9 +41,6 @@ class Controller:
     _step_page: int
     """Current step sequence page (0-15) for STEP mode pad display"""
 
-    _octave_offset: int
-    """Current octave"""
-
     _semi_offset: int
     """Current semitone offset"""
 
@@ -69,7 +66,6 @@ class Controller:
         self._active_group = Group.A
         self._channel_page = 0
         self._step_page = 0
-        self._octave_offset = 0
         self._semi_offset = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
@@ -234,16 +230,27 @@ class Controller:
                     case TouchStripMode.DISABLED:
                         pass
 
-            # fmt: off
-            case CC.TOUCH_STRIP_PITCH | CC.TOUCH_STRIP_MOD | CC.TOUCH_STRIP_PERFORM | CC.TOUCH_STRIP_NOTES:
-            # fmt: on
+            case (
+                CC.TOUCH_STRIP_PITCH
+                | CC.TOUCH_STRIP_MOD
+                | CC.TOUCH_STRIP_PERFORM
+                | CC.TOUCH_STRIP_NOTES
+            ):
                 self._toggle_touch_strip_mode(cc_num)
                 self._sync_touch_strip_value(self._touch_strip_mode)
 
             # -------- GROUP SECTION -------- #
-            # fmt: off
-            case CC.GROUP_A | CC.GROUP_B | CC.GROUP_C | CC.GROUP_D | CC.GROUP_E | CC.GROUP_F | CC.GROUP_G | CC.GROUP_H:
-            # fmt: on
+
+            case (
+                CC.GROUP_A
+                | CC.GROUP_B
+                | CC.GROUP_C
+                | CC.GROUP_D
+                | CC.GROUP_E
+                | CC.GROUP_F
+                | CC.GROUP_G
+                | CC.GROUP_H
+            ):
                 for cc in GROUPS_RANGE:
                     _midi_out_msg_control_change(cc, White1 if cc == cc_num else Black0)
 
@@ -256,7 +263,7 @@ class Controller:
                         self._step_page = page_idx
                     case _:
                         return
-                    
+
                 self._active_group = Group(cc_num)
 
                 self._sync_channel_rack_pads()
@@ -320,8 +327,10 @@ class Controller:
 
                 self._active_group = Group(active_group)
                 for g in GROUPS_RANGE:
-                    _midi_out_msg_control_change(g, White1 if g == self._active_group.value else Black0)
-        
+                    _midi_out_msg_control_change(
+                        g, White1 if g == self._active_group.value else Black0
+                    )
+
                 self._sync_channel_rack_pads()
 
             case CC.PATTERN:
@@ -342,9 +351,13 @@ class Controller:
                     channels.soloChannel(channels.selectedChannel())
                 elif ui.getFocused(midi.widMixer):
                     if self._shifting:
-                        mixer.soloTrack(mixer.trackNumber(), -1, midi.fxSoloModeWithSourceTracks)
+                        mixer.soloTrack(
+                            mixer.trackNumber(), -1, midi.fxSoloModeWithSourceTracks
+                        )
                     else:
-                        mixer.soloTrack(mixer.trackNumber(), -1, midi.fxSoloModeWithDestTracks)
+                        mixer.soloTrack(
+                            mixer.trackNumber(), -1, midi.fxSoloModeWithDestTracks
+                        )
 
             case CC.MUTE:
                 if ui.getFocused(midi.widChannelRack):
@@ -354,23 +367,22 @@ class Controller:
 
             # ---- KNOB PAGE SECTION ---- #
             # BUTTONS
-            case CC.PRESET_NEXT | CC.PRESET_PREV: # TODO: add mixer logic
+            case CC.PRESET_NEXT | CC.PRESET_PREV:  # TODO: add mixer logic
                 selected_channel = channels.selectedChannel()
-                
+
                 if not plugins.isValid(selected_channel):
                     return
-                
+
                 if cc_num == CC.PRESET_NEXT:
                     plugins.nextPreset(selected_channel)
                 else:
                     plugins.prevPreset(selected_channel)
 
+            case CC.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+                self._semi_offset -= 12
 
-            case CC.OCTAVE_DOWN if self._octave_offset > MIN_OCTAVE:
-                self._octave_offset -= 1
-
-            case CC.OCTAVE_UP if self._octave_offset < MAX_OCTAVE:
-                self._octave_offset += 1
+            case CC.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
+                self._semi_offset += 12
 
             case CC.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
                 self._semi_offset -= 1
@@ -616,9 +628,12 @@ class Controller:
 
         mode = mode if self._touch_strip_mode != mode else TouchStripMode.DISABLED
 
-        # fmt: off
-        for cc_num in (CC.TOUCH_STRIP_PITCH, CC.TOUCH_STRIP_MOD, CC.TOUCH_STRIP_PERFORM, CC.TOUCH_STRIP_NOTES):
-        # fmt: on
+        for cc_num in (
+            CC.TOUCH_STRIP_PITCH,
+            CC.TOUCH_STRIP_MOD,
+            CC.TOUCH_STRIP_PERFORM,
+            CC.TOUCH_STRIP_NOTES,
+        ):
             _midi_out_msg_control_change(
                 cc_num,
                 (127 if cc == cc_num and mode != TouchStripMode.DISABLED else 0),
@@ -647,4 +662,4 @@ class Controller:
 
     def _get_semi_offset(self) -> int:
         """Returns the current semitone offset"""
-        return self._octave_offset * SEMITONES + self._semi_offset + SEMITONES
+        return self._semi_offset + SEMITONES_IN_OCTAVE
