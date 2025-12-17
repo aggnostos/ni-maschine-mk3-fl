@@ -21,6 +21,7 @@ OUT_PATH: Path = DIST / "device_Maschine_MK3.py"
 PACKAGES: List[str] = []
 
 MODULES: List[str] = [
+    "consts",
     "colors",
     "controls",
     "enums",
