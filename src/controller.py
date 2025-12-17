@@ -11,6 +11,7 @@ import transport
 from fl_classes import FlMidiMsg
 
 from enums import *
+from consts import *
 from colors import *
 from controls import *
 from utilities import *
@@ -225,6 +226,13 @@ class Controller:
             # fmt: on
                 self._toggle_touch_strip_mode(cc_num)
                 self._sync_touch_strip_value(self._touch_strip_mode)
+
+            # -------- GROUP SECTION -------- #
+            # fmt: off
+            case CC.GROUP_A | CC.GROUP_B | CC.GROUP_C | CC.GROUP_D | CC.GROUP_E | CC.GROUP_F | CC.GROUP_G | CC.GROUP_H:
+            # fmt: on
+                for cc in GROUPS_RANGE:
+                    _midi_out_msg_control_change(cc, White1 if cc == cc_num else Black0)
 
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._shifting:  # LOOP
