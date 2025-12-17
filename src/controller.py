@@ -87,7 +87,8 @@ class Controller:
             self._sync_led_states()
         if flags & midi.HW_Dirty_Patterns:
             print("midi.HW_Dirty_Patterns")
-            self._sync_channel_rack_pads()
+            if not self._is_selecting_pattern:
+                self._sync_channel_rack_pads()
         if flags & midi.HW_Dirty_Tracks:
             print("midi.HW_Dirty_Tracks")
         if flags & midi.HW_Dirty_ControlValues:
@@ -286,7 +287,7 @@ class Controller:
                         _midi_out_msg_note_on(pattern, Lime1)
                 else:
                     self._is_selecting_pattern = False
-                    if self._pad_mode == PadMode.OMNI:
+                    if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
                         self._sync_channel_rack_pads()
 
             case CC.SOLO:
@@ -356,6 +357,22 @@ class Controller:
         # so we don't have to explicitly set event.handled = True in each case
         # otherwise we would have returned earlier to let FL Studio handle it itself
         msg.handled = True
+
+    def OnNoteOn(self, msg: FlMidiMsg) -> None:
+        note_num, note_vel = msg.note, msg.velocity
+        # velocity == 0 means note off
+
+        if note_vel:
+            if self._is_selecting_pattern:
+                patterns.jumpToPattern(note_num + 1)
+                msg.handled = True
+
+        if msg.handled:
+            return
+
+        msg.handled = True
+
+        print(f"Note Num: {note_num}, Note Vel: {note_vel}")
 
     def _init_led_states(self) -> None:
         self._deinit_led_states()
