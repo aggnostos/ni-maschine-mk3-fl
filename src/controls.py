@@ -30,11 +30,11 @@ class CC(IntEnum):
     # -------- TOUCH STRIP SECTION -------- #
     TOUCH_STRIP = 1
 
-    LOCK = 48
-    PITCH = 49
-    MOD = 50
-    PERFORM = 51
-    NOTES = 52
+    TOUCH_STRIP_LOCK = 48
+    TOUCH_STRIP_PITCH = 49
+    TOUCH_STRIP_MOD = 50
+    TOUCH_STRIP_PERFORM = 51
+    TOUCH_STRIP_NOTES = 52
 
     # -------- GROUP SECTION -------- #
     PAD_GROUP_A = 100

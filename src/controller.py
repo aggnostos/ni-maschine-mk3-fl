@@ -26,6 +26,9 @@ class Controller:
     _encoder_mode: FourDEncoderMode
     """Current 4D encoder mode. See FourDEncoderMode Enum"""
 
+    _touch_strip_mode: TouchStripMode
+    """Current touch strip mode. See TouchStripMode Enum"""
+
     _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
 
@@ -47,6 +50,7 @@ class Controller:
     def __init__(self):
         self._pad_mode = PadMode.OMNI
         self._encoder_mode = FourDEncoderMode.JOG
+        self._touch_strip_mode = TouchStripMode.DISABLED
         self._channel_page = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
@@ -64,14 +68,13 @@ class Controller:
         self._deinit_led_states()
 
     def OnRefresh(self, flags: int) -> None:
-        print(f"flags: {flags}")
+        # print(f"flags: {flags}")
         if flags & midi.HW_Dirty_Mixer_Sel:
             print("flags & midi.HW_Dirty_Mixer_Sel")
         if flags & midi.HW_Dirty_Mixer_Display:
             print("midi.HW_Dirty_Mixer_Display")
         if flags & midi.HW_Dirty_Mixer_Controls:
             print("midi.HW_Dirty_Mixer_Controls")
-            print(mixer.getTrackVolume(mixer.trackNumber()))
             if not self._is_plugin_picker_active:
                 self._sync_mixer_controls()
         if flags & midi.HW_Dirty_FocusedWindow:
@@ -88,6 +91,7 @@ class Controller:
             print("midi.HW_Dirty_Tracks")
         if flags & midi.HW_Dirty_ControlValues:
             print("midi.HW_Dirty_ControlValues")
+            self._sync_touch_strip_value(self._touch_strip_mode)
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
         if flags & midi.HW_Dirty_Colors:
@@ -157,6 +161,7 @@ class Controller:
                 match self._encoder_mode:
                     case FourDEncoderMode.JOG:
                         ui.jog(1 * multiplier)
+
                     case FourDEncoderMode.VOLUME:
                         if ui.getFocused(midi.widMixer):
                             target_vol = (
@@ -171,8 +176,10 @@ class Controller:
                                 channels.getChannelVolume(selected_channel)
                                 + 0.03125 * multiplier,
                             )
+
                     case FourDEncoderMode.SWING:
                         pass  # TODO implement swing adjustment
+
                     case FourDEncoderMode.TEMPO:
                         transport.globalTransport(midi.FPT_TempoJog, 10 * multiplier)
 
@@ -191,6 +198,27 @@ class Controller:
 
             case CC.ENCODER_VOLUME | CC.ENCODER_SWING | CC.ENCODER_TEMPO:
                 self._toggle_encoder_mode(cc_num)
+
+            # -------- TOUCH STRIP SECTION -------- #
+            case CC.TOUCH_STRIP:
+                selected_channel = channels.selectedChannel()
+                match self._touch_strip_mode:
+                    case TouchStripMode.PITCH:
+                        channels.setChannelPitch(selected_channel, (cc_val / 50) - 1)
+                    case TouchStripMode.MOD:
+                        pass  # TODO
+                    case TouchStripMode.PERFORM:
+                        pass  # TODO
+                    case TouchStripMode.NOTES:
+                        pass  # TODO
+                    case TouchStripMode.DISABLED:
+                        pass
+
+            # fmt: off
+            case CC.TOUCH_STRIP_PITCH | CC.TOUCH_STRIP_MOD | CC.TOUCH_STRIP_PERFORM | CC.TOUCH_STRIP_NOTES:
+            # fmt: on
+                self._toggle_touch_strip_mode(cc_num)
+                self._sync_touch_strip_value(self._touch_strip_mode)
 
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._shifting:  # LOOP
@@ -413,3 +441,49 @@ class Controller:
             )
 
         self._encoder_mode = mode
+
+    def _toggle_touch_strip_mode(self, cc: int) -> None:
+        """Toggles the touch strip mode based on the given control change number"""
+
+        match cc:
+            case CC.TOUCH_STRIP_PITCH:
+                mode = TouchStripMode.PITCH
+            case CC.TOUCH_STRIP_MOD:
+                mode = TouchStripMode.MOD
+            case CC.TOUCH_STRIP_PERFORM:
+                mode = TouchStripMode.PERFORM
+            case CC.TOUCH_STRIP_NOTES:
+                mode = TouchStripMode.NOTES
+            case _:
+                mode = TouchStripMode.DISABLED
+
+        mode = mode if self._touch_strip_mode != mode else TouchStripMode.DISABLED
+
+        # fmt: off
+        for cc_num in (CC.TOUCH_STRIP_PITCH, CC.TOUCH_STRIP_MOD, CC.TOUCH_STRIP_PERFORM, CC.TOUCH_STRIP_NOTES):
+        # fmt: on
+            _midi_out_msg_control_change(
+                cc_num,
+                (127 if cc == cc_num and mode != TouchStripMode.DISABLED else 0),
+            )
+
+        self._touch_strip_mode = mode
+
+    def _sync_touch_strip_value(self, mode: TouchStripMode) -> None:
+        """Syncs the touch strip value on the Maschine MK3 device with the current FL Studio state based on the given mode"""
+
+        match mode:
+            case TouchStripMode.PITCH:
+                _midi_out_msg_control_change(
+                    CC.TOUCH_STRIP,
+                    round(channels.getChannelPitch(channels.selectedChannel()) * 50)
+                    + 50,
+                )
+            case TouchStripMode.MOD:
+                pass  # TODO
+            case TouchStripMode.PERFORM:
+                pass  # TODO
+            case TouchStripMode.NOTES:
+                pass  # TODO
+            case TouchStripMode.DISABLED:
+                _midi_out_msg_control_change(CC.TOUCH_STRIP, 0)

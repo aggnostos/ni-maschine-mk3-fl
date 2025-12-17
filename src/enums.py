@@ -6,10 +6,11 @@ from colors import *
 
 
 __all__ = [
-    "PadMode",
-    "FourDEncoderMode",
     "PluginColors",
     "ChannelColors",
+    "PadMode",
+    "FourDEncoderMode",
+    "TouchStripMode",
 ]
 
 
@@ -47,3 +48,13 @@ class FourDEncoderMode(Enum):
     VOLUME = 1
     SWING = 2
     TEMPO = 3
+
+
+class TouchStripMode(Enum):
+    """Touch Strip Modes"""
+
+    DISABLED = 0
+    PITCH = 1
+    MOD = 2
+    PERFORM = 3
+    NOTES = 4
