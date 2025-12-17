@@ -288,6 +288,18 @@ class Controller:
                     if self._pad_mode == PadMode.OMNI:
                         self._sync_channel_rack_pads()
 
+            case CC.SOLO:
+                if ui.getFocused(midi.widChannelRack):
+                    channels.soloChannel(channels.selectedChannel())
+                elif ui.getFocused(midi.widMixer):
+                    mixer.soloTrack(mixer.trackNumber())
+
+            case CC.MUTE:
+                if ui.getFocused(midi.widChannelRack):
+                    channels.muteChannel(channels.selectedChannel())
+                elif ui.getFocused(midi.widMixer):
+                    mixer.muteTrack(mixer.trackNumber())
+
             # ---- KNOB PAGE SECTION ---- #
             # KNOBS
             case CC.MIX_TRACK:
@@ -404,6 +416,8 @@ class Controller:
         _midi_out_msg_control_change(CC.CHAN_SEL, selected_channel)
         _midi_out_msg_control_change(CC.CHAN_VOL, round(channels.getChannelVolume(selected_channel) * 100))
         _midi_out_msg_control_change(CC.CHAN_PAN, round((channels.getChannelPan(selected_channel) * 50) + 50))
+        _midi_out_msg_control_change(CC.SOLO, _on_off(channels.isChannelSolo(selected_channel)))
+        _midi_out_msg_control_change(CC.MUTE, _on_off(channels.isChannelMuted(selected_channel)))        
         # fmt: on
 
     @staticmethod
@@ -417,6 +431,8 @@ class Controller:
         _midi_out_msg_control_change(CC.MIX_VOLUME, round(mixer.getTrackVolume(track_number) * 125))
         _midi_out_msg_control_change(CC.MIX_PAN, round((mixer.getTrackPan(track_number) * 50) + 50))
         _midi_out_msg_control_change(CC.MIX_STEREO, round((mixer.getTrackStereoSep(track_number) + 1) * 50))
+        _midi_out_msg_control_change(CC.SOLO, _on_off(mixer.isTrackSolo(track_number)))
+        _midi_out_msg_control_change(CC.MUTE, _on_off(mixer.isTrackMuted(track_number)))
         # fmt: on
 
     def _toggle_encoder_mode(self, cc: int) -> None:
