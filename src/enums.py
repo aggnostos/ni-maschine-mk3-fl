@@ -18,8 +18,8 @@ __all__ = [
 class PluginColors(Enum):
     """Plugin Colors"""
 
-    DEFAULT = Green1
-    HIGHLIGHTED = Green3
+    DEFAULT = Orange1
+    HIGHLIGHTED = Orange3
 
 
 class ChannelColors(Enum):
