@@ -363,6 +363,12 @@ class Controller:
         # velocity == 0 means note off
 
         if note_vel:
+            if self._shifting:
+                if note_num == 0:
+                    general.undoUp()
+                elif note_num == 1:
+                    general.undoDown()
+                msg.handled = True
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
                 msg.handled = True
