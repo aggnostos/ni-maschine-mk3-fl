@@ -23,6 +23,9 @@ class Controller:
     _pad_mode: PadMode
     """Current pad mode. See PadMode Enum"""
 
+    _encoder_mode: FourDEncoderMode
+    """Current 4D encoder mode. See FourDEncoderMode Enum"""
+
     _channel_page: int
     """Current channel page (0-15) for channel rack pad display"""
 
@@ -43,6 +46,7 @@ class Controller:
 
     def __init__(self):
         self._pad_mode = PadMode.OMNI
+        self._encoder_mode = FourDEncoderMode.JOG
         self._channel_page = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
@@ -67,6 +71,7 @@ class Controller:
             print("midi.HW_Dirty_Mixer_Display")
         if flags & midi.HW_Dirty_Mixer_Controls:
             print("midi.HW_Dirty_Mixer_Controls")
+            print(mixer.getTrackVolume(mixer.trackNumber()))
             if not self._is_plugin_picker_active:
                 self._sync_mixer_controls()
         if flags & midi.HW_Dirty_FocusedWindow:
@@ -137,6 +142,55 @@ class Controller:
 
             case CC.SETTINGS:
                 transport.globalTransport(midi.FPT_F10, 1)
+
+            # -------- EDIT (ENCODER) SECTION -------- #
+            case CC.ENCODER_PUSH:
+                ui.enter()
+
+            case CC.ENCODER_TURN:
+                is_clockwise = cc_val == 65  # CLOCKWISE
+                multiplier = 1 if is_clockwise else -1
+
+                track_number = mixer.trackNumber()
+                selected_channel = channels.selectedChannel()
+
+                match self._encoder_mode:
+                    case FourDEncoderMode.JOG:
+                        ui.jog(1 * multiplier)
+                    case FourDEncoderMode.VOLUME:
+                        if ui.getFocused(midi.widMixer):
+                            target_vol = (
+                                mixer.getTrackVolume(track_number)
+                                + 0.012125 * multiplier
+                            )
+                            if 0.0 < target_vol < 1.0:
+                                mixer.setTrackVolume(track_number, target_vol)
+                        elif ui.getFocused(midi.widChannelRack):
+                            channels.setChannelVolume(
+                                selected_channel,
+                                channels.getChannelVolume(selected_channel)
+                                + 0.03125 * multiplier,
+                            )
+                    case FourDEncoderMode.SWING:
+                        pass  # TODO implement swing adjustment
+                    case FourDEncoderMode.TEMPO:
+                        transport.globalTransport(midi.FPT_TempoJog, 10 * multiplier)
+
+            case CC.ENCODER_UP | CC.ENCODER_RIGHT | CC.ENCODER_DOWN | CC.ENCODER_LEFT:
+                match cc_num:
+                    case CC.ENCODER_UP:
+                        ui.up()
+                    case CC.ENCODER_RIGHT:
+                        ui.right()
+                    case CC.ENCODER_DOWN:
+                        ui.down()
+                    case CC.ENCODER_LEFT:
+                        ui.left()
+                    case _:
+                        pass
+
+            case CC.ENCODER_VOLUME | CC.ENCODER_SWING | CC.ENCODER_TEMPO:
+                self._toggle_encoder_mode(cc_num)
 
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._shifting:  # LOOP
@@ -336,3 +390,26 @@ class Controller:
         _midi_out_msg_control_change(CC.MIX_PAN, round((mixer.getTrackPan(track_number) * 50) + 50))
         _midi_out_msg_control_change(CC.MIX_STEREO, round((mixer.getTrackStereoSep(track_number) + 1) * 50))
         # fmt: on
+
+    def _toggle_encoder_mode(self, cc: int) -> None:
+        """Toggles the 4D encoder mode based on the given control change number"""
+
+        match cc:
+            case CC.ENCODER_VOLUME:
+                mode = FourDEncoderMode.VOLUME
+            case CC.ENCODER_SWING:
+                mode = FourDEncoderMode.SWING
+            case CC.ENCODER_TEMPO:
+                mode = FourDEncoderMode.TEMPO
+            case _:
+                mode = FourDEncoderMode.JOG
+
+        mode = mode if self._encoder_mode != mode else FourDEncoderMode.JOG
+
+        for cc_num in (CC.ENCODER_VOLUME, CC.ENCODER_SWING, CC.ENCODER_TEMPO):
+            _midi_out_msg_control_change(
+                cc_num,
+                (127 if cc == cc_num and mode != FourDEncoderMode.JOG else 0),
+            )
+
+        self._encoder_mode = mode
