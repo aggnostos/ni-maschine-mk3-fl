@@ -64,11 +64,11 @@ class TouchStripMode(IntEnum):
 class Group(IntEnum):
     """Pad Groups"""
 
-    A = 0
-    B = 1
-    C = 2
-    D = 3
-    E = 4
-    F = 5
-    G = 6
-    H = 7
+    A = 100
+    B = 101
+    C = 102
+    D = 103
+    E = 104
+    F = 105
+    G = 106
+    H = 107

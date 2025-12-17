@@ -32,7 +32,7 @@ class Controller:
     _touch_strip_mode: TouchStripMode
     """Current touch strip mode. See TouchStripMode Enum"""
 
-    _selected_group: Group
+    _active_group: Group
     """Current selected group (A-H)"""
 
     _channel_page: int
@@ -66,7 +66,7 @@ class Controller:
         self._pad_mode = PadMode.OMNI
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.DISABLED
-        self._selected_group = Group.A
+        self._active_group = Group.A
         self._channel_page = 0
         self._step_page = 0
         self._octave_offset = 0
@@ -257,6 +257,8 @@ class Controller:
                     case _:
                         return
                     
+                self._active_group = Group(cc_num)
+
                 self._sync_channel_rack_pads()
 
             # -------- TRASPORT SECTION -------- #
@@ -297,9 +299,11 @@ class Controller:
                 for cc in (CC.PAD_MODE, CC.KEYBOARD_MODE, CC.CHORDS_MODE, CC.STEP_MODE):
                     _midi_out_msg_control_change(cc, 127 if cc == cc_num else 0)
 
+                active_group = Group.A.value
                 match cc_num:
                     case CC.PAD_MODE:
                         self._pad_mode = PadMode.OMNI
+                        active_group += self._channel_page
 
                     case CC.KEYBOARD_MODE:
                         self._pad_mode = PadMode.KEYBOARD
@@ -309,10 +313,15 @@ class Controller:
 
                     case CC.STEP_MODE:
                         self._pad_mode = PadMode.STEP
+                        active_group += self._step_page
 
                     case _:
                         pass
 
+                self._active_group = Group(active_group)
+                for g in GROUPS_RANGE:
+                    _midi_out_msg_control_change(g, White1 if g == self._active_group.value else Black0)
+        
                 self._sync_channel_rack_pads()
 
             case CC.PATTERN:
