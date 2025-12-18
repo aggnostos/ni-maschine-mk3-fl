@@ -3,6 +3,9 @@
 from enum import IntEnum
 
 
+__all__ = ["CC"]
+
+
 class CC(IntEnum):
     """Maschine MK3 Control Change (CC) Numbers Enum"""
 
