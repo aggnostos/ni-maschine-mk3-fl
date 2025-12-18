@@ -14,6 +14,20 @@ In addition to clean code and solid architecture, special care was taken to map 
 
 The goal is to provide a clean, performant, and well-structured MIDI script that works out of the box, while also serving as a solid foundation for anyone who wants to learn or build upon FL Studio MIDI scripting.
 
+## Project Status
+
+This project is actively maintained and continuously evolving.
+New features, refinements, and internal improvements are added on a regular basis as the script is used and tested in real-world workflows.
+
+User feedback plays an important role in shaping future development, and suggestions based on practical usage are especially welcome.
+
+## Contributing
+
+Contributions are welcome and appreciated.
+Whether it’s bug reports, feature suggestions, documentation improvements, or code enhancements — feel free to open an issue or submit a pull request.
+
+This project is intentionally structured to be readable and easy to extend, making it a good starting point for anyone interested in FL Studio MIDI scripting.
+
 ## Requirements
 
 Before installing the script, make sure you have the following:
