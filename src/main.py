@@ -1,5 +1,3 @@
-# name=NI Maschine MK3 by Aggnostos
-
 from fl_classes import FlMidiMsg
 
 from controller import Controller

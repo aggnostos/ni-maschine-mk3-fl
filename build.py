@@ -31,7 +31,7 @@ MODULES: List[str] = [
     "controller",
 ]
 
-MIDI_SCRIPT_NAME: str = "NI Maschine MK3 by Aggnostos"
+MIDI_SCRIPT_NAME: str = "NI Maschine MK3"
 
 HEADER: str = """
 # ------------------------------------------------------------------------- #
