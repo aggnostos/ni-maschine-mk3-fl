@@ -1,5 +1,10 @@
 """Notes"""
 
+# --------------------------------------------------------------------------------
+# NOTES
+# --------------------------------------------------------------------------------
+# DO NOT CHANGE THE NOTE VALUES BELOW, UNLESS YOU KNOW WHAT YOU ARE DOING!
+
 C1 = 0
 Cs1 = 1
 D1 = 2
@@ -128,3 +133,185 @@ E11 = 124
 F11 = 125
 Fs11 = 126
 G11 = 127
+
+# --------------------------------------------------------------------------------
+# CHORD SETS
+# --------------------------------------------------------------------------------
+# CHANGE THE NOTES INSIDE THE BRACKETS AS YOU PLEASE,YOU CAN EVEN ADD MORE THAN 4 NOTES FOR 7TH AND 9TH CHORDS!
+# OR YOU CAN CREATE YOUR OWN CHORD SETS,
+# JUST MAKE SURE THERE IS ALWAYS 16 CHORDS IN EACH CHORDSET!
+
+min1 = [  # MINOR 1
+    [C4, C5, Ds5, G5],  # 1
+    [Ds4, C5, Ds5, G5],
+    [F4, C4, F5, Gs5],
+    [G3, B4, D5, G5],
+    [Gs3, C5, Ds5, G5],  # 5
+    [Ds4, As4, Ds5, G5],
+    [G3, As4, D5, G5],
+    [As3, As4, D5, F5],
+    [F3, A4, C5, F5],  # 9
+    [Gs3, C5, F5, Gs5],
+    [G3, C5, Ds5, G5],
+    [G3, B4, D5, G5],
+    [F3, D4, F5, Gs5],  # 13
+    [D4, D5, F5, As5],
+    [D4, C5, D5, G5],
+    [C4, C5, F5, G5],
+]
+
+min2 = [  # MINOR 2
+    [C4, G4, C5, Ds5],
+    [B3, G4, B4, Ds5],
+    [As3, G4, C5, Ds5],
+    [G3, B4, D5, G5],
+    [Gs3, C5, Ds5, G5],
+    [Ds4, As4, Ds5, G5],
+    [G3, As4, D5, G5],
+    [As3, As4, D5, F5],
+    [F3, A4, C5, F5],
+    [Gs3, C5, F5, Gs5],
+    [G3, C5, Ds5, G5],
+    [G3, B4, D5, G5],
+    [C4, C5, Ds5, G5],
+    [F3, D4, F5, Gs5],
+    [As3, D4, F5, As5],
+    [As3, D4, D5, G5],
+]
+
+min3 = [  # SYNTHWAVE
+    [C4, G4, C5, D5, G5],
+    [C4, G4, As4, D5, F5],
+    [D4, A4, C5, D5, F5],
+    [D4, A5, C5, E5, G5],
+    [E4, G4, C5, D5, G5],
+    [D4, G4, As4, D5, F5],
+    [A3, A4, C5, D5, F5],
+    [A3, A4, C5, E5, G5],
+    [Ds4, Ds5, Fs5, As5],
+    [Ds4, Cs5, F5, Gs5],
+    [Cs4, Cs5, F5, Gs5],
+    [Ds4, F5, Gs5, Cs6],
+    [Cs4, F5, Gs5, Cs6],
+    [C4, Ds5, Gs5, C6],
+    [C4, Ds5, G5, As5],
+    [As3, D4, G5, As5],
+]
+
+min4 = [  # EPIC
+    [Cs3, D4, G4, As4],
+    [F3, C4, F4, A4],
+    [G3, D4, G4, As4],
+    [As3, F4, As4, D5],
+    [D3, A3, D4, F4],
+    [C3, G3, C4, Ds4],
+    [F3, C4, F4, A4],
+    [G3, D4, G4, As4],
+    [C4, C5, Ds5, G5],
+    [C4, C5, Ds5, G5],
+    [C4, C5, Ds5, G5],
+    [C4, C5, Ds5, G5],
+    [C4, C5, Ds5, G5],
+    [C4, C5, Ds5, G5],
+    [C4, C5, Ds5, G5],
+    [C4, C5, Ds5, G5],
+]
+
+maj1 = [
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+]
+
+maj2 = [
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+]
+
+maj3 = [
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+]
+
+maj4 = [
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+    [C4, C5, E5, G5],
+]
+
+# THERE MUST BE EXACTLY 8 CHORD SETS!
+CHORD_SETS = [min1, min2, min3, min4, maj1, maj2, maj3, maj4]
+
+# --------------------------------------------------------------------------------
+# SCALES
+# --------------------------------------------------------------------------------
+# CHANGE THE NOTES INSIDE THE BRACKETS AS YOU PLEASE OR ADD YOU OWN,
+# JUST MAKE SURE THAT THERE IS EXACTLY 16 NOTES IN EACH GROUP!
+
+# fmt: off
+scale_1 = [C4, D4, Gs4, As4, Cs4, E4, A4, F4, B4, Fs4, Ds4, G4, C5, Cs5, D5, G5]  # BATTERY
+scale_2 = [C5, D5, Ds5, F5, G5, Gs5, As5, C6, D6, Ds6, F6, G6, Gs6, As6, C7, D7]  # MINOR
+scale_3 = [C5, D5, E5, F5, G5, A5, B5, C6, D6, E6, F6, G6, A6, B6, C7, D7]        # MAJOR
+scale_4 = [Cs4, C4, Fs4, As7, E4, D4, As4, Gs4, C5, B4, A4, G4, Cs5, G5, Ds5, F5] # FPC
+scale_5 = [C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5, As5, B5, C6, Cs6, D6, Ds6] # CHROMATIC
+scale_6 = [C5, Cs5, E5, F5, G5, Gs5, B5, C6, Cs6, E6, F6, G6, Gs6, B6, C7, Cs7]	  # ARABIC
+scale_7 = [C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5, As5, B5, C6, Cs6, D6, Ds6] # CUSTOM
+scale_8 = [C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5, As5, B5, C6, Cs6, D6, Ds6] # CUSTOM
+# fmt: on
+
+# THERE MUST BE EXACTLY 8 SCALES!
+SCALES = [scale_1, scale_2, scale_3, scale_4, scale_5, scale_6, scale_7, scale_8]
