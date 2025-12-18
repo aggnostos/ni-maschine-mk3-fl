@@ -35,29 +35,29 @@ Before installing the script, make sure you have the following:
 - **NI Controller Editor**
 - **NI Maschine MK3 MIDI controller**
 
-> ⚠️ This script is **not compatible** with Maschine Mikro or Maschine+.
+> ⚠️ This script is **not compatible** with Maschine Mikro or Maschine+
 
 ## Installation
 
 ### 1. Download the latest release
-1. Go to the **Releases** page of this repository.
-2. Download the latest release archive named `ni-maschine-mk3-fl-<version>.zip`.
-3. Extract the files to a temporary location.
+1. Go to the **Releases** page of this repository
+2. Download the latest release archive named `ni-maschine-mk3-fl-<version>.zip`
+3. Extract the files to a temporary location
 
 ### 2. Load the Maschine MK3 configuration in NI Controller Editor
-1. Open **NI Controller Editor**.
-2. Connect your **Maschine MK3**.
+1. Open **NI Controller Editor**
+2. Connect your **Maschine MK3**
 3. In the menu, select: **"File" → "Open Configuration..."**
 4. Open the file `FL Studio.ncc`
 5. After loading, select the configuration named **"FL Studio"**
-6. Make sure this configuration is **active** on the controller.
+6. Make sure this configuration is **active** on the controller
 
 ### 3. Install the MIDI script in FL Studio
 1. Locate the FL Studio MIDI scripts directory:
 	- **macOS**: `~/Documents/Image-Line/FL Studio/Settings/Hardware/`
     - **Windows**: `Documents/Image-Line\FL Studio\Settings\Hardware\`
 2. Create a **new folder** with any name, for example: `NI_Maschine_MK3`    
-3. Copy the file `device_Maschine_MK3.py` into the newly created folder.
+3. Copy the file `device_Maschine_MK3.py` into the newly created folder
 
 The final folder structure should look like this:
 ```
@@ -68,19 +68,22 @@ The final folder structure should look like this:
 ```
 
 ### 4. Enable the script in FL Studio
-1. Open **FL Studio**.
+1. Open **FL Studio**
 2. Go to: **"Options" → "MIDI Settings"**
 3. In the **Input** list, find: "Maschine MK3..."
 4. Select it, then:
     - Set **Controller type** to: "NI Maschine MK3"
-    - Enable the **Enable** checkbox.
-5. Close the MIDI Settings window.
+    - Enable the **Enable** checkbox
+5. Close the MIDI Settings window
 
 ### 5. If nothing happens
 If the controller does not respond immediately:
-1. Hold **SHIFT** on the Maschine MK3.
-2. Press **CHANNEL (MIDI)** on the controller.
+1. Hold **SHIFT** on the Maschine MK3
+2. Press **CHANNEL (MIDI)** on the controller
 
 ## Next steps
-- See [User Guide](docs/user_guide.md) for a full control layout and workflow explanation.
-- See [Developer Guide](docs/developer_guide.md) if you want to modify or extend the script.
+- See [User Guide](docs/user_guide.md) for a full control layout and workflow explanation
+- See [Developer Guide](docs/developer_guide.md) if you want to modify or extend the script
+
+## License
+This project is licensed under the MIT License
