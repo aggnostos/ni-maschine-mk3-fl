@@ -87,6 +87,7 @@ class Controller:
     def OnInit(self) -> None:
         self._init_led_states()
         self._sync_led_states()
+        self._sync_channel_rack_pads()
         self._sync_channel_rack_controls()
         self._sync_mixer_controls()
 
@@ -94,33 +95,51 @@ class Controller:
         self._deinit_led_states()
 
     def OnRefresh(self, flags: int) -> None:
-        # print(f"flags: {flags}")
+        channel_event = flags & midi.HW_ChannelEvent
+        led_event = flags & midi.HW_Dirty_LEDs
+        pattern_event = flags & midi.HW_Dirty_Patterns
+        control_values_event = flags & midi.HW_Dirty_ControlValues
+        mixer_controls_event = flags & midi.HW_Dirty_Mixer_Controls
+
+        if channel_event and led_event:
+            self._sync_channel_rack_pads()
+            if not self._is_plugin_picker_active:
+                self._sync_channel_rack_controls()
+        elif pattern_event:
+            if not self._is_selecting_pattern:
+                self._sync_channel_rack_pads()
+        elif led_event:
+            self._sync_led_states()
+            if not self._is_selecting_pattern:
+                self._sync_channel_rack_pads()
+
+        if control_values_event:
+            self._sync_touch_strip_value(self._touch_strip_mode)
+            if not self._is_plugin_picker_active:
+                self._sync_channel_rack_controls()
+        if mixer_controls_event:
+            if not self._is_plugin_picker_active:
+                self._sync_mixer_controls()
+
+        # Debugging output for refresh flags
         if flags & midi.HW_Dirty_Mixer_Sel:
             print("flags & midi.HW_Dirty_Mixer_Sel")
         if flags & midi.HW_Dirty_Mixer_Display:
             print("midi.HW_Dirty_Mixer_Display")
         if flags & midi.HW_Dirty_Mixer_Controls:
             print("midi.HW_Dirty_Mixer_Controls")
-            if not self._is_plugin_picker_active:
-                self._sync_mixer_controls()
         if flags & midi.HW_Dirty_FocusedWindow:
             print("midi.HW_Dirty_FocusedWindow")
         if flags & midi.HW_Dirty_Performance:
             print("midi.HW_Dirty_Performance")
         if flags & midi.HW_Dirty_LEDs:
             print("midi.HW_Dirty_LEDs")
-            self._sync_led_states()
         if flags & midi.HW_Dirty_Patterns:
             print("midi.HW_Dirty_Patterns")
-            if not self._is_selecting_pattern:
-                self._sync_channel_rack_pads()
         if flags & midi.HW_Dirty_Tracks:
             print("midi.HW_Dirty_Tracks")
         if flags & midi.HW_Dirty_ControlValues:
             print("midi.HW_Dirty_ControlValues")
-            self._sync_touch_strip_value(self._touch_strip_mode)
-            if not self._is_plugin_picker_active:
-                self._sync_channel_rack_controls()
         if flags & midi.HW_Dirty_Colors:
             print("midi.HW_Dirty_Colors")
         if flags & midi.HW_Dirty_Names:
@@ -129,9 +148,6 @@ class Controller:
             print("midi.HW_Dirty_ChannelRackGroup")
         if flags & midi.HW_ChannelEvent:
             print("midi.HW_ChannelEvent")
-            self._sync_channel_rack_pads()
-            if not self._is_plugin_picker_active:
-                self._sync_channel_rack_controls()
 
     def OnControlChange(self, msg: FlMidiMsg) -> None:
         cc_num, cc_val = msg.controlNum, msg.controlVal
@@ -542,9 +558,9 @@ class Controller:
     def _deinit_led_states() -> None:
         """De-initializes the LED states on the Maschine MK3 device"""
 
-        for i in range(128):
-            _midi_out_msg_control_change(i, ControllerColor.BLACK_0)
-            _midi_out_msg_note_on(i, ControllerColor.BLACK_0)
+        for cc_note in range(128):
+            _midi_out_msg_control_change(cc_note, ControllerColor.BLACK_0)
+            _midi_out_msg_note_on(cc_note, ControllerColor.BLACK_0)
 
     def _sync_led_states(self) -> None:
         """Syncs the LED states with the current FL Studio state"""
@@ -562,14 +578,11 @@ class Controller:
         _midi_out_msg_control_change(CC.BROWSER,  _on_off(ui.getVisible(midi.widBrowser)))
         # fmt: on
 
-        self._sync_channel_rack_pads()
-
     def _sync_channel_rack_pads(self) -> None:
         """Syncs the channel rack state with the pad LEDs on the Maschine MK3 device"""
 
-        # NOTE: Need to check range later
-        for i in range(128):
-            _midi_out_msg_note_on(i, ControllerColor.BLACK_0)
+        for note in range(128):
+            _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
         selected_channel = channels.selectedChannel()
 
@@ -589,7 +602,8 @@ class Controller:
                 channel = selected_channel - lower_channel
                 _midi_out_msg_note_on(channel, _get_channel_color(channel, True))
 
-        if self._pad_mode == PadMode.STEP:
+        elif self._pad_mode == PadMode.STEP:
+            print("STEP mode pad sync")
             lower_step = self._step_page * 16
 
             # turn on pads for step sequencer grid bits
