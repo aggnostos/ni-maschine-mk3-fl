@@ -1,3 +1,5 @@
+"""Build script to generate a single-file MIDI script"""
+
 import re
 import logging
 from os import path
@@ -20,8 +22,10 @@ OUT_FILE = "device_Maschine_MK3.py"
 
 OUT_PATH: Path = DIST / OUT_FILE
 
+# List of local packages (folders with __init__.py) to include
 PACKAGES: List[str] = []
 
+# List of local modules (single .py files) to include
 MODULES: List[str] = [
     "consts",
     "enums",
@@ -42,11 +46,13 @@ HEADER: str = """
 # ------------------------------------------------------------------------- #
 """
 
+# Regular expression for matching import statements
 IMPORT_RE = re.compile(
     r"^(import|from)\s+[a-zA-Z_][\w.]*\b.*$",
     re.MULTILINE,
 )
 
+# Regular expression for matching __all__ exports
 ALL_RE = re.compile(
     r"^__all__\s*=\s*\[[^\]]*\]\s*\n?",
     re.MULTILINE | re.DOTALL,
@@ -54,6 +60,8 @@ ALL_RE = re.compile(
 
 
 def _split_imports_and_body(source: str) -> Tuple[List[str], str]:
+    """Splits the source code into imports and body."""
+
     matches = list(IMPORT_RE.finditer(source))
     if not matches:
         return [], source
@@ -65,6 +73,8 @@ def _split_imports_and_body(source: str) -> Tuple[List[str], str]:
 
 
 def _remove_local_imports(imports: Set[str]) -> Set[str]:
+    """Removes imports that are from local packages/modules."""
+
     result: Set[str] = set()
     for imp in imports:
         if not any(
@@ -76,22 +86,26 @@ def _remove_local_imports(imports: Set[str]) -> Set[str]:
 
 
 def _prepare_imports(imports: Set[str]) -> List[str]:
+    """Prepares and sorts the imports for the final output."""
     result = _remove_local_imports(imports)
     result.remove("from fl_classes import FlMidiMsg")
     return sorted(list(result), key=len)
 
 
 def _remove_all_exports(source: str) -> str:
+    """Removes __all__ exports from the source code."""
     return ALL_RE.sub("", source)
 
 
 def _remove_FlMidiMsg_annotations(
     source: str,
 ) -> str:
+    """Removes FlMidiMsg type annotations from the source code as they will raise errors running in FL Studio environment."""
     return re.sub(r":\s*FlMidiMsg\b", "", source)
 
 
 def _process_module(path: Path, imports: Set[str], body: StringIO) -> None:
+    """Processes a module file, extracting imports and body."""
     with open(path, encoding="utf-8") as pkg_file:
         pkg_imports, pkg_body = _split_imports_and_body(pkg_file.read())
         imports.update(pkg_imports)
@@ -130,7 +144,6 @@ def main():
         if not path.exists(mod_path):
             logger.warning(f"Module {mod}.py not found, skipping.")
             continue
-
         _process_module(mod_path, all_imports, pkg_body_buf)
 
     # ---- write output ----
