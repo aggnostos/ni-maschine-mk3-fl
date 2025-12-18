@@ -139,7 +139,7 @@ class FourDEncoderMode(IntEnum):
 class TouchStripMode(IntEnum):
     """Touch Strip Modes"""
 
-    DISABLED = 0
+    TRANSPORT = 0
     PITCH = 1
     MOD = 2
     PERFORM = 3

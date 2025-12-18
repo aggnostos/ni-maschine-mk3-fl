@@ -25,7 +25,7 @@
 - `TEMPO` sets 4D Encoder mode to **TEMPO** allowing you to adjust **Tempo**
 
 ### Performance (Touch Strip) section
-- `TOUCH STRIP` allows you to adjust specific parameter depending on what Touch Strip mode You are using
+- `TOUCH STRIP` allows you to adjust specific parameter depending on what Touch Strip mode You are using. In **TRANSPORT** (default) mode Touch strip is adjusting a current song position.
 - `PITCH` changes Touch Strip mode to **PITCH** allowing you to adjust Pitch of selected channel
 - `MOD` changes Touch Strip mode to **MOD**
 - `PERFORM` changes Touch Strip mode to **PERFORM**
