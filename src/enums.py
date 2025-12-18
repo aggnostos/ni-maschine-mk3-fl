@@ -7,6 +7,7 @@ __all__ = [
     "PluginColor",
     "ChannelColor",
     "PadMode",
+    "PadModeColor",
     "FourDEncoderMode",
     "TouchStripMode",
     "PadGroup",
@@ -95,14 +96,14 @@ class PluginColor(IntEnum):
     """Plugin Colors"""
 
     DEFAULT = ControllerColor.ORANGE_1
-    HIGHLIGHTED = ControllerColor.ORANGE_3
+    HIGHLIGHTED = ControllerColor.ORANGE_2
 
 
 class ChannelColor(IntEnum):
     """Channel Colors"""
 
     DEFAULT = ControllerColor.WHITE_1
-    HIGHLIGHTED = ControllerColor.WHITE_3
+    HIGHLIGHTED = ControllerColor.WHITE_2
 
 
 # ------------------------------------------------------------------------------------------------------------------------
@@ -115,6 +116,15 @@ class PadMode(IntEnum):
     KEYBOARD = 1
     CHORDS = 2
     STEP = 3
+
+
+class PadModeColor(IntEnum):
+    """Pad Mode Colors"""
+
+    OMNI = ControllerColor.ORANGE_2
+    KEYBOARD = ControllerColor.BLUE_2
+    CHORDS = ControllerColor.RED_2
+    STEP = ControllerColor.PURPLE_2
 
 
 class FourDEncoderMode(IntEnum):

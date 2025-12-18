@@ -25,6 +25,9 @@ class Controller:
     _pad_mode: PadMode
     """Current pad mode. See PadMode Enum"""
 
+    _pad_mode_color: PadModeColor
+    """Current pad mode color. See PadModeColor Enum"""
+
     _encoder_mode: FourDEncoderMode
     """Current 4D encoder mode. See FourDEncoderMode Enum"""
 
@@ -66,6 +69,7 @@ class Controller:
 
     def __init__(self):
         self._pad_mode = PadMode.OMNI
+        self._pad_mode_color = PadModeColor.OMNI
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.DISABLED
         self._active_group = PadGroup.A
@@ -258,16 +262,6 @@ class Controller:
                 | CC.GROUP_G
                 | CC.GROUP_H
             ):
-                for cc in GROUPS_RANGE:
-                    _midi_out_msg_control_change(
-                        cc,
-                        (
-                            ControllerColor.WHITE_1
-                            if cc == cc_num
-                            else ControllerColor.BLACK_0
-                        ),
-                    )
-
                 page_idx = cc_num - 100
 
                 match self._pad_mode:
@@ -283,6 +277,7 @@ class Controller:
                         return
 
                 self._active_group = PadGroup(cc_num)
+                self._change_group_colors()
 
                 self._sync_channel_rack_pads()
 
@@ -324,37 +319,33 @@ class Controller:
                 for cc in (CC.PAD_MODE, CC.KEYBOARD_MODE, CC.CHORDS_MODE, CC.STEP_MODE):
                     _midi_out_msg_control_change(cc, 127 if cc == cc_num else 0)
 
-                active_group = PadGroup.A.value
+                active_group = PadGroup.A
                 match cc_num:
                     case CC.PAD_MODE:
                         self._pad_mode = PadMode.OMNI
+                        self._pad_mode_color = PadModeColor.OMNI
                         active_group += self._channel_page
 
                     case CC.KEYBOARD_MODE:
                         self._pad_mode = PadMode.KEYBOARD
+                        self._pad_mode_color = PadModeColor.KEYBOARD
                         active_group += self._scale_index
 
                     case CC.CHORDS_MODE:
                         self._pad_mode = PadMode.CHORDS
+                        self._pad_mode_color = PadModeColor.CHORDS
                         active_group += self._chordset_index
 
                     case CC.STEP_MODE:
                         self._pad_mode = PadMode.STEP
+                        self._pad_mode_color = PadModeColor.STEP
                         active_group += self._step_page
 
                     case _:
                         pass
 
                 self._active_group = PadGroup(active_group)
-                for cc in GROUPS_RANGE:
-                    _midi_out_msg_control_change(
-                        cc,
-                        (
-                            ControllerColor.WHITE_1
-                            if cc == self._active_group.value
-                            else ControllerColor.BLACK_0
-                        ),
-                    )
+                self._change_group_colors()
 
                 self._sync_channel_rack_pads()
 
@@ -453,9 +444,6 @@ class Controller:
             case _:
                 return
 
-        # We will reach here if a case matched and was handled
-        # so we don't have to explicitly set event.handled = True in each case
-        # otherwise we would have returned earlier to let FL Studio handle it itself
         msg.handled = True
 
     def OnNoteOn(self, msg: FlMidiMsg) -> None:
@@ -502,8 +490,10 @@ class Controller:
                         real_note,
                         self._fixed_velocity if self._is_fixed_velocity else note_vel,
                     )
+                    _midi_out_msg_note_on(note_num, PadModeColor.KEYBOARD)
                 else:
                     channels.midiNoteOn(channels.selectedChannel(), real_note, 0)
+                    _midi_out_msg_note_on(note_num, ControllerColor.BLACK_0)
 
             case PadMode.CHORDS:
                 chord_notes = CHORD_SETS[self._chordset_index][note_num]
@@ -519,8 +509,10 @@ class Controller:
                                 else note_vel
                             ),
                         )
+                        _midi_out_msg_note_on(note_num, PadModeColor.CHORDS)
                     else:
                         channels.midiNoteOn(channels.selectedChannel(), real_note, 0)
+                        _midi_out_msg_note_on(note_num, ControllerColor.BLACK_0)
 
             case PadMode.STEP if note_vel:
                 chan_idx = note_num + self._step_page * 16
@@ -536,14 +528,12 @@ class Controller:
 
         msg.handled = True
 
-        print(f"Note Num: {note_num}, Note Vel: {note_vel}")
-
     def _init_led_states(self) -> None:
         self._deinit_led_states()
 
         # fmt: off
         _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 127))
-        _midi_out_msg_control_change(CC.GROUP_A, ControllerColor.WHITE_1)
+        _midi_out_msg_control_change(CC.GROUP_A, self._pad_mode_color)
         _midi_out_msg_control_change(CC.PAD_MODE, 127)
         _midi_out_msg_control_change(CC.FIX_VEL, 100)
         # fmt: on
@@ -608,7 +598,7 @@ class Controller:
                 _midi_out_msg_note_on(
                     idx,
                     (
-                        ControllerColor.WHITE_1
+                        PadModeColor.STEP
                         if channels.getGridBit(selected_channel, gridbit)
                         else ControllerColor.BLACK_0
                     ),
@@ -714,6 +704,19 @@ class Controller:
                 pass  # TODO
             case TouchStripMode.DISABLED:
                 _midi_out_msg_control_change(CC.TOUCH_STRIP, 0)
+
+    def _change_group_colors(self) -> None:
+        """Updates the group button colors based on the current pad mode"""
+
+        for cc in GROUPS_RANGE:
+            _midi_out_msg_control_change(
+                cc,
+                (
+                    self._pad_mode_color
+                    if cc == self._active_group
+                    else ControllerColor.BLACK_0
+                ),
+            )
 
     def _get_semi_offset(self) -> int:
         """Returns the current semitone offset"""
