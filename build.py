@@ -16,7 +16,9 @@ DIST.mkdir(exist_ok=True)
 
 MAIN_PATH: Path = SRC / "main.py"
 
-OUT_PATH: Path = DIST / "device_Maschine_MK3.py"
+OUT_FILE = "device_Maschine_MK3.py"
+
+OUT_PATH: Path = DIST / OUT_FILE
 
 PACKAGES: List[str] = []
 
