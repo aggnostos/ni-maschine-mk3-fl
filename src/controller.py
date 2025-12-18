@@ -209,7 +209,7 @@ class Controller:
                         if ui.getFocused(midi.widMixer):
                             target_vol = (
                                 mixer.getTrackVolume(track_number)
-                                + 0.012125 * multiplier
+                                + MIXER_TRACK_VOL_STEP * multiplier
                             )
                             if 0.0 < target_vol < 1.0:
                                 mixer.setTrackVolume(track_number, target_vol)
@@ -217,7 +217,7 @@ class Controller:
                             channels.setChannelVolume(
                                 selected_channel,
                                 channels.getChannelVolume(selected_channel)
-                                + 0.03125 * multiplier,
+                                + CHANNEL_VOL_STEP * multiplier,
                             )
 
                     case FourDEncoderMode.SWING:
@@ -226,18 +226,17 @@ class Controller:
                     case FourDEncoderMode.TEMPO:
                         transport.globalTransport(midi.FPT_TempoJog, 10 * multiplier)
 
-            case CC.ENCODER_UP | CC.ENCODER_RIGHT | CC.ENCODER_DOWN | CC.ENCODER_LEFT:
-                match cc_num:
-                    case CC.ENCODER_UP:
-                        ui.up()
-                    case CC.ENCODER_RIGHT:
-                        ui.right()
-                    case CC.ENCODER_DOWN:
-                        ui.down()
-                    case CC.ENCODER_LEFT:
-                        ui.left()
-                    case _:
-                        pass
+            case CC.ENCODER_UP:
+                ui.up()
+
+            case CC.ENCODER_RIGHT:
+                ui.right()
+
+            case CC.ENCODER_DOWN:
+                ui.down()
+
+            case CC.ENCODER_LEFT:
+                ui.left()
 
             case CC.ENCODER_VOLUME | CC.ENCODER_SWING | CC.ENCODER_TEMPO:
                 self._toggle_encoder_mode(cc_num)
@@ -722,7 +721,7 @@ class Controller:
     def _change_group_colors(self) -> None:
         """Updates the group button colors based on the current pad mode"""
 
-        for cc in GROUPS_RANGE:
+        for cc in range(CC.GROUP_A, CC.GROUP_H + 1):
             _midi_out_msg_control_change(
                 cc,
                 (
