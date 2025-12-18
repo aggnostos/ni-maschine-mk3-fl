@@ -1,4 +1,4 @@
-# name=NI Maschine MK3 by Aggnostos
+# name=NI Maschine MK3
 
 
 # ------------------------------------------------------------------------- #
@@ -15,8 +15,8 @@ import mixer
 import device
 import general
 import plugins
-import patterns
 import channels
+import patterns
 import transport
 from enum import IntEnum
 
@@ -524,7 +524,6 @@ class CC(IntEnum):
     # -------- TOUCH STRIP SECTION -------- #
     TOUCH_STRIP = 1
 
-    TOUCH_STRIP_LOCK = 48
     TOUCH_STRIP_PITCH = 49
     TOUCH_STRIP_MOD = 50
     TOUCH_STRIP_PERFORM = 51
@@ -558,12 +557,7 @@ class CC(IntEnum):
     CHORDS_MODE = 84
     STEP_MODE = 83
 
-    SCENE = 85
     PATTERN = 86
-    EVENTS = 87
-    VARIATION = 88
-    DUPLICATE = 89
-    SELECT = 90
     SOLO = 91
     MUTE = 92
 
@@ -742,7 +736,7 @@ class Controller:
 
     def OnInit(self) -> None:
         self._init_led_states()
-        self._sync_led_states()
+        self._sync_cc_led_states()
         self._sync_channel_rack_pads()
         self._sync_channel_rack_controls()
         self._sync_mixer_controls()
@@ -765,7 +759,7 @@ class Controller:
             if not self._is_selecting_pattern:
                 self._sync_channel_rack_pads()
         elif led_event:
-            self._sync_led_states()
+            self._sync_cc_led_states()
             if not self._is_selecting_pattern:
                 self._sync_channel_rack_pads()
 
@@ -777,37 +771,37 @@ class Controller:
             if not self._is_plugin_picker_active:
                 self._sync_mixer_controls()
 
-        # Debugging output for refresh flags
-        if flags & midi.HW_Dirty_Mixer_Sel:
-            print("flags & midi.HW_Dirty_Mixer_Sel")
-        if flags & midi.HW_Dirty_Mixer_Display:
-            print("midi.HW_Dirty_Mixer_Display")
-        if flags & midi.HW_Dirty_Mixer_Controls:
-            print("midi.HW_Dirty_Mixer_Controls")
-        if flags & midi.HW_Dirty_FocusedWindow:
-            print("midi.HW_Dirty_FocusedWindow")
-        if flags & midi.HW_Dirty_Performance:
-            print("midi.HW_Dirty_Performance")
-        if flags & midi.HW_Dirty_LEDs:
-            print("midi.HW_Dirty_LEDs")
-        if flags & midi.HW_Dirty_Patterns:
-            print("midi.HW_Dirty_Patterns")
-        if flags & midi.HW_Dirty_Tracks:
-            print("midi.HW_Dirty_Tracks")
-        if flags & midi.HW_Dirty_ControlValues:
-            print("midi.HW_Dirty_ControlValues")
-        if flags & midi.HW_Dirty_Colors:
-            print("midi.HW_Dirty_Colors")
-        if flags & midi.HW_Dirty_Names:
-            print("midi.HW_Dirty_Names")
-        if flags & midi.HW_Dirty_ChannelRackGroup:
-            print("midi.HW_Dirty_ChannelRackGroup")
-        if flags & midi.HW_ChannelEvent:
-            print("midi.HW_ChannelEvent")
+        # # Debugging output for refresh flags
+        # if flags & midi.HW_Dirty_Mixer_Sel:
+        #     print("flags & midi.HW_Dirty_Mixer_Sel")
+        # if flags & midi.HW_Dirty_Mixer_Display:
+        #     print("midi.HW_Dirty_Mixer_Display")
+        # if flags & midi.HW_Dirty_Mixer_Controls:
+        #     print("midi.HW_Dirty_Mixer_Controls")
+        # if flags & midi.HW_Dirty_FocusedWindow:
+        #     print("midi.HW_Dirty_FocusedWindow")
+        # if flags & midi.HW_Dirty_Performance:
+        #     print("midi.HW_Dirty_Performance")
+        # if flags & midi.HW_Dirty_LEDs:
+        #     print("midi.HW_Dirty_LEDs")
+        # if flags & midi.HW_Dirty_Patterns:
+        #     print("midi.HW_Dirty_Patterns")
+        # if flags & midi.HW_Dirty_Tracks:
+        #     print("midi.HW_Dirty_Tracks")
+        # if flags & midi.HW_Dirty_ControlValues:
+        #     print("midi.HW_Dirty_ControlValues")
+        # if flags & midi.HW_Dirty_Colors:
+        #     print("midi.HW_Dirty_Colors")
+        # if flags & midi.HW_Dirty_Names:
+        #     print("midi.HW_Dirty_Names")
+        # if flags & midi.HW_Dirty_ChannelRackGroup:
+        #     print("midi.HW_Dirty_ChannelRackGroup")
+        # if flags & midi.HW_ChannelEvent:
+        #     print("midi.HW_ChannelEvent")
 
     def OnControlChange(self, msg) -> None:
         cc_num, cc_val = msg.controlNum, msg.controlVal
-        print(f"CC Num: {cc_num}, CC Val: {cc_val}")
+
         match cc_num:
             # -------- CONTROL BUTTONS SECTION -------- #
             case CC.CHANNEL:
@@ -1218,8 +1212,8 @@ class Controller:
             _midi_out_msg_control_change(cc_note, ControllerColor.BLACK_0)
             _midi_out_msg_note_on(cc_note, ControllerColor.BLACK_0)
 
-    def _sync_led_states(self) -> None:
-        """Syncs the LED states with the current FL Studio state"""
+    def _sync_cc_led_states(self) -> None:
+        """Syncs the CC LED states with the current FL Studio state"""
 
         # fmt: off
         _midi_out_msg_control_change(CC.RESTART,  _on_off(bool(transport.getLoopMode())))
