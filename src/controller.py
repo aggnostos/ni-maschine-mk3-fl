@@ -43,6 +43,9 @@ class Controller:
     _semi_offset: int
     """Current semitone offset"""
 
+    _scale_index: int
+    """Current scale index for keyboard mode (0-7)"""
+
     _fixed_velocity: int
     """Fixed velocity value for pads when fixed velocity mode is enabled"""
 
@@ -66,6 +69,7 @@ class Controller:
         self._channel_page = 0
         self._step_page = 0
         self._semi_offset = 0
+        self._scale_index = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
         self._shifting = False
@@ -265,6 +269,8 @@ class Controller:
                 match self._pad_mode:
                     case PadMode.OMNI:
                         self._channel_page = page_idx
+                    case PadMode.KEYBOARD:
+                        self._scale_index = page_idx
                     case PadMode.STEP:
                         self._step_page = page_idx
                     case _:
@@ -320,6 +326,7 @@ class Controller:
 
                     case CC.KEYBOARD_MODE:
                         self._pad_mode = PadMode.KEYBOARD
+                        active_group += self._scale_index
 
                     case CC.CHORDS_MODE:
                         self._pad_mode = PadMode.CHORDS
@@ -477,6 +484,19 @@ class Controller:
                     channels.selectOneChannel(chan_idx)
                 else:
                     channels.midiNoteOn(chan_idx, real_note, 0)
+
+            case PadMode.KEYBOARD:
+                real_note = (
+                    SCALES[self._scale_index][note_num] + self._get_semi_offset()
+                )
+                if note_vel:
+                    channels.midiNoteOn(
+                        channels.selectedChannel(),
+                        real_note,
+                        self._fixed_velocity if self._is_fixed_velocity else note_vel,
+                    )
+                else:
+                    channels.midiNoteOn(channels.selectedChannel(), real_note, 0)
 
             case PadMode.STEP if note_vel:
                 chan_idx = note_num + self._step_page * 16
