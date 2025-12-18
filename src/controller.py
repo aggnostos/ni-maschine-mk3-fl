@@ -429,7 +429,7 @@ class Controller:
                 mixer.setTrackVolume(mixer.trackNumber(), cc_val / 125)
 
             case CC.MIX_PAN:
-                mixer.setTrackPan(mixer.trackNumber(), (cc_val - 50) / 50)
+                mixer.setTrackPan(mixer.trackNumber(), _cc_val_to_pan(cc_val))
 
             case CC.MIX_SS:
                 mixer.setTrackStereoSep(mixer.trackNumber(), (cc_val / 50) - 1)
@@ -446,7 +446,9 @@ class Controller:
                 channels.setChannelVolume(channels.selectedChannel(), cc_val / 100)
 
             case CC.CHAN_PAN:
-                channels.setChannelPan(channels.selectedChannel(), (cc_val - 50) / 50)
+                channels.setChannelPan(
+                    channels.selectedChannel(), _cc_val_to_pan(cc_val)
+                )
 
             case CC.FIX_VEL:
                 self._fixed_velocity = cc_val

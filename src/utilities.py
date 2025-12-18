@@ -12,6 +12,7 @@ __all__ = [
     "_midi_out_msg_note_on",
     "_midi_out_msg_control_change",
     "_on_off",
+    "_cc_val_to_pan",
 ]
 
 
@@ -96,3 +97,8 @@ def _on_off(condition: bool) -> int:
         int: 127 if condition is True, else 0
     """
     return 127 if condition else 0
+
+
+def _cc_val_to_pan(cc_val: int) -> float:
+    """Convert a MIDI CC value (0-100) to a channel pan value (-1.0 to 1.0)"""
+    return (cc_val - 50) / 50
