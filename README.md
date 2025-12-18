@@ -10,6 +10,8 @@ When I started looking for Maschine MK3 MIDI scripts for FL Studio, most existin
 
 This project was created to address those issues.
 
+In addition to clean code and solid architecture, special care was taken to map buttons and controls in a way that feels as native as possible to FL Studio, avoiding unnatural or forced behavior.
+
 The goal is to provide a clean, performant, and well-structured MIDI script that works out of the box, while also serving as a solid foundation for anyone who wants to learn or build upon FL Studio MIDI scripting.
 
 ## Requirements
@@ -25,7 +27,7 @@ Before installing the script, make sure you have the following:
 
 ### 1. Download the latest release
 1. Go to the **Releases** page of this repository.
-2. Download the latest release archive.
+2. Download the latest release archive named `ni-maschine-mk3-fl-<version>.zip`.
 3. Extract the files to a temporary location.
 
 ### 2. Load the Maschine MK3 configuration in NI Controller Editor
