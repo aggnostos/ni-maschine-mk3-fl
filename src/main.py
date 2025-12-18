@@ -27,7 +27,9 @@ def OnDeInit() -> None:
 
 def OnRefresh(flags: int) -> None:
     """
-    Called when certain events occur within FL Studio. Scripts should use the provided flags to update required interfaces on their associated controllers.
+    Called when certain events occur within FL Studio.
+    Scripts should use the provided flags to update required interfaces on their associated controllers.
+
     flags values will be a bitwise combination of the OnRefresh flags.
 
     Args:
