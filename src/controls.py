@@ -30,7 +30,6 @@ class CC(IntEnum):
     # -------- TOUCH STRIP SECTION -------- #
     TOUCH_STRIP = 1
 
-    TOUCH_STRIP_LOCK = 48
     TOUCH_STRIP_PITCH = 49
     TOUCH_STRIP_MOD = 50
     TOUCH_STRIP_PERFORM = 51
@@ -64,12 +63,7 @@ class CC(IntEnum):
     CHORDS_MODE = 84
     STEP_MODE = 83
 
-    SCENE = 85
     PATTERN = 86
-    EVENTS = 87
-    VARIATION = 88
-    DUPLICATE = 89
-    SELECT = 90
     SOLO = 91
     MUTE = 92
 
