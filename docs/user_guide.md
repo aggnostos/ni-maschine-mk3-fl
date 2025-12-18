@@ -13,7 +13,7 @@
 - `FILE` saves current project (behaves same way as pressing `Ctrl+S`)
 - `SETTINGS` opens **Settings** window
 
-### Edit (Encoder) section
+### Edit (Encoder) Section
 - `PUSH` behaves same way as pressing `Enter` key
 - `TURN` performes action depending the selected 4D Encoder mode. If JOG (default) mode is selected, performing `next` or `previous` actions.
 - `UP` behaves same way as pressing `Up Arrow` key
@@ -24,7 +24,7 @@
 - `SWING` sets 4D Encoder mode to **SWING**
 - `TEMPO` sets 4D Encoder mode to **TEMPO** allowing you to adjust **Tempo**
 
-### Performance (Touch Strip) section
+### Performance (Touch Strip) Section
 - `TOUCH STRIP` allows you to adjust specific parameter depending on what Touch Strip mode You are using. In **TRANSPORT** (default) mode Touch strip is adjusting a current song position.
 - `PITCH` changes Touch Strip mode to **PITCH** allowing you to adjust Pitch of selected channel
 - `MOD` changes Touch Strip mode to **MOD**
@@ -61,8 +61,7 @@ Groups have different meaning depending on what pad mode you are currently using
 - `MUTE` mutes the currently selected **Channel** or **Mixer Track**.
 By default (whithout `SHIFT`) soloes mixer track, including send tracks that it is routed to, otherwise soloes mixer track, including source tracks routed to it
 
-### Knob Page section
-
+### Knob Page Section
 #### Buttons
 - `PRESET -` selects previous **Plug-In** preset in selected channel
 - `PRESET +` selects next **Plug-In** preset in selected channel
