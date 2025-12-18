@@ -482,7 +482,7 @@ class Controller:
 
         match self._pad_mode:
             case PadMode.OMNI:
-                real_note = C5 + self._get_semi_offset()
+                real_note = ROOT_NOTE + self._get_semi_offset()
                 chan_idx = note_num + self._channel_page * 16
                 if chan_idx >= channels.channelCount():
                     return
