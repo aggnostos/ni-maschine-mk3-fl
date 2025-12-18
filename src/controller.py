@@ -317,22 +317,19 @@ class Controller:
                 if cc_val:
                     transport.globalTransport(midi.FPT_TapTempo, 1)
 
-            case CC.PLAY | CC.STOP:
-                if cc_num == CC.PLAY:
-                    transport.start()
-                elif cc_num == CC.STOP:
-                    transport.stop()
+            case CC.GRID:
+                ui.snapOnOff()
 
-                if self._touch_strip_mode == TouchStripMode.TRANSPORT:
-                    self._sync_song_position()
+            case CC.PLAY:
+                transport.start()
+
+            case CC.STOP:
+                transport.stop()
 
             case CC.REC if self._shifting:  # Count-in
                 transport.globalTransport(midi.FPT_CountDown, 1)
             case CC.REC:
                 transport.record()
-
-            case CC.GRID:
-                ui.snapOnOff()
 
             # -------- PAD SECTION -------- #
             case CC.FIXED_VEL:
