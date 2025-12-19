@@ -20,7 +20,14 @@ MAIN_PATH: Path = SRC / "main.py"
 
 OUT_FILE = "device_Maschine_MK3.py"
 
-OUT_PATH: Path = DIST / OUT_FILE
+# OUT_PATH: Path = DIST / OUT_FILE
+
+OUT_PATH = (
+    Path(
+        "/Users/aggnostos/Documents/Image-Line/FL Studio/Settings/Hardware/NI Machine MK3"
+    )
+    / OUT_FILE
+)
 
 # List of local packages (folders with __init__.py) to include
 PACKAGES: List[str] = []
