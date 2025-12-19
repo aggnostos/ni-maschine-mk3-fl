@@ -1,7 +1,9 @@
 # Developer guide
 
 ## Motivation & Design Goals
+
 As was said this project was created in response to the state of existing Maschine MK3 MIDI scripts for FL Studio, which often suffer from:
+
 - tightly coupled logic
 - unclear control flow
 - lack of separation between input handling, state, and UI sync
@@ -13,6 +15,7 @@ Rather than patching an existing solution, this script was implemented from scra
 In parallel, significant effort was made to ensure that all buttons, encoders, and controls are mapped in a way that feels native to FL Studio’s workflow. Wherever possible, controls mirror FL Studio’s own shortcuts and interaction patterns instead of introducing arbitrary or controller-centric abstractions.
 
 Key design goals:
+
 - explicit state management instead of implicit behavior
 - clear separation of responsibilities (controller logic, mappings, utilities, constants)
 - predictable event handling for FL Studio callbacks
@@ -21,6 +24,7 @@ Key design goals:
 The project is intentionally structured as a reference-quality implementation rather than a black box, making it suitable both for daily use and as a learning base for developers interested in FL Studio MIDI scripting.
 
 ## Project structure
+
 - `main.py` contains integration layer between FL Studio and the controller logic
 - `consts.py` contains global constants used across the script. This file centralizes constants so they are easy to update.
 - `controller.py` the central controller class where all MIDI events are handled
