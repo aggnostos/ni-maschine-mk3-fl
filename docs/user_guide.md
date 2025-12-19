@@ -5,6 +5,7 @@
 - `SHIFT` original **SHIFT** button is reserved by Maschine so we assign it to another CC that is not used - **NOTE REPEAT (Arp)**
 
 ### Control Buttons
+
 - `CHANNEL` toggles **Channel Rack** visibility
 - `PLUG-IN` toggles **Plug-In** window visibility for selected channel
 - `ARRANGER` toggles **Playlist** visibility
@@ -14,6 +15,7 @@
 - `SETTINGS` opens **Settings** window
 
 ### Edit (Encoder) Section
+
 - `PUSH` behaves same way as pressing `Enter` key
 - `TURN` performes action depending the selected 4D Encoder mode. If JOG (default) mode is selected, performing `next` or `previous` actions.
 - `UP` behaves same way as pressing `Up Arrow` key
@@ -25,6 +27,7 @@
 - `TEMPO` sets 4D Encoder mode to **TEMPO** allowing you to adjust **Tempo**
 
 ### Performance (Touch Strip) Section
+
 - `TOUCH STRIP` allows you to adjust specific parameter depending on what Touch Strip mode You are using. In **TRANSPORT** (default) mode Touch strip is adjusting a current song position.
 - `PITCH` changes Touch Strip mode to **PITCH** allowing you to adjust Pitch of selected channel
 - `MOD` changes Touch Strip mode to **MOD**
@@ -32,13 +35,16 @@
 - `NOTES` changes Touch Strip mode to **NOTES**
 
 ### Group Section
+
 Groups have different meaning depending on what pad mode you are currently using. Toggling between one of each group (`A-H`) allows you to switch between:
+
 - channel ranges in **PAD** mode (each group contains 16 channels)
 - scales in **KEYBOARD** mode
 - chord sets in **CHORDS** mode
 - sets of gridbits in **STEP** mode
 
 ### Transport Section
+
 - `RESTART` stops playback and immediately starts it again from the current song position or toggles the **Loop mode** if pressed with `SHIFT`
 - `ERASE` behaves same way as pressing `Delete` key in Piano Roll
 - `TAP` allows you to tap tempo or turn the metronome on/off if pressed with `SHIFT`
@@ -48,7 +54,9 @@ Groups have different meaning depending on what pad mode you are currently using
 - `STOP` stops playback and resets the playhead
 
 ### Pad Section
+
 #### Pad Modes
+
 - `FIXED VEL` toggles **Fixed Velocity** mode
 - `PAD MODE` enables the **PAD (OMNI)** mode
 - `KEYBOARD` enables the **KEYBOARD** mode
@@ -56,13 +64,16 @@ Groups have different meaning depending on what pad mode you are currently using
 - `STEP` enables the **STEP** mode
 
 #### Other
+
 - `PATTERN` allows you to select **Pattern** by pressing on one of the highlighted pads associated with it
 - `SOLO` soloes the currently selected **Channel** or **Mixer Track**
 - `MUTE` mutes the currently selected **Channel** or **Mixer Track**.
 By default (whithout `SHIFT`) soloes mixer track, including send tracks that it is routed to, otherwise soloes mixer track, including source tracks routed to it
 
 ### Knob Page Section
+
 #### Buttons
+
 - `PRESET -` selects previous **Plug-In** preset in selected channel
 - `PRESET +` selects next **Plug-In** preset in selected channel
 - `OCTAVE -` shifts notes triggered by -12 semitones
@@ -71,6 +82,7 @@ By default (whithout `SHIFT`) soloes mixer track, including send tracks that it 
 - `SEMI +` shifts notes triggered by +1 semitone
 
 #### Knobs
+
 - `MIX. TRACK.` selects a mixer track and display the number of the currently selected mixer track on the screen
 - `MIX. VOL.` controls the volume for selected mixer track
 - `MIX. PAN.` controls the pan for selected mixer track
@@ -79,3 +91,7 @@ By default (whithout `SHIFT`) soloes mixer track, including send tracks that it 
 - `CHAN. VOL.` controls the volume of the currently selected channel
 - `CHAN. PAN.` controls the pan for selected channel
 - `FIX. VEL.` controls the velocity of notes when **FIXED VELOCITY** mode is turned on
+
+> ## Note
+>
+> `PRESET+` and `PRESET-` are only compatible with FL Studio stock plugins by now. Compability with external plugins requires custom logic
