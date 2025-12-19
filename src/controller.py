@@ -97,36 +97,41 @@ class Controller:
 
     def OnRefresh(self, flags: int) -> None:
         channel_event = flags & midi.HW_ChannelEvent
-        led_event = flags & midi.HW_Dirty_LEDs
         pattern_event = flags & midi.HW_Dirty_Patterns
         control_values_event = flags & midi.HW_Dirty_ControlValues
         mixer_controls_event = flags & midi.HW_Dirty_Mixer_Controls
+        mixer_display_event = flags & midi.HW_Dirty_Mixer_Display
+        leds_event = flags & midi.HW_Dirty_LEDs
 
-        if channel_event and led_event:
-            self._sync_channel_rack_pads()
+        if channel_event and leds_event:
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
-        elif pattern_event:
-            if not self._is_selecting_pattern:
+            if not self._is_plugin_picker_active:
                 self._sync_channel_rack_pads()
-        elif led_event:
+        elif leds_event:
             self._sync_cc_led_states()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
             if not self._is_selecting_pattern:
                 self._sync_channel_rack_pads()
 
+        if pattern_event:
+            if not self._is_selecting_pattern:
+                self._sync_channel_rack_pads()
+
         if control_values_event:
-            self._sync_touch_strip_value(self._touch_strip_mode)
+            if self._touch_strip_mode != TouchStripMode.PITCH:
+                self._sync_touch_strip_value(self._touch_strip_mode)
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
-        if mixer_controls_event:
+
+        if mixer_controls_event or mixer_display_event:
             if not self._is_plugin_picker_active:
                 self._sync_mixer_controls()
 
         # # Debugging output for refresh flags
         # if flags & midi.HW_Dirty_Mixer_Sel:
-        #     print("flags & midi.HW_Dirty_Mixer_Sel")
+        #     print("midi.HW_Dirty_Mixer_Sel")
         # if flags & midi.HW_Dirty_Mixer_Display:
         #     print("midi.HW_Dirty_Mixer_Display")
         # if flags & midi.HW_Dirty_Mixer_Controls:
@@ -571,16 +576,16 @@ class Controller:
         """Syncs the CC LED states with the current FL Studio state"""
 
         # fmt: off
+        _midi_out_msg_control_change(CC.CHANNEL,  _on_off(ui.getVisible(midi.widChannelRack)))
+        _midi_out_msg_control_change(CC.ARRANGER, _on_off(ui.getVisible(midi.widPlaylist)))
+        _midi_out_msg_control_change(CC.MIXER,    _on_off(ui.getVisible(midi.widMixer)))
         _midi_out_msg_control_change(CC.RESTART,  _on_off(bool(transport.getLoopMode())))
+        _midi_out_msg_control_change(CC.BROWSER,  _on_off(ui.getVisible(midi.widBrowser)))
         _midi_out_msg_control_change(CC.TAP,      _on_off(general.getUseMetronome()))
         _midi_out_msg_control_change(CC.PLAY,     _on_off(transport.isPlaying()))
         _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
         _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
         _midi_out_msg_control_change(CC.GRID,     _on_off(ui.getSnapMode() != 3))
-        _midi_out_msg_control_change(CC.CHANNEL,  _on_off(ui.getVisible(midi.widChannelRack)))
-        _midi_out_msg_control_change(CC.ARRANGER, _on_off(ui.getVisible(midi.widPlaylist)))
-        _midi_out_msg_control_change(CC.MIXER,    _on_off(ui.getVisible(midi.widMixer)))
-        _midi_out_msg_control_change(CC.BROWSER,  _on_off(ui.getVisible(midi.widBrowser)))
         # fmt: on
 
     def _sync_channel_rack_pads(self) -> None:
