@@ -17,13 +17,15 @@ In parallel, significant effort was made to ensure that all buttons, encoders, a
 Key design goals:
 
 - explicit state management instead of implicit behavior
-- clear separation of responsibilities (controller logic, mappings, utilities, constants)
+- clear separation of responsibilities
 - predictable event handling for FL Studio callbacks
 - readable, self-documenting code supported by enums and constants
 
 The project is intentionally structured as a reference-quality implementation rather than a black box, making it suitable both for daily use and as a learning base for developers interested in FL Studio MIDI scripting.
 
 ## Project structure
+
+`src/`:
 
 - `main.py` contains integration layer between FL Studio and the controller logic
 - `consts.py` contains global constants used across the script. This file centralizes constants so they are easy to update.
@@ -33,4 +35,14 @@ The project is intentionally structured as a reference-quality implementation ra
 - `notes.py` defines MIDI note constants
 - `utilities.py` helper functions used by the script
 
-`build.py` is an utility script used for building all the source files into one inside the `dist/` folder (used for building a release version)
+`scripts/`:
+
+- `build.py` is an utility script used for building all the source files into one inside the `dist/` folder (used for building a release version)
+
+`dist/`:
+
+- `device_Maschine_MK3.py` file prodused by `build.py` script
+
+`controller_editor/`:
+
+- `FL_Studio.ncc` configuration file for **Controller Editor**
