@@ -15,8 +15,8 @@ import mixer
 import device
 import plugins
 import general
-import patterns
 import channels
+import patterns
 import transport
 from enum import IntEnum
 
@@ -1062,8 +1062,7 @@ class Controller:
                 self._is_selecting_pattern = bool(cc_val)
 
                 if cc_val:
-                    for pattern in range(patterns.patternCount()):
-                        _midi_out_msg_note_on(pattern, ControllerColor.ORANGE_0)
+                    self._sync_patterns()
                 else:
                     if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
                         self._sync_channel_rack_pads()
@@ -1172,6 +1171,7 @@ class Controller:
                 msg.handled = True
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
+                self._sync_patterns()
                 msg.handled = True
             if self._is_selecting_channel:
                 chan_idx = note_num + self._channel_page * 16
@@ -1436,6 +1436,19 @@ class Controller:
                     self._pad_mode_color
                     if cc == self._active_group
                     else ControllerColor.BLACK_0
+                ),
+            )
+
+    def _sync_patterns(self) -> None:
+        """Syncs the pattern selection state on the Maschine MK3 device with the current FL Studio state"""
+
+        for pattern in range(patterns.patternCount()):
+            _midi_out_msg_note_on(
+                pattern,
+                (
+                    ControllerColor.ORANGE_2
+                    if patterns.isPatternSelected(pattern + 1)
+                    else ControllerColor.ORANGE_1
                 ),
             )
 
