@@ -1198,6 +1198,9 @@ class Controller:
                     )
                 else:
                     channels.midiNoteOn(chan_idx, real_note, 0)
+                _midi_out_msg_note_on(
+                    note_num, _get_channel_color(chan_idx, bool(note_vel))
+                )
 
             case PadMode.KEYBOARD:
                 real_note = (
