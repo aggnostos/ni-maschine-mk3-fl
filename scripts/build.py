@@ -1,11 +1,10 @@
 """Build script to generate a single-file MIDI script"""
 
-import re
+import ast
+import black
 import logging
-from os import path
-from io import StringIO
 from pathlib import Path
-from typing import List, Set, Tuple
+from typing import List, Optional, Set, Tuple
 
 
 logger = logging.getLogger(__name__)
@@ -46,121 +45,179 @@ HEADER: str = """
 # ------------------------------------------------------------------------- #
 """
 
-# Regular expression for matching import statements
-IMPORT_RE = re.compile(
-    r"^(import|from)\s+[a-zA-Z_][\w.]*\b.*$",
-    re.MULTILINE,
-)
 
-# Regular expression for matching __all__ exports
-ALL_RE = re.compile(
-    r"^__all__\s*=\s*\[[^\]]*\]\s*\n?",
-    re.MULTILINE | re.DOTALL,
-)
+class ImportsVisitor(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.imports: ast.Module = ast.Module(body=[], type_ignores=[])
 
+    def visit_Import(self, node: ast.Import) -> None:
+        self.imports.body.append(node)
 
-def _split_imports_and_body(source: str) -> Tuple[List[str], str]:
-    """Splits the source code into imports and body."""
-
-    matches = list(IMPORT_RE.finditer(source))
-    if not matches:
-        return [], source
-
-    imports = [m.group() for m in matches]
-    body_start = matches[-1].end()
-
-    return imports, source[body_start:]
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        self.imports.body.append(node)
 
 
-def _remove_local_imports(imports: Set[str]) -> Set[str]:
-    """Removes imports that are from local packages/modules."""
+class ImportsTransformer(ast.NodeTransformer):
+    def __init__(self) -> None:
+        self._seen: Set[Tuple[str, ...]] = set()
+        self.result: ast.Module = ast.Module(body=[], type_ignores=[])
 
-    result: Set[str] = set()
-    for imp in imports:
-        if not any(
-            imp.startswith(f"import {pkg}") or imp.startswith(f"from {pkg}")
-            for pkg in PACKAGES + MODULES
+    def visit_Import(self, node: ast.Import) -> Optional[ast.Import]:
+        if self._is_local(node) or self._is_duplicate(node):
+            return None
+        return node
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> Optional[ast.ImportFrom]:
+        if (
+            self._is_local(node)
+            or self._is_duplicate(node)
+            or self._is_fl_classes(node)
         ):
-            result.add(imp)
-    return result
+            return None
+
+        return node
+
+    def _is_local(self, node: ast.AST) -> bool:
+        if isinstance(node, ast.ImportFrom):
+            return node.module in MODULES or node.module in PACKAGES
+        if isinstance(node, ast.Import):
+            return any(
+                alias.name in MODULES or alias.name in PACKAGES for alias in node.names
+            )
+        return False
+
+    def _is_duplicate(self, node: ast.AST) -> bool:
+        key = self._get_import_key(node)
+        if key in self._seen:
+            return True
+        self._seen.add(key)
+        return False
+
+    def _is_fl_classes(self, node: ast.AST) -> bool:
+        return isinstance(node, ast.ImportFrom) and node.module == "fl_classes"
+
+    def _get_import_key(self, node: ast.AST) -> Tuple[str, ...]:
+        if isinstance(node, ast.Import):
+            return ("import", *tuple(sorted(alias.name for alias in node.names)))
+        if isinstance(node, ast.ImportFrom):
+            return (
+                "from",
+                node.module or "",
+                *tuple(sorted(alias.name for alias in node.names)),
+            )
+        return ()
 
 
-def _prepare_imports(imports: Set[str]) -> List[str]:
-    """Prepares and sorts the imports for the final output."""
-    result = _remove_local_imports(imports)
-    result.remove("from fl_classes import FlMidiMsg")
-    return sorted(list(result), key=len)
+class BodyVisitor(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.result = ast.Module(body=[], type_ignores=[])
+
+    def visit_Module(self, node: ast.Module) -> None:
+        for stmt in node.body:
+            if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
+                self.result.body.append(stmt)
 
 
-def _remove_all_exports(source: str) -> str:
-    """Removes __all__ exports from the source code."""
-    return ALL_RE.sub("", source)
+class BodyTransformer(ast.NodeTransformer):
+    """AST transformer to clean up the code body"""
+
+    def visit_Assign(self, node: ast.Assign) -> Optional[ast.Assign]:
+        # Remove __all__ assignments
+        if any(
+            isinstance(target, ast.Name) and target.id == "__all__"
+            for target in node.targets
+        ):
+            return None
+        return node
+
+    def visit_arg(self, node: ast.arg):
+        # Remove FlMidiMsg type annotations from function arguments
+        if (
+            node.annotation
+            and isinstance(node.annotation, ast.Name)
+            and node.annotation.id == "FlMidiMsg"
+        ):
+            node.annotation = None
+        return node
+
+    def visit_Module(self, node: ast.Module) -> ast.Module:
+        self.generic_visit(node)
+        return self._remove_docstring(node)  # type: ignore[return-value]
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> ast.FunctionDef:
+        self.generic_visit(node)
+        return self._remove_docstring(node)  # type: ignore[return-value]
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> ast.ClassDef:
+        self.generic_visit(node)
+        return self._remove_docstring(node)  # type: ignore[return-value]
+
+    def _remove_docstring(self, node: ast.AST) -> ast.AST:
+        body = getattr(node, "body", None)
+        if not body:
+            return node
+
+        first = body[0]
+        if (
+            isinstance(first, ast.Expr)
+            and isinstance(first.value, ast.Constant)
+            and isinstance(first.value.value, str)
+        ):
+            body.pop(0)
+
+        return node
 
 
-def _remove_FlMidiMsg_annotations(
-    source: str,
-) -> str:
-    """Removes FlMidiMsg type annotations from the source code as they will raise errors running in FL Studio environment."""
-    return re.sub(r":\s*FlMidiMsg\b", "", source)
-
-
-def _process_module(path: Path, imports: Set[str], body: StringIO) -> None:
-    """Processes a module file, extracting imports and body."""
-    with open(path, encoding="utf-8") as pkg_file:
-        pkg_imports, pkg_body = _split_imports_and_body(pkg_file.read())
-        imports.update(pkg_imports)
-        body.write(pkg_body)
-
-
-def main():
+def main() -> None:
     logger.info("Building MIDI script...")
 
-    all_imports: Set[str] = set()
-    pkg_body_buf = StringIO()
-    main_body_buf = StringIO()
+    imports_visitor: ImportsVisitor = ImportsVisitor()
+    body_visitor: BodyVisitor = BodyVisitor()
 
-    # ---- main.py ----
-    with open(MAIN_PATH, encoding="utf-8") as main:
-        imports, main_body = _split_imports_and_body(main.read())
-        all_imports.update(imports)
-        main_body_buf.write(main_body)
+    def _process_module(mod_path: Path) -> None:
+        source: str = mod_path.read_text(encoding="utf-8")
+        tree = ast.parse(source, mod_path.name)
+        imports_visitor.visit(tree)
+        body_visitor.visit(tree)
 
-    # ---- packages ----
     for pkg in PACKAGES:
-        pkg_path = SRC / pkg
-        if not path.exists(pkg_path):
+        pkg_path: Path = SRC / pkg
+        if not Path.exists(pkg_path):
             logger.warning(f"Package {pkg} not found, skipping.")
             continue
+        pkg_files: List[Path] = list(pkg_path.glob("*.py"))
+        for mod_path in sorted(pkg_files):
+            _process_module(mod_path)
 
-        pkg_files = list(pkg_path.glob("*.py"))
-        for pkg_file in sorted(pkg_files):
-            if pkg_file.name == "__init__.py":
-                continue
-            _process_module(pkg_file, all_imports, pkg_body_buf)
-
-    # ---- modules ----
     for mod in MODULES:
-        mod_path = SRC / f"{mod}.py"
-        if not path.exists(mod_path):
+        mod_path: Path = SRC / f"{mod}.py"
+        if not Path.exists(mod_path):
             logger.warning(f"Module {mod}.py not found, skipping.")
             continue
-        _process_module(mod_path, all_imports, pkg_body_buf)
+        _process_module(mod_path)
 
-    # ---- write output ----
+    _process_module(MAIN_PATH)
+
     with open(OUT_PATH, "w", encoding="utf-8") as out:
-        out.write(f"# name={MIDI_SCRIPT_NAME}" + "\n\n\n")
-        out.write(HEADER.strip() + "\n\n\n")
+        out.write(f"# name={MIDI_SCRIPT_NAME}\n\n")
+        out.write(HEADER + "\n\n")
 
-        out.write("\n".join(_prepare_imports(all_imports)) + "\n\n\n")
+        transformed_imports: ast.AST = ImportsTransformer().visit(
+            imports_visitor.imports
+        )
+        ast.fix_missing_locations(transformed_imports)
+        out.write(ast.unparse(transformed_imports) + "\n\n\n")
 
-        combined_body = pkg_body_buf.getvalue() + main_body_buf.getvalue()
-        combined_body = _remove_all_exports(combined_body)
-        combined_body = _remove_FlMidiMsg_annotations(combined_body)
+        transformed_body: ast.AST = BodyTransformer().visit(body_visitor.result)
+        ast.fix_missing_locations(transformed_body)
+        out.write(ast.unparse(transformed_body))
 
-        out.write(combined_body)
-
-    main_body_buf.close()
-    pkg_body_buf.close()
+    black.format_file_in_place(
+        OUT_PATH,
+        fast=True,
+        mode=black.FileMode(),
+        write_back=black.WriteBack.YES,
+    )
 
     logger.info(f"Done. Built MIDI script at {OUT_PATH.resolve()}")
 
