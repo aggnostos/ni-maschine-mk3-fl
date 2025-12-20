@@ -1,12 +1,18 @@
 """Constants"""
 
 __all__ = [
+    "CC_RANGE",
+    "NOTES_RANGE",
     "SEMITONES_IN_OCTAVE",
     "MIN_SEMI_OFFSET",
     "MAX_SEMI_OFFSET",
     "CHANNEL_VOL_STEP",
     "MIXER_TRACK_VOL_STEP",
 ]
+
+CC_RANGE = 128
+
+NOTES_RANGE = 16
 
 MIN_OCTAVE = -5
 MAX_OCTAVE = 5

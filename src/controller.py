@@ -568,9 +568,11 @@ class Controller:
     def _deinit_led_states() -> None:
         """De-initializes the LED states on the Maschine MK3 device"""
 
-        for cc_note in range(128):
-            _midi_out_msg_control_change(cc_note, ControllerColor.BLACK_0)
-            _midi_out_msg_note_on(cc_note, ControllerColor.BLACK_0)
+        for cc in range(CC_RANGE):
+            _midi_out_msg_control_change(cc, ControllerColor.BLACK_0)
+
+        for note in range(NOTES_RANGE):
+            _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
     def _sync_cc_led_states(self) -> None:
         """Syncs the CC LED states with the current FL Studio state"""
@@ -591,7 +593,7 @@ class Controller:
     def _sync_channel_rack_pads(self) -> None:
         """Syncs the channel rack state with the pad LEDs on the Maschine MK3 device"""
 
-        for note in range(128):
+        for note in range(NOTES_RANGE):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
         selected_channel = channels.selectedChannel()
