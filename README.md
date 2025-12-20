@@ -16,7 +16,7 @@ The goal is to provide a clean, performant, and well-structured MIDI script that
 
 ## Project Status
 
-This project is actively maintained and continuously evolving.
+This project is currently under development, actively maintained and continuously evolving.
 New features, refinements, and internal improvements are added on a regular basis as the script is used and tested in real-world workflows.
 
 User feedback plays an important role in shaping future development, and suggestions based on practical usage are especially welcome.
@@ -60,14 +60,14 @@ Before installing the script, make sure you have the following:
 1. Locate the FL Studio MIDI scripts directory:
 
 - **macOS**: `~/Documents/Image-Line/FL Studio/Settings/Hardware/`
-  - **Windows**: `Documents/Image-Line\FL Studio\Settings\Hardware\`
+- **Windows**: `Documents/Image-Line\FL Studio\Settings\Hardware\`
 
 1. Create a **new folder** with any name, for example: `NI_Maschine_MK3`
 2. Copy the file `device_Maschine_MK3.py` into the newly created folder
 
 The final folder structure should look like this:
 
-``` sh
+``` md
 ...
 └── Hardware/
  └── NI_Maschine_MK3/

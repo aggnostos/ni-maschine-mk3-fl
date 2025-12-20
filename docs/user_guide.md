@@ -45,7 +45,7 @@ Groups have different meaning depending on what pad mode you are currently using
 
 ### Transport Section
 
-- `RESTART` stops playback and immediately starts it again from the current song position or toggles the **Loop mode** if pressed with `SHIFT`
+- `RESTART` stops playback and immediately starts it again from the current song position or toggles the **Loop** mode if pressed with `SHIFT`
 - `ERASE` behaves same way as pressing `Delete` key in Piano Roll
 - `TAP` allows you to tap tempo or turn the metronome on/off if pressed with `SHIFT`
 - `PLAY` starts playback from the current playhead position
