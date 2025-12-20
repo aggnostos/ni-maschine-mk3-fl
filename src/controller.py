@@ -37,6 +37,9 @@ class Controller:
     _active_group: PadGroup
     """Current selected group (A-H)"""
 
+    _selected_channel: int
+    """Currently selected channel index"""
+
     _channel_page: int
     """Current channel page (0-15) for OMNI mode pad display"""
 
@@ -76,6 +79,7 @@ class Controller:
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.TRANSPORT
         self._active_group = PadGroup.A
+        self._selected_channel = 0
         self._channel_page = 0
         self._step_page = 0
         self._semi_offset = 0
@@ -91,8 +95,9 @@ class Controller:
     def on_init(self) -> None:
         self._init_led_states()
         self._sync_cc_led_states()
-        self._sync_channel_rack_pads()
-        self._sync_channel_rack_controls()
+        self._sync_selected_channel()
+        self._sync_channel_pads()
+        self._sync_channel_controls()
         self._sync_mixer_controls()
         self._sync_song_position()
 
@@ -115,11 +120,12 @@ class Controller:
         # so we only want to run the full leds sync logic when no other events are present.
         # e.g. `leds_event` is triggered alongside `channel_event`, so we only want to sync leds
         # that are related to `channel_event` in that case.
-        if channel_event and leds_event:
+        if channel_event:
+            self._sync_selected_channel()
             if not self._is_plugin_picker_active:
-                self._sync_channel_rack_controls()
+                self._sync_channel_controls()
             if not self._is_plugin_picker_active:
-                self._sync_channel_rack_pads()
+                self._sync_channel_pads()
         elif mixer_sel_event or mixer_display_event or mixer_controls_event:
             if not self._is_plugin_picker_active:
                 self._sync_mixer_controls()
@@ -128,17 +134,16 @@ class Controller:
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
             if not self._is_selecting_pattern:
-                self._sync_channel_rack_pads()
+                self._sync_channel_pads()
 
         if pattern_event:
             if not self._is_selecting_pattern:
-                self._sync_channel_rack_pads()
-
+                self._sync_channel_pads()
         if control_values_event:
             if self._touch_strip_mode == TouchStripMode.PITCH:
                 self._sync_touch_strip_value(self._touch_strip_mode)
             if not self._is_plugin_picker_active:
-                self._sync_channel_rack_controls()
+                self._sync_channel_controls()
 
         # # Debugging output for refresh flags
         # if flags & midi.HW_Dirty_Mixer_Sel:
@@ -180,7 +185,7 @@ class Controller:
                     ui.showWindow(midi.widChannelRack)
 
             case CC.PLUGIN:
-                channels.showCSForm(channels.selectedChannel(), -1)
+                channels.showCSForm(self._selected_channel, -1)
 
             case CC.ARRANGER:
                 if ui.getVisible(midi.widPlaylist):
@@ -218,7 +223,6 @@ class Controller:
                 multiplier = 1 if is_clockwise else -1
 
                 track_number = mixer.trackNumber()
-                selected_channel = channels.selectedChannel()
 
                 match self._encoder_mode:
                     case FourDEncoderMode.JOG:
@@ -234,8 +238,8 @@ class Controller:
                                 mixer.setTrackVolume(track_number, target_vol)
                         elif ui.getFocused(midi.widChannelRack):
                             channels.setChannelVolume(
-                                selected_channel,
-                                channels.getChannelVolume(selected_channel)
+                                self._selected_channel,
+                                channels.getChannelVolume(self._selected_channel)
                                 + CHANNEL_VOL_STEP * multiplier,
                             )
 
@@ -268,7 +272,7 @@ class Controller:
                         _midi_out_msg_control_change(CC.TOUCH_STRIP, cc_val)
                     case TouchStripMode.PITCH:
                         channels.setChannelPitch(
-                            channels.selectedChannel(),
+                            self._selected_channel,
                             _percent_to_bipolar(cc_val),
                         )
                     case TouchStripMode.MOD:
@@ -316,7 +320,7 @@ class Controller:
                 self._active_group = PadGroup(cc_num)
                 self._change_group_colors()
 
-                self._sync_channel_rack_pads()
+                self._sync_channel_pads()
 
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._shifting:  # LOOP
@@ -384,7 +388,7 @@ class Controller:
                 self._active_group = PadGroup(active_group)
                 self._change_group_colors()
 
-                self._sync_channel_rack_pads()
+                self._sync_channel_pads()
 
             case CC.PATTERN:
                 for p in range(16):
@@ -396,14 +400,14 @@ class Controller:
                     self._sync_patterns()
                 else:
                     if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
-                        self._sync_channel_rack_pads()
+                        self._sync_channel_pads()
 
             case CC.SELECT:
                 self._is_selecting_channel = bool(cc_val)
 
             case CC.SOLO:
                 if ui.getFocused(midi.widChannelRack):
-                    channels.soloChannel(channels.selectedChannel())
+                    channels.soloChannel(self._selected_channel)
                 elif ui.getFocused(midi.widMixer):
                     if self._shifting:
                         mixer.soloTrack(
@@ -416,22 +420,20 @@ class Controller:
 
             case CC.MUTE:
                 if ui.getFocused(midi.widChannelRack):
-                    channels.muteChannel(channels.selectedChannel())
+                    channels.muteChannel(self._selected_channel)
                 elif ui.getFocused(midi.widMixer):
                     mixer.muteTrack(mixer.trackNumber())
 
             # ---- KNOB PAGE SECTION ---- #
             # BUTTONS
             case CC.PRESET_NEXT | CC.PRESET_PREV:  # TODO: add mixer logic
-                selected_channel = channels.selectedChannel()
-
-                if not plugins.isValid(selected_channel):
+                if not plugins.isValid(self._selected_channel):
                     return
 
                 if cc_num == CC.PRESET_NEXT:
-                    plugins.nextPreset(selected_channel)
+                    plugins.nextPreset(self._selected_channel)
                 else:
-                    plugins.prevPreset(selected_channel)
+                    plugins.prevPreset(self._selected_channel)
 
             case CC.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
                 self._semi_offset -= 12
@@ -464,16 +466,13 @@ class Controller:
                 if cc_val < channels.channelCount():
                     channels.selectOneChannel(cc_val)
                 else:
-                    _midi_out_msg_control_change(
-                        CC.CHAN_SEL, channels.selectedChannel()
-                    )
+                    _midi_out_msg_control_change(CC.CHAN_SEL, self._selected_channel)
 
             case CC.CHAN_VOL:
-                channels.setChannelVolume(channels.selectedChannel(), cc_val / 100)
-
+                channels.setChannelVolume(self._selected_channel, cc_val / 100)
             case CC.CHAN_PAN:
                 channels.setChannelPan(
-                    channels.selectedChannel(), _percent_to_bipolar(cc_val)
+                    self._selected_channel, _percent_to_bipolar(cc_val)
                 )
 
             case CC.FIX_VEL:
@@ -534,13 +533,13 @@ class Controller:
                 )
                 if note_vel:
                     channels.midiNoteOn(
-                        channels.selectedChannel(),
+                        self._selected_channel,
                         real_note,
                         self._fixed_velocity if self._is_fixed_velocity else note_vel,
                     )
                     _midi_out_msg_note_on(note_num, PadModeColor.KEYBOARD)
                 else:
-                    channels.midiNoteOn(channels.selectedChannel(), real_note, 0)
+                    channels.midiNoteOn(self._selected_channel, real_note, 0)
                     _midi_out_msg_note_on(note_num, ControllerColor.BLACK_0)
 
             case PadMode.CHORDS:
@@ -549,7 +548,7 @@ class Controller:
                     real_note = note + self._get_semi_offset()
                     if note_vel:
                         channels.midiNoteOn(
-                            channels.selectedChannel(),
+                            self._selected_channel,
                             real_note,
                             (
                                 self._fixed_velocity
@@ -559,12 +558,12 @@ class Controller:
                         )
                         _midi_out_msg_note_on(note_num, PadModeColor.CHORDS)
                     else:
-                        channels.midiNoteOn(channels.selectedChannel(), real_note, 0)
+                        channels.midiNoteOn(self._selected_channel, real_note, 0)
                         _midi_out_msg_note_on(note_num, ControllerColor.BLACK_0)
 
             case PadMode.STEP if note_vel:
                 chan_idx = note_num + self._step_page * 16
-                selected_channel = channels.selectedChannel()
+                selected_channel = self._selected_channel
                 channels.setGridBit(
                     selected_channel,
                     chan_idx,
@@ -595,6 +594,11 @@ class Controller:
         for note in range(NOTES_RANGE):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
+    def _sync_selected_channel(self) -> None:
+        """Syncs the selected channel index with the current FL Studio selected channel"""
+
+        self._selected_channel = channels.selectedChannel()
+
     def _sync_cc_led_states(self) -> None:
         """Syncs the CC LED states with the current FL Studio state"""
 
@@ -611,13 +615,11 @@ class Controller:
         _midi_out_msg_control_change(CC.GRID,     _on_off(ui.getSnapMode() != 3))
         # fmt: on
 
-    def _sync_channel_rack_pads(self) -> None:
+    def _sync_channel_pads(self) -> None:
         """Syncs the channel rack state with the pad LEDs on the Maschine MK3 device"""
 
         for note in range(NOTES_RANGE):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
-
-        selected_channel = channels.selectedChannel()
 
         if self._pad_mode == PadMode.OMNI:
             lower_channel = self._channel_page * 16
@@ -631,8 +633,8 @@ class Controller:
                 _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
 
             # highlight selected channel pad
-            if selected_channel in range(lower_channel, channel_count):
-                channel = selected_channel - lower_channel
+            if self._selected_channel in range(lower_channel, channel_count):
+                channel = self._selected_channel - lower_channel
                 _midi_out_msg_note_on(channel, _get_channel_color(channel, True))
 
         elif self._pad_mode == PadMode.STEP:
@@ -645,23 +647,20 @@ class Controller:
                     idx,
                     (
                         PadModeColor.STEP
-                        if channels.getGridBit(selected_channel, gridbit)
+                        if channels.getGridBit(self._selected_channel, gridbit)
                         else ControllerColor.BLACK_0
                     ),
                 )
 
-    @staticmethod
-    def _sync_channel_rack_controls() -> None:
+    def _sync_channel_controls(self) -> None:
         """Syncs the channel rack controls on the Maschine MK3 device with the current FL Studio channel rack state"""
 
-        selected_channel = channels.selectedChannel()
-
         # fmt: off
-        _midi_out_msg_control_change(CC.CHAN_SEL, selected_channel)
-        _midi_out_msg_control_change(CC.CHAN_VOL, round(channels.getChannelVolume(selected_channel) * 100))
-        _midi_out_msg_control_change(CC.CHAN_PAN, _bipolar_to_percent(channels.getChannelPan(selected_channel)))
-        _midi_out_msg_control_change(CC.SOLO, _on_off(channels.isChannelSolo(selected_channel)))
-        _midi_out_msg_control_change(CC.MUTE, _on_off(channels.isChannelMuted(selected_channel)))        
+        _midi_out_msg_control_change(CC.CHAN_SEL, self._selected_channel)
+        _midi_out_msg_control_change(CC.CHAN_VOL, round(channels.getChannelVolume(self._selected_channel) * 100))
+        _midi_out_msg_control_change(CC.CHAN_PAN, _bipolar_to_percent(channels.getChannelPan(self._selected_channel)))
+        _midi_out_msg_control_change(CC.SOLO, _on_off(channels.isChannelSolo(self._selected_channel)))
+        _midi_out_msg_control_change(CC.MUTE, _on_off(channels.isChannelMuted(self._selected_channel)))        
         # fmt: on
 
     @staticmethod
@@ -742,7 +741,7 @@ class Controller:
                 _midi_out_msg_control_change(
                     CC.TOUCH_STRIP,
                     _bipolar_to_percent(
-                        channels.getChannelPitch(channels.selectedChannel())
+                        channels.getChannelPitch(self._selected_channel)
                     ),
                 )
             case TouchStripMode.MOD:
