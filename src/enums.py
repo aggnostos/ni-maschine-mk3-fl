@@ -95,14 +95,14 @@ class ControllerColor(IntEnum):
 class PluginColor(IntEnum):
     """Plugin Colors"""
 
-    DEFAULT = ControllerColor.ORANGE_1
+    DEFAULT = ControllerColor.ORANGE_0
     HIGHLIGHTED = ControllerColor.ORANGE_2
 
 
 class ChannelColor(IntEnum):
     """Channel Colors"""
 
-    DEFAULT = ControllerColor.WHITE_1
+    DEFAULT = ControllerColor.WHITE_0
     HIGHLIGHTED = ControllerColor.WHITE_2
 
 

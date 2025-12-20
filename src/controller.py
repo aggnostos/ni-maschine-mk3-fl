@@ -137,6 +137,8 @@ class Controller:
                 self._sync_channel_pads()
 
         if pattern_event:
+            if self._is_selecting_pattern:
+                self._sync_patterns()
             if not self._is_selecting_pattern:
                 self._sync_channel_pads()
         if control_values_event:
@@ -391,7 +393,7 @@ class Controller:
                 self._sync_channel_pads()
 
             case CC.PATTERN:
-                for p in range(16):
+                for p in range(NOTES_COUNT):
                     _midi_out_msg_note_on(p, ControllerColor.BLACK_0)
 
                 self._is_selecting_pattern = bool(cc_val)
@@ -404,6 +406,7 @@ class Controller:
 
             case CC.SELECT:
                 self._is_selecting_channel = bool(cc_val)
+                self._sync_channel_pads()
 
             case CC.SOLO:
                 if ui.getFocused(midi.widChannelRack):
@@ -504,18 +507,18 @@ class Controller:
                 self._sync_patterns()
                 msg.handled = True
             if self._is_selecting_channel:
-                chan_idx = note_num + self._channel_page * 16
+                chan_idx = note_num + self._channel_page * NOTES_COUNT
                 if chan_idx < channels.channelCount():
                     channels.selectOneChannel(chan_idx)
                 msg.handled = True
 
-        if msg.handled:
+        if msg.handled or self._is_selecting_pattern or self._is_selecting_channel:
             return
 
         match self._pad_mode:
             case PadMode.OMNI:
                 real_note = ROOT_NOTE + self._get_semi_offset()
-                chan_idx = note_num + self._channel_page * 16
+                chan_idx = note_num + self._channel_page * NOTES_COUNT
                 if chan_idx >= channels.channelCount():
                     return
                 if note_vel:
@@ -562,7 +565,7 @@ class Controller:
                         _midi_out_msg_note_on(note_num, ControllerColor.BLACK_0)
 
             case PadMode.STEP if note_vel:
-                chan_idx = note_num + self._step_page * 16
+                chan_idx = note_num + self._step_page * NOTES_COUNT
                 selected_channel = self._selected_channel
                 channels.setGridBit(
                     selected_channel,
@@ -588,16 +591,11 @@ class Controller:
     def _deinit_led_states() -> None:
         """De-initializes the LED states on the Maschine MK3 device"""
 
-        for cc in range(CC_RANGE):
+        for cc in range(CC_COUNT):
             _midi_out_msg_control_change(cc, ControllerColor.BLACK_0)
 
-        for note in range(NOTES_RANGE):
+        for note in range(NOTES_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
-
-    def _sync_selected_channel(self) -> None:
-        """Syncs the selected channel index with the current FL Studio selected channel"""
-
-        self._selected_channel = channels.selectedChannel()
 
     def _sync_cc_led_states(self) -> None:
         """Syncs the CC LED states with the current FL Studio state"""
@@ -615,33 +613,43 @@ class Controller:
         _midi_out_msg_control_change(CC.GRID,     _on_off(ui.getSnapMode() != 3))
         # fmt: on
 
+    def _sync_selected_channel(self) -> None:
+        """Syncs the selected channel index with the current FL Studio selected channel"""
+
+        self._selected_channel = channels.selectedChannel()
+
+    def _toggle_selected_channel_highlight(self) -> None:
+        """Highlights the selected channel pad on the Maschine MK3 device"""
+
+        _midi_out_msg_note_on(
+            self._selected_channel - self._channel_page * NOTES_COUNT,
+            _get_channel_color(self._selected_channel, self._is_selecting_channel),
+        )
+
     def _sync_channel_pads(self) -> None:
         """Syncs the channel rack state with the pad LEDs on the Maschine MK3 device"""
 
-        for note in range(NOTES_RANGE):
+        for note in range(NOTES_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
-        if self._pad_mode == PadMode.OMNI:
-            lower_channel = self._channel_page * 16
+        if self._pad_mode == PadMode.OMNI or self._is_selecting_channel:
+            lower_channel = self._channel_page * NOTES_COUNT
             channel_count = channels.channelCount()
 
             # turn on pads for available channels
             for channel in range(lower_channel, channel_count):
                 idx = channel - lower_channel
-                if idx == 16:
+                if idx == NOTES_COUNT:
                     break
                 _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
 
-            # highlight selected channel pad
-            if self._selected_channel in range(lower_channel, channel_count):
-                channel = self._selected_channel - lower_channel
-                _midi_out_msg_note_on(channel, _get_channel_color(channel, True))
+            self._toggle_selected_channel_highlight()
 
         elif self._pad_mode == PadMode.STEP:
-            lower_step = self._step_page * 16
+            lower_step = self._step_page * NOTES_COUNT
 
             # turn on pads for step sequencer grid bits
-            for gridbit in range(lower_step, lower_step + 16):
+            for gridbit in range(lower_step, lower_step + NOTES_COUNT):
                 idx = gridbit - lower_step
                 _midi_out_msg_note_on(
                     idx,
@@ -778,7 +786,7 @@ class Controller:
                 (
                     ControllerColor.ORANGE_2
                     if patterns.isPatternSelected(pattern + 1)
-                    else ControllerColor.ORANGE_1
+                    else ControllerColor.ORANGE_0
                 ),
             )
 
