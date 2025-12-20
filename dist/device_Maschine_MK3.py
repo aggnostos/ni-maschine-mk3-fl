@@ -13,10 +13,10 @@ import ui
 import midi
 import mixer
 import device
-import plugins
 import general
-import patterns
+import plugins
 import channels
+import patterns
 import transport
 from enum import IntEnum
 
@@ -183,6 +183,8 @@ class PadGroup(IntEnum):
     F = 105
     G = 106
     H = 107
+
+
 """Notes"""
 
 # --------------------------------------------------------------------------------
@@ -328,7 +330,7 @@ ROOT_NOTE = C5
 # OR YOU CAN CREATE YOUR OWN CHORD SETS,
 # JUST MAKE SURE THERE IS ALWAYS 16 CHORDS IN EACH CHORDSET!
 
-min1 = [  # MINOR 1
+MIN_1 = [  # MINOR 1
     [C4, C5, DS5, G5],  # 1
     [DS4, C5, DS5, G5],
     [F4, C4, F5, GS5],
@@ -347,7 +349,7 @@ min1 = [  # MINOR 1
     [C4, C5, F5, G5],
 ]
 
-min2 = [  # MINOR 2
+MIN_2 = [  # MINOR 2
     [C4, G4, C5, DS5],
     [B3, G4, B4, DS5],
     [AS3, G4, C5, DS5],
@@ -366,7 +368,7 @@ min2 = [  # MINOR 2
     [AS3, D4, D5, G5],
 ]
 
-min3 = [  # SYNTHWAVE
+MIN_3 = [  # SYNTHWAVE
     [C4, G4, C5, D5, G5],
     [C4, G4, AS4, D5, F5],
     [D4, A4, C5, D5, F5],
@@ -385,7 +387,7 @@ min3 = [  # SYNTHWAVE
     [AS3, D4, G5, AS5],
 ]
 
-min4 = [  # EPIC
+MIN_4 = [  # EPIC
     [CS3, D4, G4, AS4],
     [F3, C4, F4, A4],
     [G3, D4, G4, AS4],
@@ -404,7 +406,7 @@ min4 = [  # EPIC
     [C4, C5, DS5, G5],
 ]
 
-maj1 = [
+MAJ_1 = [
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
@@ -423,7 +425,7 @@ maj1 = [
     [C4, C5, E5, G5],
 ]
 
-maj2 = [
+MAJ_2 = [
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
@@ -442,7 +444,7 @@ maj2 = [
     [C4, C5, E5, G5],
 ]
 
-maj3 = [
+MAJ_3 = [
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
@@ -461,7 +463,7 @@ maj3 = [
     [C4, C5, E5, G5],
 ]
 
-maj4 = [
+MAJ_4 = [
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
     [C4, C5, E5, G5],
@@ -481,7 +483,7 @@ maj4 = [
 ]
 
 # THERE MUST BE EXACTLY 8 CHORD SETS!
-CHORD_SETS = [min1, min2, min3, min4, maj1, maj2, maj3, maj4]
+CHORD_SETS = [MIN_1, MIN_2, MIN_3, MIN_4, MAJ_1, MAJ_2, MAJ_3, MAJ_4]
 
 # --------------------------------------------------------------------------------
 # SCALES
@@ -490,19 +492,18 @@ CHORD_SETS = [min1, min2, min3, min4, maj1, maj2, maj3, maj4]
 # JUST MAKE SURE THAT THERE IS EXACTLY 16 NOTES IN EACH GROUP!
 
 # fmt: off
-scale_1 = [C4, D4, GS4, AS4, CS4, E4, A4, F4, B4, FS4, DS4, G4, C5, CS5, D5, G5]  # BATTERY
-scale_2 = [C5, D5, DS5, F5, G5, GS5, AS5, C6, D6, DS6, F6, G6, GS6, AS6, C7, D7]  # MINOR
-scale_3 = [C5, D5, E5, F5, G5, A5, B5, C6, D6, E6, F6, G6, A6, B6, C7, D7]        # MAJOR
-scale_4 = [CS4, C4, FS4, AS7, E4, D4, AS4, GS4, C5, B4, A4, G4, CS5, G5, DS5, F5] # FPC
-scale_5 = [C5, CS5, D5, DS5, E5, F5, FS5, G5, GS5, A5, AS5, B5, C6, CS6, D6, DS6] # CHROMATIC
-scale_6 = [C5, CS5, E5, F5, G5, GS5, B5, C6, CS6, E6, F6, G6, GS6, B6, C7, CS7]	  # ARABIC
-scale_7 = [C5, CS5, D5, DS5, E5, F5, FS5, G5, GS5, A5, AS5, B5, C6, CS6, D6, DS6] # CUSTOM
-scale_8 = [C5, CS5, D5, DS5, E5, F5, FS5, G5, GS5, A5, AS5, B5, C6, CS6, D6, DS6] # CUSTOM
+SCALE_1 = [C4, D4, GS4, AS4, CS4, E4, A4, F4, B4, FS4, DS4, G4, C5, CS5, D5, G5]  # BATTERY
+SCALE_2 = [C5, D5, DS5, F5, G5, GS5, AS5, C6, D6, DS6, F6, G6, GS6, AS6, C7, D7]  # MINOR
+SCALE_3 = [C5, D5, E5, F5, G5, A5, B5, C6, D6, E6, F6, G6, A6, B6, C7, D7]        # MAJOR
+SCALE_4 = [CS4, C4, FS4, AS7, E4, D4, AS4, GS4, C5, B4, A4, G4, CS5, G5, DS5, F5] # FPC
+SCALE_5 = [C5, CS5, D5, DS5, E5, F5, FS5, G5, GS5, A5, AS5, B5, C6, CS6, D6, DS6] # CHROMATIC
+SCALE_6 = [C5, CS5, E5, F5, G5, GS5, B5, C6, CS6, E6, F6, G6, GS6, B6, C7, CS7]	  # ARABIC
+SCALE_7 = [C5, CS5, D5, DS5, E5, F5, FS5, G5, GS5, A5, AS5, B5, C6, CS6, D6, DS6] # CUSTOM
+SCALE_8 = [C5, CS5, D5, DS5, E5, F5, FS5, G5, GS5, A5, AS5, B5, C6, CS6, D6, DS6] # CUSTOM
 # fmt: on
 
 # THERE MUST BE EXACTLY 8 SCALES!
-SCALES = [scale_1, scale_2, scale_3, scale_4, scale_5, scale_6, scale_7, scale_8]
-
+SCALES = [SCALE_1, SCALE_2, SCALE_3, SCALE_4, SCALE_5, SCALE_6, SCALE_7, SCALE_8]
 
 
 class CC(IntEnum):
@@ -592,7 +593,6 @@ class CC(IntEnum):
     # Original Shift button is reserved by Maschine
     # so we assign it to another CC that is not used (FOLLOW)
     SHIFT = 46
-
 
 
 def _get_channel_color(
@@ -1465,7 +1465,6 @@ class Controller:
     def _get_semi_offset(self) -> int:
         """Returns the current semitone offset"""
         return self._semi_offset + SEMITONES_IN_OCTAVE
-
 
 
 controller = Controller()
