@@ -96,18 +96,29 @@ class Controller:
         self._deinit_led_states()
 
     def OnRefresh(self, flags: int) -> None:
+        # `flags` is a bitmask — a single integer where each bit represents a different type of state change,
+        # allowing multiple updates to be signaled at once.
+
         channel_event = flags & midi.HW_ChannelEvent
         pattern_event = flags & midi.HW_Dirty_Patterns
         control_values_event = flags & midi.HW_Dirty_ControlValues
-        mixer_controls_event = flags & midi.HW_Dirty_Mixer_Controls
+        mixer_sel_event = flags & midi.HW_Dirty_Mixer_Sel
         mixer_display_event = flags & midi.HW_Dirty_Mixer_Display
+        mixer_controls_event = flags & midi.HW_Dirty_Mixer_Controls
         leds_event = flags & midi.HW_Dirty_LEDs
 
+        # This `elif` block is needed because `leds_event` is triggered alongside other events
+        # so we only want to run the full leds sync logic when no other events are present.
+        # e.g. `leds_event` is triggered alongside `channel_event`, so we only want to sync leds
+        # that are related to `channel_event` in that case.
         if channel_event and leds_event:
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_pads()
+        elif mixer_sel_event or mixer_display_event or mixer_controls_event:
+            if not self._is_plugin_picker_active:
+                self._sync_mixer_controls()
         elif leds_event:
             self._sync_cc_led_states()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
@@ -123,10 +134,6 @@ class Controller:
             self._sync_touch_strip_value(self._touch_strip_mode)
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
-
-        if mixer_controls_event or mixer_display_event:
-            if not self._is_plugin_picker_active:
-                self._sync_mixer_controls()
 
         # # Debugging output for refresh flags
         # if flags & midi.HW_Dirty_Mixer_Sel:
