@@ -12,16 +12,21 @@
 - `MIXER` toggles **Mixer** visibility
 - `BROWSER` toggles **Browser** visibility
 - `FILE` saves current project (behaves same way as pressing `Ctrl+S`)
-- `SETTINGS` opens **Settings** window
+- `SETTINGS` toggles **Settings** window visibility
 
 ### Edit (Encoder) Section
 
+#### Encoder actions
+
 - `PUSH` behaves same way as pressing `Enter` key
-- `TURN` performes action depending the selected 4D Encoder mode. If JOG (default) mode is selected, performing `next` or `previous` actions.
+- `TURN` performes action depending the selected 4D Encoder mode. If **JOG** (default) mode is selected, performing **next** or **previous** actions.
 - `UP` behaves same way as pressing `Up Arrow` key
 - `RIGHT` behaves same way as pressing `Right Arrow` key
 - `DOWN` behaves same way as pressing `Down Arrow` key
 - `LEFT` behaves same way as pressing `Left Arrow` key
+
+#### Encoder modes
+
 - `VOLUME` sets 4D Encoder mode to **VOLUME** allowing you to adjust **Channel** or **Mixer Track** volume depending on what window is focused
 - `SWING` sets 4D Encoder mode to **SWING**
 - `TEMPO` sets 4D Encoder mode to **TEMPO** allowing you to adjust **Tempo**
@@ -45,12 +50,15 @@ Groups have different meaning depending on what pad mode you are currently using
 
 ### Transport Section
 
-- `RESTART` stops playback and immediately starts it again from the current song position or toggles the **Loop** mode if pressed with `SHIFT`
+- `RESTART` stops playback and immediately starts it again from the current song position
+  - `+ SHIFT` toggles the **Loop** mode if pressed with
 - `ERASE` behaves same way as pressing `Delete` key in Piano Roll
-- `TAP` allows you to tap tempo or turn the metronome on/off if pressed with `SHIFT`
+- `TAP` allows you to tap tempo
+  - `+ SHIFT` turns the metronome on/off
 - `PLAY` starts playback from the current playhead position
 - `GRID` toggles **Snap (Grid)** mode
-- `REC` starts or stops recording or toggles **Precount** mode if pressed with `SHIFT`
+- `REC` starts or stops recording
+  - `+ SHIFT` toggles **Precount** mode if pressed with
 - `STOP` stops playback and resets the playhead
 
 ### Pad Section
@@ -68,7 +76,7 @@ Groups have different meaning depending on what pad mode you are currently using
 - `PATTERN` allows you to select **Pattern** by pressing on one of the highlighted pads associated with it
 - `SOLO` soloes the currently selected **Channel** or **Mixer Track**
 - `MUTE` mutes the currently selected **Channel** or **Mixer Track**.
-By default (whithout `SHIFT`) soloes mixer track, including send tracks that it is routed to, otherwise soloes mixer track, including source tracks routed to it
+  - By default (whithout `SHIFT`) soloes mixer track, including send tracks that it is routed to, otherwise soloes mixer track, including source tracks routed to it
 
 ### Knob Page Section
 
