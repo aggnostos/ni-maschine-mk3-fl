@@ -257,7 +257,8 @@ class Controller:
                         _midi_out_msg_control_change(CC.TOUCH_STRIP, cc_val)
                     case TouchStripMode.PITCH:
                         channels.setChannelPitch(
-                            channels.selectedChannel(), (cc_val / 50) - 1
+                            channels.selectedChannel(),
+                            _percent_to_bipolar(cc_val),
                         )
                     case TouchStripMode.MOD:
                         pass  # TODO
@@ -439,10 +440,12 @@ class Controller:
                 mixer.setTrackVolume(mixer.trackNumber(), cc_val / 125)
 
             case CC.MIX_PAN:
-                mixer.setTrackPan(mixer.trackNumber(), _cc_val_to_pan(cc_val))
+                mixer.setTrackPan(mixer.trackNumber(), _percent_to_bipolar(cc_val))
 
             case CC.MIX_SS:
-                mixer.setTrackStereoSep(mixer.trackNumber(), (cc_val / 50) - 1)
+                mixer.setTrackStereoSep(
+                    mixer.trackNumber(), _percent_to_bipolar(cc_val)
+                )
 
             case CC.CHAN_SEL:
                 if cc_val < channels.channelCount():
@@ -457,7 +460,7 @@ class Controller:
 
             case CC.CHAN_PAN:
                 channels.setChannelPan(
-                    channels.selectedChannel(), _cc_val_to_pan(cc_val)
+                    channels.selectedChannel(), _percent_to_bipolar(cc_val)
                 )
 
             case CC.FIX_VEL:
@@ -638,7 +641,7 @@ class Controller:
         # fmt: off
         _midi_out_msg_control_change(CC.CHAN_SEL, selected_channel)
         _midi_out_msg_control_change(CC.CHAN_VOL, round(channels.getChannelVolume(selected_channel) * 100))
-        _midi_out_msg_control_change(CC.CHAN_PAN, round((channels.getChannelPan(selected_channel) * 50) + 50))
+        _midi_out_msg_control_change(CC.CHAN_PAN, _bipolar_to_percent(channels.getChannelPan(selected_channel)))
         _midi_out_msg_control_change(CC.SOLO, _on_off(channels.isChannelSolo(selected_channel)))
         _midi_out_msg_control_change(CC.MUTE, _on_off(channels.isChannelMuted(selected_channel)))        
         # fmt: on
@@ -652,8 +655,8 @@ class Controller:
         # fmt: off
         _midi_out_msg_control_change(CC.MIX_TRACK, track_number)
         _midi_out_msg_control_change(CC.MIX_VOL, round(mixer.getTrackVolume(track_number) * 125))
-        _midi_out_msg_control_change(CC.MIX_PAN, round((mixer.getTrackPan(track_number) * 50) + 50))
-        _midi_out_msg_control_change(CC.MIX_SS, round((mixer.getTrackStereoSep(track_number) + 1) * 50))
+        _midi_out_msg_control_change(CC.MIX_PAN, _bipolar_to_percent(mixer.getTrackPan(track_number)))
+        _midi_out_msg_control_change(CC.MIX_SS, _bipolar_to_percent(mixer.getTrackStereoSep(track_number)))
         _midi_out_msg_control_change(CC.SOLO, _on_off(mixer.isTrackSolo(track_number)))
         _midi_out_msg_control_change(CC.MUTE, _on_off(mixer.isTrackMuted(track_number)))
         # fmt: on
@@ -720,8 +723,9 @@ class Controller:
             case TouchStripMode.PITCH:
                 _midi_out_msg_control_change(
                     CC.TOUCH_STRIP,
-                    round(channels.getChannelPitch(channels.selectedChannel()) * 50)
-                    + 50,
+                    _bipolar_to_percent(
+                        channels.getChannelPitch(channels.selectedChannel())
+                    ),
                 )
             case TouchStripMode.MOD:
                 pass  # TODO
