@@ -1,5 +1,3 @@
-"""Enums for the Maschine MK3 FL Studio MIDI script"""
-
 from enum import IntEnum
 
 __all__ = [

@@ -1,5 +1,3 @@
-"""Utility functions"""
-
 import midi
 import device
 import plugins

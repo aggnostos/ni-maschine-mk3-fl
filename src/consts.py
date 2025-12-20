@@ -1,5 +1,3 @@
-"""Constants"""
-
 __all__ = [
     "CC_COUNT",
     "NOTES_COUNT",

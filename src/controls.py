@@ -1,5 +1,3 @@
-"""Maschine MK3 Control Change (CC) Numbers"""
-
 from enum import IntEnum
 
 

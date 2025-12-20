@@ -1,5 +1,3 @@
-"""Notes"""
-
 __all__ = [
     "ROOT_NOTE",
     "CHORD_SETS",

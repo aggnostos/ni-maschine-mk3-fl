@@ -1,5 +1,3 @@
-"""NI Maschine MK3 Controller abstract class"""
-
 import ui
 import midi
 import mixer
