@@ -120,8 +120,7 @@ class Controller:
                 self._sync_channel_rack_pads()
 
         if control_values_event:
-            if self._touch_strip_mode != TouchStripMode.PITCH:
-                self._sync_touch_strip_value(self._touch_strip_mode)
+            self._sync_touch_strip_value(self._touch_strip_mode)
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
 
