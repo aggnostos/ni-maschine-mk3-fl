@@ -67,6 +67,7 @@ class CC(IntEnum):
     STEP_MODE = 83
 
     PATTERN = 86
+    SELECT = 90
     SOLO = 91
     MUTE = 92
 

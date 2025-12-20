@@ -74,6 +74,7 @@ Groups have different meaning depending on what pad mode you are currently using
 #### Other
 
 - `PATTERN` allows you to select **Pattern** by pressing on one of the highlighted pads associated with it
+- `SELECT` allows you to select **Channel** by pressing on one of the highlighted pads associated with it
 - `SOLO` soloes the currently selected **Channel** or **Mixer Track**
 - `MUTE` mutes the currently selected **Channel** or **Mixer Track**.
   - By default (whithout `SHIFT`) soloes mixer track, including send tracks that it is routed to, otherwise soloes mixer track, including source tracks routed to it

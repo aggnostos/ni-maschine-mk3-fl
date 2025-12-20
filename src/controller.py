@@ -67,6 +67,9 @@ class Controller:
     _is_selecting_pattern: bool
     """Indicates whether the user is currently selecting a pattern"""
 
+    _is_selecting_channel: bool
+    """Indicates whether the user is currently selecting a channel"""
+
     def __init__(self):
         self._pad_mode = PadMode.OMNI
         self._pad_mode_color = PadModeColor.OMNI
@@ -83,6 +86,7 @@ class Controller:
         self._shifting = False
         self._is_plugin_picker_active = False
         self._is_selecting_pattern = False
+        self._is_selecting_channel = False
 
     def on_init(self) -> None:
         self._init_led_states()
@@ -386,14 +390,17 @@ class Controller:
                 for p in range(16):
                     _midi_out_msg_note_on(p, ControllerColor.BLACK_0)
 
+                self._is_selecting_pattern = bool(cc_val)
+
                 if cc_val:
-                    self._is_selecting_pattern = True
                     for pattern in range(patterns.patternCount()):
                         _midi_out_msg_note_on(pattern, ControllerColor.ORANGE_0)
                 else:
-                    self._is_selecting_pattern = False
                     if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
                         self._sync_channel_rack_pads()
+
+            case CC.SELECT:
+                self._is_selecting_channel = bool(cc_val)
 
             case CC.SOLO:
                 if ui.getFocused(midi.widChannelRack):
@@ -497,6 +504,11 @@ class Controller:
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
                 msg.handled = True
+            if self._is_selecting_channel:
+                chan_idx = note_num + self._channel_page * 16
+                if chan_idx < channels.channelCount():
+                    channels.selectOneChannel(chan_idx)
+                msg.handled = True
 
         if msg.handled:
             return
@@ -513,7 +525,6 @@ class Controller:
                         real_note,
                         self._fixed_velocity if self._is_fixed_velocity else note_vel,
                     )
-                    channels.selectOneChannel(chan_idx)
                 else:
                     channels.midiNoteOn(chan_idx, real_note, 0)
 
