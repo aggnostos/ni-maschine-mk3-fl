@@ -13,7 +13,7 @@ def OnInit() -> None:
     Note that the script may be kept in memory after being de-initialized with OnDeInit(),
     so this function may be called more than once during the lifetime of this Python script.
     """
-    controller.OnInit()
+    controller.on_init()
 
 
 def OnDeInit() -> None:
@@ -22,7 +22,7 @@ def OnDeInit() -> None:
 
     This function should be used to shut down the attached device
     """
-    controller.OnDeInit()
+    controller.on_de_init()
 
 
 def OnRefresh(flags: int) -> None:
@@ -35,7 +35,7 @@ def OnRefresh(flags: int) -> None:
     Args:
         flags (int): flags to represent the changes in FL Studio's state.
     """
-    controller.OnRefresh(flags)
+    controller.on_refresh(flags)
 
 
 def OnControlChange(msg: FlMidiMsg) -> None:
@@ -45,7 +45,7 @@ def OnControlChange(msg: FlMidiMsg) -> None:
     Args:
         msg (fl_classes.FlMidiMsg): incoming control change MIDI message.
     """
-    controller.OnControlChange(msg)
+    controller.on_control_change(msg)
 
 
 def OnNoteOn(msg: FlMidiMsg) -> None:
@@ -55,4 +55,4 @@ def OnNoteOn(msg: FlMidiMsg) -> None:
     Args:
         msg (fl_classes.FlMidiMsg): incoming note on MIDI message.
     """
-    controller.OnNoteOn(msg)
+    controller.on_note_on(msg)

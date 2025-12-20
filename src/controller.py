@@ -84,7 +84,7 @@ class Controller:
         self._is_plugin_picker_active = False
         self._is_selecting_pattern = False
 
-    def OnInit(self) -> None:
+    def on_init(self) -> None:
         self._init_led_states()
         self._sync_cc_led_states()
         self._sync_channel_rack_pads()
@@ -92,10 +92,10 @@ class Controller:
         self._sync_mixer_controls()
         self._sync_song_position()
 
-    def OnDeInit(self) -> None:
+    def on_de_init(self) -> None:
         self._deinit_led_states()
 
-    def OnRefresh(self, flags: int) -> None:
+    def on_refresh(self, flags: int) -> None:
         # `flags` is a bitmask — a single integer where each bit represents a different type of state change,
         # allowing multiple updates to be signaled at once.
 
@@ -136,35 +136,35 @@ class Controller:
             if not self._is_plugin_picker_active:
                 self._sync_channel_rack_controls()
 
-        # Debugging output for refresh flags
-        if flags & midi.HW_Dirty_Mixer_Sel:
-            print("midi.HW_Dirty_Mixer_Sel")
-        if flags & midi.HW_Dirty_Mixer_Display:
-            print("midi.HW_Dirty_Mixer_Display")
-        if flags & midi.HW_Dirty_Mixer_Controls:
-            print("midi.HW_Dirty_Mixer_Controls")
-        if flags & midi.HW_Dirty_FocusedWindow:
-            print("midi.HW_Dirty_FocusedWindow")
-        if flags & midi.HW_Dirty_Performance:
-            print("midi.HW_Dirty_Performance")
-        if flags & midi.HW_Dirty_LEDs:
-            print("midi.HW_Dirty_LEDs")
-        if flags & midi.HW_Dirty_Patterns:
-            print("midi.HW_Dirty_Patterns")
-        if flags & midi.HW_Dirty_Tracks:
-            print("midi.HW_Dirty_Tracks")
-        if flags & midi.HW_Dirty_ControlValues:
-            print("midi.HW_Dirty_ControlValues")
-        if flags & midi.HW_Dirty_Colors:
-            print("midi.HW_Dirty_Colors")
-        if flags & midi.HW_Dirty_Names:
-            print("midi.HW_Dirty_Names")
-        if flags & midi.HW_Dirty_ChannelRackGroup:
-            print("midi.HW_Dirty_ChannelRackGroup")
-        if flags & midi.HW_ChannelEvent:
-            print("midi.HW_ChannelEvent")
+        # # Debugging output for refresh flags
+        # if flags & midi.HW_Dirty_Mixer_Sel:
+        #     print("midi.HW_Dirty_Mixer_Sel")
+        # if flags & midi.HW_Dirty_Mixer_Display:
+        #     print("midi.HW_Dirty_Mixer_Display")
+        # if flags & midi.HW_Dirty_Mixer_Controls:
+        #     print("midi.HW_Dirty_Mixer_Controls")
+        # if flags & midi.HW_Dirty_FocusedWindow:
+        #     print("midi.HW_Dirty_FocusedWindow")
+        # if flags & midi.HW_Dirty_Performance:
+        #     print("midi.HW_Dirty_Performance")
+        # if flags & midi.HW_Dirty_LEDs:
+        #     print("midi.HW_Dirty_LEDs")
+        # if flags & midi.HW_Dirty_Patterns:
+        #     print("midi.HW_Dirty_Patterns")
+        # if flags & midi.HW_Dirty_Tracks:
+        #     print("midi.HW_Dirty_Tracks")
+        # if flags & midi.HW_Dirty_ControlValues:
+        #     print("midi.HW_Dirty_ControlValues")
+        # if flags & midi.HW_Dirty_Colors:
+        #     print("midi.HW_Dirty_Colors")
+        # if flags & midi.HW_Dirty_Names:
+        #     print("midi.HW_Dirty_Names")
+        # if flags & midi.HW_Dirty_ChannelRackGroup:
+        #     print("midi.HW_Dirty_ChannelRackGroup")
+        # if flags & midi.HW_ChannelEvent:
+        #     print("midi.HW_ChannelEvent")
 
-    def OnControlChange(self, msg: FlMidiMsg) -> None:
+    def on_control_change(self, msg: FlMidiMsg) -> None:
         cc_num, cc_val = msg.controlNum, msg.controlVal
 
         match cc_num:
@@ -483,7 +483,7 @@ class Controller:
 
         msg.handled = True
 
-    def OnNoteOn(self, msg: FlMidiMsg) -> None:
+    def on_note_on(self, msg: FlMidiMsg) -> None:
         note_num, note_vel = msg.note, msg.velocity
         # velocity == 0 means note off
 
