@@ -75,7 +75,7 @@ class CommonVisitor(ast.NodeVisitor):
         self.imports.body.append(node)
 
 
-class ImportsTransformer(ast.NodeTransformer):
+class ImportsRemover(ast.NodeTransformer):
     def __init__(self) -> None:
         self._seen: Set[Tuple[str, ...]] = set()
         self.result: ast.Module = ast.Module(body=[], type_ignores=[])
@@ -242,7 +242,7 @@ def main() -> None:
         out.write(f"# name={MIDI_SCRIPT_NAME}\n\n")
         out.write(HEADER + "\n\n")
 
-        imports = ImportsTransformer().visit(common_visitor.imports)
+        imports = ImportsRemover().visit(common_visitor.imports)
         ast.fix_missing_locations(imports)
         out.write(ast.unparse(imports) + "\n\n\n")
 
