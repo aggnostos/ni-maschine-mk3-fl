@@ -13,30 +13,31 @@ logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
 
 SRC = Path("src")
 
-# Output directory. Modify if you want to change the output location.
+# Modify if you want to change the output location.
 # For example directly to FL Studio's MIDI scripts folder.
 DIST = Path("dist")
 DIST.mkdir(exist_ok=True)
-OUT_FILE = "device_Maschine_MK3.py"
-OUT_PATH: Path = DIST / OUT_FILE
-# OUT_PATH: Path = Path(
-#     "/Users/aggnostos/Documents/Image-Line/FL Studio/Settings/Hardware/NI Machine MK3/device_Maschine_MK3.py"
-# )
 
-MAIN_PATH: Path = SRC / "main.py"
+OUT_FILE = "device_Maschine_MK3.py"
+
+OUT_PATH: Path = DIST / OUT_FILE
 
 # List of local packages (folders with __init__.py) to include
 PACKAGES: List[str] = []
 
-# List of local modules (single .py files) to include
+# List of local modules (single .py files) to include.
+# Order matters here for correct import resolution.
+# See more details in the develoer guide.
 MODULES: List[str] = [
+    "controls",
     "consts",
     "enums",
     "notes",
-    "controls",
     "utilities",
     "controller",
+    "main",
 ]
+
 
 SCRIPT_NAME: str = "NI Maschine MK3"
 
@@ -286,8 +287,6 @@ def main() -> None:
             logger.warning(f"Module {mod}.py not found, skipping.")
             continue
         _process_module(mod_path)
-
-    _process_module(MAIN_PATH)
 
     with open(OUT_PATH, "w", encoding="utf-8") as out:
         out.write(f"# name={SCRIPT_NAME}\n\n")
