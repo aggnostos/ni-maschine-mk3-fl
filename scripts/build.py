@@ -180,6 +180,36 @@ class DocstringRemover(ast.NodeTransformer):
         return node
 
 
+class ConstReplacer(ast.NodeTransformer):
+    def __init__(self, constants: Dict[str, ast.AST]):
+        self.constants = constants
+
+    def visit_Name(self, node: ast.Name):
+        if isinstance(node.ctx, ast.Load) and node.id in self.constants:
+            return ast.copy_location(
+                self.constants[node.id],
+                node,
+            )
+        return node
+
+    def visit_Assign(self, node: ast.Assign):
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and target.id in self.constants:
+            return None
+        return node
+
+
+class ConstRemover(ast.NodeTransformer):
+    def __init__(self, constants: Dict[str, ast.AST]):
+        self.const_names = set(constants.keys())
+
+    def visit_Assign(self, node: ast.Assign):
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and target.id in self.const_names:
+            return None
+        return node
+
+
 def main() -> None:
     logger.info("Building MIDI script...")
 
@@ -219,6 +249,8 @@ def main() -> None:
         body = AllRemover().visit(common_visitor.body)
         body = FlMidiMsgRemover().visit(body)
         body = DocstringRemover().visit(body)
+        body = ConstReplacer(common_visitor.constants).visit(body)
+        body = ConstRemover(common_visitor.constants).visit(body)
 
         ast.fix_missing_locations(body)
 
