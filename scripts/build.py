@@ -246,14 +246,15 @@ def main() -> None:
         ast.fix_missing_locations(imports)
         out.write(ast.unparse(imports) + "\n\n\n")
 
-        body = AllRemover().visit(common_visitor.body)
+        body = common_visitor.body
+        constants = common_visitor.constants
+
+        body = AllRemover().visit(body)
         body = FlMidiMsgRemover().visit(body)
         body = DocstringRemover().visit(body)
-        body = ConstReplacer(common_visitor.constants).visit(body)
-        body = ConstRemover(common_visitor.constants).visit(body)
-
+        body = ConstReplacer(constants).visit(body)
+        body = ConstRemover(constants).visit(body)
         ast.fix_missing_locations(body)
-
         out.write(ast.unparse(body))
 
     black.format_file_in_place(
