@@ -198,7 +198,7 @@ class DocstringRemover(ast.NodeTransformer):
         return node
 
 
-class ConstReplacer(ast.NodeTransformer):
+class ConstInliner(ast.NodeTransformer):
     def __init__(self, constants: Dict[str, ast.AST]):
         self.constants = constants
 
@@ -219,7 +219,7 @@ class ConstRemover(ast.NodeTransformer):
         return node
 
 
-class EnumReplacer(ast.NodeTransformer):
+class EnumInliner(ast.NodeTransformer):
     def __init__(self, enums: Dict[str, Dict[str, ast.AST]]):
         self.enums = enums
 
@@ -271,13 +271,12 @@ def main() -> None:
         body = common_visitor.body
         constants = common_visitor.constants
         enums = common_visitor.enums
-
         body = AllRemover().visit(body)
         body = FlMidiMsgRemover().visit(body)
         body = DocstringRemover().visit(body)
-        body = ConstReplacer(constants).visit(body)
+        body = ConstInliner(constants).visit(body)
         body = ConstRemover(constants).visit(body)
-        body = EnumReplacer(enums).visit(body)
+        body = EnumInliner(enums).visit(body)
         ast.fix_missing_locations(body)
         out.write(ast.unparse(body))
 
