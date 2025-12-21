@@ -46,14 +46,14 @@ Before installing the script, make sure you have the following:
 2. Download the latest release archive named `ni-maschine-mk3-fl-<version>.zip`
 3. Extract the files to a temporary location
 
-### 2. Load the Maschine MK3 configuration in NI Controller Editor
+### 2. Load the Maschine MK3 template in NI Controller Editor
 
 1. Open **NI Controller Editor**
 2. Connect your **Maschine MK3**
-3. In the menu, select: **"File" → "Open Configuration..."**
-4. Open the file `FL Studio.ncc`
-5. After loading, select the configuration named **"FL Studio"**
-6. Make sure this configuration is **active** on the controller
+3. In the menu, select: **"File" → "Open Template..."**
+4. Open the `FL Studio.ncm3`
+5. After loading, select the template named **"FL Studio"**
+6. Make sure this template is **active** on the controller
 
 ### 3. Install the MIDI script in FL Studio
 

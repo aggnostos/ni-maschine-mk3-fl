@@ -53,4 +53,4 @@ The project is intentionally structured as a reference-quality implementation ra
 
 `controller_editor/`:
 
-- `FL_Studio.ncc` configuration file for **Controller Editor**
+- `FL_Studio.ncm3` template file for **Controller Editor**
