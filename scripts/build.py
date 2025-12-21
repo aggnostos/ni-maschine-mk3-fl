@@ -210,7 +210,6 @@ class DocstringRemover(ast.NodeTransformer):
 class ConstCollector(ast.NodeVisitor):
     def __init__(self):
         self.consts: Dict[str, ast.AST] = {}
-
         self._is_in_class = False
 
     def visit_Assign(self, node: ast.Assign) -> None:
@@ -250,6 +249,32 @@ class ConstRemover(ast.NodeTransformer):
         return node
 
 
+class EnumCollector(ast.NodeVisitor):
+    def __init__(self):
+        self.enums: Dict[str, Dict[str, ast.AST]] = {}
+        self._curr_enum: str | None = None
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        is_in_enum = any(
+            base
+            for base in node.bases
+            if isinstance(base, ast.Name) and base.id in ("Enum", "IntEnum")
+        )
+
+        if is_in_enum:
+            self._curr_enum = node.name
+            self.enums[self._curr_enum] = {}
+        else:
+            self._curr_enum = None
+
+        self.generic_visit(node)
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and self._curr_enum is not None:
+            self.enums[self._curr_enum][target.id] = node.value
+
+
 class EnumInliner(ast.NodeTransformer):
     def __init__(self, enums: Dict[str, Dict[str, ast.AST]]):
         self.enums = enums
@@ -269,6 +294,7 @@ def main() -> None:
     common_visitor = CommonVisitor()
     imports_collector = ImportsCollector()
     const_collector = ConstCollector()
+    enum_collector = EnumCollector()
 
     def _process_module(mod_path: Path) -> None:
         source: str = mod_path.read_text(encoding="utf-8")
@@ -277,6 +303,7 @@ def main() -> None:
         common_visitor.visit(tree)
         imports_collector.visit(tree)
         const_collector.visit(tree)
+        enum_collector.visit(tree)
 
     for pkg in PACKAGES:
         pkg_path: Path = SRC / pkg
@@ -305,14 +332,14 @@ def main() -> None:
         out.write(ast.unparse(imports) + "\n\n\n")
 
         body = common_visitor.body
-        constants = const_collector.consts
-        enums = common_visitor.enums
+        consts = const_collector.consts
+        enums = enum_collector.enums
 
         body = AllRemover().visit(body)
         body = FlMidiMsgRemover().visit(body)
         body = DocstringRemover().visit(body)
-        body = ConstInliner(constants).visit(body)
-        body = ConstRemover(constants).visit(body)
+        body = ConstInliner(consts).visit(body)
+        body = ConstRemover(consts).visit(body)
         body = EnumInliner(enums).visit(body)
         ast.fix_missing_locations(body)
         out.write(ast.unparse(body))
