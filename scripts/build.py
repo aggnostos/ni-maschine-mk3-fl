@@ -19,6 +19,9 @@ DIST = Path("dist")
 DIST.mkdir(exist_ok=True)
 OUT_FILE = "device_Maschine_MK3.py"
 OUT_PATH: Path = DIST / OUT_FILE
+# OUT_PATH: Path = Path(
+#     "/Users/aggnostos/Documents/Image-Line/FL Studio/Settings/Hardware/NI Machine MK3/device_Maschine_MK3.py"
+# )
 
 MAIN_PATH: Path = SRC / "main.py"
 
@@ -90,6 +93,11 @@ class CommonVisitor(ast.NodeVisitor):
                 self.constants[target.id] = node.value
             elif self._curr_enum is not None:
                 self.enums[self._curr_enum][target.id] = node.value
+
+
+class ImportsCollector(ast.NodeVisitor):
+    def __init__(self):
+        self.imports = ast.Module(body=[], type_ignores=[])
 
     def visit_Import(self, node: ast.Import) -> None:
         self.imports.body.append(node)
@@ -237,11 +245,14 @@ def main() -> None:
     logger.info("Building MIDI script...")
 
     common_visitor = CommonVisitor()
+    imports_collector = ImportsCollector()
 
     def _process_module(mod_path: Path) -> None:
         source: str = mod_path.read_text(encoding="utf-8")
         tree = ast.parse(source, mod_path.name)
+
         common_visitor.visit(tree)
+        imports_collector.visit(tree)
 
     for pkg in PACKAGES:
         pkg_path: Path = SRC / pkg
@@ -265,7 +276,7 @@ def main() -> None:
         out.write(f"# name={SCRIPT_NAME}\n\n")
         out.write(HEADER + "\n\n")
 
-        imports = ImportsRemover().visit(common_visitor.imports)
+        imports = ImportsRemover().visit(imports_collector.imports)
         ast.fix_missing_locations(imports)
         out.write(ast.unparse(imports) + "\n\n\n")
 
