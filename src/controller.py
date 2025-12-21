@@ -134,11 +134,17 @@ class Controller:
             if not self._is_selecting_pattern:
                 self._sync_channel_pads()
 
+        # for some reason turning record on/off triggers mixer_controls_event alongside leds_event,
+        # so we need to handle it separately
+        if mixer_controls_event and leds_event:
+            _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
+
         if pattern_event:
             if self._is_selecting_pattern:
                 self._sync_patterns()
             if not self._is_selecting_pattern:
                 self._sync_channel_pads()
+
         if control_values_event:
             if self._touch_strip_mode == TouchStripMode.PITCH:
                 self._sync_touch_strip_value(self._touch_strip_mode)
