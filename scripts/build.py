@@ -202,7 +202,7 @@ class ConstInliner(ast.NodeTransformer):
     def __init__(self, constants: Dict[str, ast.AST]):
         self.constants = constants
 
-    def visit_Name(self, node: ast.Name):
+    def visit_Name(self, node: ast.Name) -> ast.AST:
         if isinstance(node.ctx, ast.Load) and node.id in self.constants:
             return self.visit(self.constants[node.id])
         return node
@@ -212,7 +212,7 @@ class ConstRemover(ast.NodeTransformer):
     def __init__(self, constants: Dict[str, ast.AST]):
         self.const_names = set(constants.keys())
 
-    def visit_Assign(self, node: ast.Assign):
+    def visit_Assign(self, node: ast.Assign) -> Optional[ast.Assign]:
         target = node.targets[0]
         if isinstance(target, ast.Name) and target.id in self.const_names:
             return None
@@ -223,7 +223,7 @@ class EnumInliner(ast.NodeTransformer):
     def __init__(self, enums: Dict[str, Dict[str, ast.AST]]):
         self.enums = enums
 
-    def visit_Attribute(self, node: ast.Attribute):
+    def visit_Attribute(self, node: ast.Attribute) -> ast.AST:
         if isinstance(node.value, ast.Name):
             enum_name = node.value.id
             member_name = node.attr
