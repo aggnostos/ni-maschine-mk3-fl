@@ -50,51 +50,6 @@ HEADER: str = """
 """
 
 
-class CommonVisitor(ast.NodeVisitor):
-    def __init__(self) -> None:
-        self.imports: ast.Module = ast.Module(body=[], type_ignores=[])
-        self.body = ast.Module(body=[], type_ignores=[])
-        self.constants: Dict[str, ast.AST] = {}
-        self.enums: Dict[str, Dict[str, ast.AST]] = {}
-
-        self._is_in_class = False
-        self._curr_enum: str | None = None
-
-    def visit_Module(self, node: ast.Module) -> None:
-        self.generic_visit(node)
-        for stmt in node.body:
-            if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
-                self.body.body.append(stmt)
-
-    def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        old_in_class = self._is_in_class
-        self._is_in_class = True
-
-        is_in_enum = any(
-            base
-            for base in node.bases
-            if isinstance(base, ast.Name) and base.id in ("Enum", "IntEnum")
-        )
-
-        if is_in_enum:
-            self._curr_enum = node.name
-            self.enums[self._curr_enum] = {}
-        else:
-            self._curr_enum = None
-
-        self.generic_visit(node)
-
-        self._is_in_class = old_in_class
-
-    def visit_Assign(self, node: ast.Assign) -> None:
-        target = node.targets[0]
-        if isinstance(target, ast.Name) and target.id.isupper():
-            if not self._is_in_class:
-                self.constants[target.id] = node.value
-            elif self._curr_enum is not None:
-                self.enums[self._curr_enum][target.id] = node.value
-
-
 class ImportsCollector(ast.NodeVisitor):
     def __init__(self):
         self.imports = ast.Module(body=[], type_ignores=[])
@@ -155,6 +110,17 @@ class ImportsRemover(ast.NodeTransformer):
                 *tuple(sorted(alias.name for alias in node.names)),
             )
         return ()
+
+
+class BodyCollector(ast.NodeVisitor):
+    def __init__(self) -> None:
+        self.body = ast.Module(body=[], type_ignores=[])
+
+    def visit_Module(self, node: ast.Module) -> None:
+        self.generic_visit(node)
+        for stmt in node.body:
+            if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
+                self.body.body.append(stmt)
 
 
 class AllRemover(ast.NodeTransformer):
@@ -291,16 +257,16 @@ class EnumInliner(ast.NodeTransformer):
 def main() -> None:
     logger.info("Building MIDI script...")
 
-    common_visitor = CommonVisitor()
+    body_collector = BodyCollector()
     imports_collector = ImportsCollector()
     const_collector = ConstCollector()
     enum_collector = EnumCollector()
 
     def _process_module(mod_path: Path) -> None:
-        source: str = mod_path.read_text(encoding="utf-8")
+        source = mod_path.read_text(encoding="utf-8")
         tree = ast.parse(source, mod_path.name)
 
-        common_visitor.visit(tree)
+        body_collector.visit(tree)
         imports_collector.visit(tree)
         const_collector.visit(tree)
         enum_collector.visit(tree)
@@ -331,7 +297,7 @@ def main() -> None:
         ast.fix_missing_locations(imports)
         out.write(ast.unparse(imports) + "\n\n\n")
 
-        body = common_visitor.body
+        body = body_collector.body
         consts = const_collector.consts
         enums = enum_collector.enums
 
