@@ -391,7 +391,16 @@ class Controller:
                                 + 0.03125 * multiplier,
                             )
                     case 2:
-                        pass
+                        swing = general.processRECEvent(
+                            midi.REC_MainShuffle, 0, midi.REC_GetValue
+                        )
+                        target_swing = swing + 1 * multiplier
+                        if 0 <= target_swing <= 128:
+                            general.processRECEvent(
+                                midi.REC_MainShuffle,
+                                target_swing,
+                                midi.REC_UpdateControl | midi.REC_Control,
+                            )
                     case 3:
                         transport.globalTransport(midi.FPT_TempoJog, 10 * multiplier)
             case 30:
