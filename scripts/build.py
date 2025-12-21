@@ -21,10 +21,6 @@ OUT_FILE = "device_Maschine_MK3.py"
 
 OUT_PATH: Path = DIST / OUT_FILE
 
-# OUT_PATH: Path = Path(
-#     "/Users/aggnostos/Documents/Image-Line/FL Studio/Settings/Hardware/NI Machine MK3/device_Maschine_MK3.py"
-# )
-
 # List of local packages (folders with __init__.py) to include
 PACKAGES: List[str] = []
 
@@ -55,24 +51,31 @@ class CommonVisitor(ast.NodeVisitor):
         self.imports: ast.Module = ast.Module(body=[], type_ignores=[])
         self.body = ast.Module(body=[], type_ignores=[])
         self.constants: Dict[str, ast.AST] = {}
-
-    def visit_Module(self, node: ast.Module) -> None:
-        self.generic_visit(node)
-
-        for stmt in node.body:
-            if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
-                self.body.body.append(stmt)
-
-            if isinstance(stmt, ast.Assign):
-                target = stmt.targets[0]
-                if isinstance(target, ast.Name) and target.id.isupper():
-                    self.constants[target.id] = stmt.value
+        self.is_in_class = False
 
     def visit_Import(self, node: ast.Import) -> None:
         self.imports.body.append(node)
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         self.imports.body.append(node)
+
+    def visit_Module(self, node: ast.Module) -> None:
+        self.generic_visit(node)
+        for stmt in node.body:
+            if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
+                self.body.body.append(stmt)
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        old_in_class = self.is_in_class
+        self.is_in_class = True
+        self.generic_visit(node)
+        self.is_in_class = old_in_class
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        target = node.targets[0]
+        if isinstance(target, ast.Name) and target.id.isupper():
+            if not self.is_in_class:
+                self.constants[target.id] = node.value
 
 
 class ImportsRemover(ast.NodeTransformer):
@@ -186,16 +189,7 @@ class ConstReplacer(ast.NodeTransformer):
 
     def visit_Name(self, node: ast.Name):
         if isinstance(node.ctx, ast.Load) and node.id in self.constants:
-            return ast.copy_location(
-                self.constants[node.id],
-                node,
-            )
-        return node
-
-    def visit_Assign(self, node: ast.Assign):
-        target = node.targets[0]
-        if isinstance(target, ast.Name) and target.id in self.constants:
-            return None
+            return self.visit(self.constants[node.id])
         return node
 
 
