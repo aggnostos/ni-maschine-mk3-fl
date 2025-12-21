@@ -244,7 +244,16 @@ class Controller:
                             )
 
                     case FourDEncoderMode.SWING:
-                        pass  # TODO implement swing adjustment
+                        swing = general.processRECEvent(
+                            midi.REC_MainShuffle, 0, midi.REC_GetValue
+                        )
+                        target_swing = swing + (SWING_STEP * multiplier)
+                        if 0 <= target_swing <= 128:
+                            general.processRECEvent(
+                                midi.REC_MainShuffle,
+                                target_swing,
+                                midi.REC_UpdateControl | midi.REC_Control,
+                            )
 
                     case FourDEncoderMode.TEMPO:
                         transport.globalTransport(midi.FPT_TempoJog, 10 * multiplier)
@@ -292,7 +301,6 @@ class Controller:
                 self._sync_touch_strip_value(self._touch_strip_mode)
 
             # -------- GROUP SECTION -------- #
-
             case (
                 CC.GROUP_A
                 | CC.GROUP_B

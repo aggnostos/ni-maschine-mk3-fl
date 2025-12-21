@@ -28,7 +28,7 @@
 #### Encoder modes
 
 - `VOLUME` sets 4D Encoder mode to **VOLUME** allowing you to adjust **Channel** or **Mixer Track** volume depending on what window is focused
-- `SWING` sets 4D Encoder mode to **SWING**
+- `SWING` sets 4D Encoder mode to **SWING** allowing you to adjust FL Studio's main swing located in the channel rack
 - `TEMPO` sets 4D Encoder mode to **TEMPO** allowing you to adjust **Tempo**
 
 ### Performance (Touch Strip) Section
