@@ -1,7 +1,7 @@
 [project]
 name = "ni-maschine-mk3-fl"
 version = "1.0.0"
-description = ""
+description = "NI Maschine MK3 FL Studio MIDI Script"
 authors = [
     {name = "Mark Rybin",email = "aggnostos4@gmail.com"}
 ]
