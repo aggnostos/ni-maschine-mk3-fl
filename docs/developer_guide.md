@@ -21,9 +21,17 @@ The project is intentionally structured as a reference-quality implementation ra
 
 ## Build
 
-```sh
- poetry run python scripts/build.py
-```
+- MacOS:
+
+ ```sh
+ ./build
+ ```
+
+- Win:
+
+ ```powershell
+ ./build.cmd
+ ```
 
 ## Format
 
@@ -43,14 +51,14 @@ The project is intentionally structured as a reference-quality implementation ra
 - `notes.py` defines MIDI note constants
 - `utilities.py` helper functions used by the script
 
-`scripts/`:
-
-- `build.py` is an utility script used for building all the source files into one inside the `dist/` folder (used for building a release version)
-
 `dist/`:
 
-- `device_Maschine_MK3.py` file produced by `build.py` script
+- `device_Maschine_MK3.py` file produced by `build` script
 
 `controller_editor/`:
 
 - `FL_Studio.ncm3` template file for **Controller Editor**
+
+`scripts/`:
+
+- `build` is an utility script used for building all the source files into one inside the `dist/` folder (used for building a release version)
