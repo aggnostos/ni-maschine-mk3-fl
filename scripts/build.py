@@ -53,8 +53,9 @@ class CommonVisitor(ast.NodeVisitor):
         self.body = ast.Module(body=[], type_ignores=[])
         self.constants: Dict[str, ast.AST] = {}
         self.enums: Dict[str, Dict[str, ast.AST]] = {}
-        self.curr_enum: str | None = None
-        self.is_in_class = False
+
+        self._is_in_class = False
+        self._curr_enum: str | None = None
 
     def visit_Module(self, node: ast.Module) -> None:
         self.generic_visit(node)
@@ -63,8 +64,8 @@ class CommonVisitor(ast.NodeVisitor):
                 self.body.body.append(stmt)
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
-        old_in_class = self.is_in_class
-        self.is_in_class = True
+        old_in_class = self._is_in_class
+        self._is_in_class = True
 
         is_in_enum = any(
             base
@@ -73,22 +74,22 @@ class CommonVisitor(ast.NodeVisitor):
         )
 
         if is_in_enum:
-            self.curr_enum = node.name
-            self.enums[self.curr_enum] = {}
+            self._curr_enum = node.name
+            self.enums[self._curr_enum] = {}
         else:
-            self.curr_enum = None
+            self._curr_enum = None
 
         self.generic_visit(node)
 
-        self.is_in_class = old_in_class
+        self._is_in_class = old_in_class
 
     def visit_Assign(self, node: ast.Assign) -> None:
         target = node.targets[0]
         if isinstance(target, ast.Name) and target.id.isupper():
-            if not self.is_in_class:
+            if not self._is_in_class:
                 self.constants[target.id] = node.value
-            elif self.curr_enum is not None:
-                self.enums[self.curr_enum][target.id] = node.value
+            elif self._curr_enum is not None:
+                self.enums[self._curr_enum][target.id] = node.value
 
     def visit_Import(self, node: ast.Import) -> None:
         self.imports.body.append(node)
