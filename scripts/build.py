@@ -51,13 +51,9 @@ class CommonVisitor(ast.NodeVisitor):
         self.imports: ast.Module = ast.Module(body=[], type_ignores=[])
         self.body = ast.Module(body=[], type_ignores=[])
         self.constants: Dict[str, ast.AST] = {}
+        self.enums: Dict[str, Dict[str, ast.AST]] = {}
+        self.curr_enum: str | None = None
         self.is_in_class = False
-
-    def visit_Import(self, node: ast.Import) -> None:
-        self.imports.body.append(node)
-
-    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
-        self.imports.body.append(node)
 
     def visit_Module(self, node: ast.Module) -> None:
         self.generic_visit(node)
@@ -68,7 +64,21 @@ class CommonVisitor(ast.NodeVisitor):
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
         old_in_class = self.is_in_class
         self.is_in_class = True
+
+        is_in_enum = any(
+            base
+            for base in node.bases
+            if isinstance(base, ast.Name) and base.id in ("Enum", "IntEnum")
+        )
+
+        if is_in_enum:
+            self.curr_enum = node.name
+            self.enums[self.curr_enum] = {}
+        else:
+            self.curr_enum = None
+
         self.generic_visit(node)
+
         self.is_in_class = old_in_class
 
     def visit_Assign(self, node: ast.Assign) -> None:
@@ -76,6 +86,14 @@ class CommonVisitor(ast.NodeVisitor):
         if isinstance(target, ast.Name) and target.id.isupper():
             if not self.is_in_class:
                 self.constants[target.id] = node.value
+            elif self.curr_enum is not None:
+                self.enums[self.curr_enum][target.id] = node.value
+
+    def visit_Import(self, node: ast.Import) -> None:
+        self.imports.body.append(node)
+
+    def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
+        self.imports.body.append(node)
 
 
 class ImportsRemover(ast.NodeTransformer):
@@ -204,6 +222,19 @@ class ConstRemover(ast.NodeTransformer):
         return node
 
 
+class EnumReplacer(ast.NodeTransformer):
+    def __init__(self, enums: Dict[str, Dict[str, ast.AST]]):
+        self.enums = enums
+
+    def visit_Attribute(self, node: ast.Attribute):
+        if isinstance(node.value, ast.Name):
+            enum_name = node.value.id
+            member_name = node.attr
+            if enum_name in self.enums and member_name in self.enums[enum_name]:
+                return self.visit(self.enums[enum_name][member_name])
+        return node
+
+
 def main() -> None:
     logger.info("Building MIDI script...")
 
@@ -242,12 +273,14 @@ def main() -> None:
 
         body = common_visitor.body
         constants = common_visitor.constants
+        enums = common_visitor.enums
 
         body = AllRemover().visit(body)
         body = FlMidiMsgRemover().visit(body)
         body = DocstringRemover().visit(body)
         body = ConstReplacer(constants).visit(body)
         body = ConstRemover(constants).visit(body)
+        body = EnumReplacer(enums).visit(body)
         ast.fix_missing_locations(body)
         out.write(ast.unparse(body))
 
