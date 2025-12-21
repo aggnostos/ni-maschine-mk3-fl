@@ -12,14 +12,15 @@ logging.basicConfig(level=logging.DEBUG, format="[%(levelname)s] %(message)s")
 
 
 SRC = Path("src")
+
+# Output directory. Modify if you want to change the output location.
+# For example directly to FL Studio's MIDI scripts folder.
 DIST = Path("dist")
 DIST.mkdir(exist_ok=True)
+OUT_FILE = "device_Maschine_MK3.py"
+OUT_PATH: Path = DIST / OUT_FILE
 
 MAIN_PATH: Path = SRC / "main.py"
-
-OUT_FILE = "device_Maschine_MK3.py"
-
-OUT_PATH: Path = DIST / OUT_FILE
 
 # List of local packages (folders with __init__.py) to include
 PACKAGES: List[str] = []
@@ -34,7 +35,7 @@ MODULES: List[str] = [
     "controller",
 ]
 
-MIDI_SCRIPT_NAME: str = "NI Maschine MK3"
+SCRIPT_NAME: str = "NI Maschine MK3"
 
 HEADER: str = """
 # ------------------------------------------------------------------------- #
@@ -149,7 +150,6 @@ class ImportsRemover(ast.NodeTransformer):
 
 class AllRemover(ast.NodeTransformer):
     def visit_Assign(self, node: ast.Assign) -> Optional[ast.Assign]:
-        # Remove __all__ assignments
         if any(
             isinstance(target, ast.Name) and target.id == "__all__"
             for target in node.targets
@@ -160,7 +160,6 @@ class AllRemover(ast.NodeTransformer):
 
 class FlMidiMsgRemover(ast.NodeTransformer):
     def visit_arg(self, node: ast.arg) -> ast.arg:
-        # Remove FlMidiMsg type annotations from function arguments
         if (
             node.annotation
             and isinstance(node.annotation, ast.Name)
@@ -171,8 +170,6 @@ class FlMidiMsgRemover(ast.NodeTransformer):
 
 
 class DocstringRemover(ast.NodeTransformer):
-    """AST transformer to clean up the code body"""
-
     def visit_Module(self, node: ast.Module) -> ast.Module:
         self.generic_visit(node)
         return self._remove_docstring(node)  # type: ignore[return-value]
@@ -264,7 +261,7 @@ def main() -> None:
     _process_module(MAIN_PATH)
 
     with open(OUT_PATH, "w", encoding="utf-8") as out:
-        out.write(f"# name={MIDI_SCRIPT_NAME}\n\n")
+        out.write(f"# name={SCRIPT_NAME}\n\n")
         out.write(HEADER + "\n\n")
 
         imports = ImportsRemover().visit(common_visitor.imports)
