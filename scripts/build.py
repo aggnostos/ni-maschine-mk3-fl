@@ -207,6 +207,28 @@ class DocstringRemover(ast.NodeTransformer):
         return node
 
 
+class ConstCollector(ast.NodeVisitor):
+    def __init__(self):
+        self.consts: Dict[str, ast.AST] = {}
+
+        self._is_in_class = False
+
+    def visit_Assign(self, node: ast.Assign) -> None:
+        target = node.targets[0]
+        if (
+            isinstance(target, ast.Name)
+            and target.id.isupper()
+            and not self._is_in_class
+        ):
+            self.consts[target.id] = node.value
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:
+        old_in_class = self._is_in_class
+        self._is_in_class = True
+        self.generic_visit(node)
+        self._is_in_class = old_in_class
+
+
 class ConstInliner(ast.NodeTransformer):
     def __init__(self, constants: Dict[str, ast.AST]):
         self.constants = constants
@@ -246,6 +268,7 @@ def main() -> None:
 
     common_visitor = CommonVisitor()
     imports_collector = ImportsCollector()
+    const_collector = ConstCollector()
 
     def _process_module(mod_path: Path) -> None:
         source: str = mod_path.read_text(encoding="utf-8")
@@ -253,6 +276,7 @@ def main() -> None:
 
         common_visitor.visit(tree)
         imports_collector.visit(tree)
+        const_collector.visit(tree)
 
     for pkg in PACKAGES:
         pkg_path: Path = SRC / pkg
@@ -281,8 +305,9 @@ def main() -> None:
         out.write(ast.unparse(imports) + "\n\n\n")
 
         body = common_visitor.body
-        constants = common_visitor.constants
+        constants = const_collector.consts
         enums = common_visitor.enums
+
         body = AllRemover().visit(body)
         body = FlMidiMsgRemover().visit(body)
         body = DocstringRemover().visit(body)
