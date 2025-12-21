@@ -1,6 +1,6 @@
 [project]
 name = "ni-maschine-mk3-fl"
-version = "0.1.2"
+version = "1.0.0"
 description = ""
 authors = [
     {name = "Mark Rybin",email = "aggnostos4@gmail.com"}
