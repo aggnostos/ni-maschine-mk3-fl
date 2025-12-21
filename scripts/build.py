@@ -174,9 +174,12 @@ class DocstringRemover(ast.NodeTransformer):
         return node
 
 
+type Consts = Dict[str, ast.AST]
+
+
 class ConstCollector(ast.NodeVisitor):
     def __init__(self):
-        self.consts: Dict[str, ast.AST] = {}
+        self.consts: Consts = {}
         self._is_in_class = False
 
     def visit_Assign(self, node: ast.Assign) -> None:
@@ -196,7 +199,7 @@ class ConstCollector(ast.NodeVisitor):
 
 
 class ConstInliner(ast.NodeTransformer):
-    def __init__(self, constants: Dict[str, ast.AST]):
+    def __init__(self, constants: Consts):
         self.constants = constants
 
     def visit_Name(self, node: ast.Name) -> ast.AST:
@@ -206,7 +209,7 @@ class ConstInliner(ast.NodeTransformer):
 
 
 class ConstRemover(ast.NodeTransformer):
-    def __init__(self, constants: Dict[str, ast.AST]):
+    def __init__(self, constants: Consts):
         self.const_names = set(constants.keys())
 
     def visit_Assign(self, node: ast.Assign) -> Optional[ast.Assign]:
@@ -216,9 +219,12 @@ class ConstRemover(ast.NodeTransformer):
         return node
 
 
+type Enums = Dict[str, Dict[str, ast.AST]]
+
+
 class EnumCollector(ast.NodeVisitor):
     def __init__(self):
-        self.enums: Dict[str, Dict[str, ast.AST]] = {}
+        self.enums: Enums = {}
         self._curr_enum: str | None = None
 
     def visit_ClassDef(self, node: ast.ClassDef) -> None:
@@ -243,7 +249,7 @@ class EnumCollector(ast.NodeVisitor):
 
 
 class EnumInliner(ast.NodeTransformer):
-    def __init__(self, enums: Dict[str, Dict[str, ast.AST]]):
+    def __init__(self, enums: Enums):
         self.enums = enums
 
     def visit_Attribute(self, node: ast.Attribute) -> ast.AST:
