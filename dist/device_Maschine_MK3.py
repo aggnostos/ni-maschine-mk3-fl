@@ -324,6 +324,8 @@ class Controller:
                 self._sync_song_position()
             if not self._is_selecting_pattern:
                 self._sync_channel_pads()
+        if mixer_controls_event and leds_event:
+            _midi_out_msg_control_change(58, _on_off(transport.isRecording()))
         if pattern_event:
             if self._is_selecting_pattern:
                 self._sync_patterns()
