@@ -4,7 +4,7 @@ import ast
 import black
 import logging
 from pathlib import Path
-from typing import List, Optional, Set, Tuple
+from typing import List, Optional, Set, Tuple, Dict
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,10 @@ MAIN_PATH: Path = SRC / "main.py"
 OUT_FILE = "device_Maschine_MK3.py"
 
 OUT_PATH: Path = DIST / OUT_FILE
+
+# OUT_PATH: Path = Path(
+#     "/Users/aggnostos/Documents/Image-Line/FL Studio/Settings/Hardware/NI Machine MK3/device_Maschine_MK3.py"
+# )
 
 # List of local packages (folders with __init__.py) to include
 PACKAGES: List[str] = []
@@ -46,9 +50,23 @@ HEADER: str = """
 """
 
 
-class ImportsVisitor(ast.NodeVisitor):
+class CommonVisitor(ast.NodeVisitor):
     def __init__(self) -> None:
         self.imports: ast.Module = ast.Module(body=[], type_ignores=[])
+        self.body = ast.Module(body=[], type_ignores=[])
+        self.constants: Dict[str, ast.AST] = {}
+
+    def visit_Module(self, node: ast.Module) -> None:
+        self.generic_visit(node)
+
+        for stmt in node.body:
+            if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
+                self.body.body.append(stmt)
+
+            if isinstance(stmt, ast.Assign):
+                target = stmt.targets[0]
+                if isinstance(target, ast.Name) and target.id.isupper():
+                    self.constants[target.id] = stmt.value
 
     def visit_Import(self, node: ast.Import) -> None:
         self.imports.body.append(node)
@@ -108,19 +126,7 @@ class ImportsTransformer(ast.NodeTransformer):
         return ()
 
 
-class BodyVisitor(ast.NodeVisitor):
-    def __init__(self) -> None:
-        self.result = ast.Module(body=[], type_ignores=[])
-
-    def visit_Module(self, node: ast.Module) -> None:
-        for stmt in node.body:
-            if not isinstance(stmt, (ast.Import, ast.ImportFrom)):
-                self.result.body.append(stmt)
-
-
-class BodyTransformer(ast.NodeTransformer):
-    """AST transformer to clean up the code body"""
-
+class AllRemover(ast.NodeTransformer):
     def visit_Assign(self, node: ast.Assign) -> Optional[ast.Assign]:
         # Remove __all__ assignments
         if any(
@@ -130,7 +136,9 @@ class BodyTransformer(ast.NodeTransformer):
             return None
         return node
 
-    def visit_arg(self, node: ast.arg):
+
+class FlMidiMsgRemover(ast.NodeTransformer):
+    def visit_arg(self, node: ast.arg) -> ast.arg:
         # Remove FlMidiMsg type annotations from function arguments
         if (
             node.annotation
@@ -139,6 +147,10 @@ class BodyTransformer(ast.NodeTransformer):
         ):
             node.annotation = None
         return node
+
+
+class DocstringRemover(ast.NodeTransformer):
+    """AST transformer to clean up the code body"""
 
     def visit_Module(self, node: ast.Module) -> ast.Module:
         self.generic_visit(node)
@@ -171,14 +183,12 @@ class BodyTransformer(ast.NodeTransformer):
 def main() -> None:
     logger.info("Building MIDI script...")
 
-    imports_visitor: ImportsVisitor = ImportsVisitor()
-    body_visitor: BodyVisitor = BodyVisitor()
+    common_visitor = CommonVisitor()
 
     def _process_module(mod_path: Path) -> None:
         source: str = mod_path.read_text(encoding="utf-8")
         tree = ast.parse(source, mod_path.name)
-        imports_visitor.visit(tree)
-        body_visitor.visit(tree)
+        common_visitor.visit(tree)
 
     for pkg in PACKAGES:
         pkg_path: Path = SRC / pkg
@@ -202,15 +212,17 @@ def main() -> None:
         out.write(f"# name={MIDI_SCRIPT_NAME}\n\n")
         out.write(HEADER + "\n\n")
 
-        transformed_imports: ast.AST = ImportsTransformer().visit(
-            imports_visitor.imports
-        )
-        ast.fix_missing_locations(transformed_imports)
-        out.write(ast.unparse(transformed_imports) + "\n\n\n")
+        imports = ImportsTransformer().visit(common_visitor.imports)
+        ast.fix_missing_locations(imports)
+        out.write(ast.unparse(imports) + "\n\n\n")
 
-        transformed_body: ast.AST = BodyTransformer().visit(body_visitor.result)
-        ast.fix_missing_locations(transformed_body)
-        out.write(ast.unparse(transformed_body))
+        body = AllRemover().visit(common_visitor.body)
+        body = FlMidiMsgRemover().visit(body)
+        body = DocstringRemover().visit(body)
+
+        ast.fix_missing_locations(body)
+
+        out.write(ast.unparse(body))
 
     black.format_file_in_place(
         OUT_PATH,
