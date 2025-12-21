@@ -35,9 +35,9 @@
 
 - `TOUCH STRIP` allows you to adjust specific parameter depending on what Touch Strip mode You are using. In **TRANSPORT** (default) mode Touch strip is adjusting a current song position.
 - `PITCH` changes Touch Strip mode to **PITCH** allowing you to adjust Pitch of selected channel
-- `MOD` changes Touch Strip mode to **MOD**
-- `PERFORM` changes Touch Strip mode to **PERFORM**
-- `NOTES` changes Touch Strip mode to **NOTES**
+- `MOD` changes Touch Strip mode to **MOD** (NOT IMPLEMENTED)
+- `PERFORM` changes Touch Strip mode to **PERFORM** (NOT IMPLEMENTED)
+- `NOTES` changes Touch Strip mode to **NOTES** (NOT IMPLEMENTED)
 
 ### Group Section
 
