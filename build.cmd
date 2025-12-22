@@ -1,3 +1,3 @@
 @echo off
 
-poetry run python ./scripts/build/build.pyl
+poetry run python ./scripts/build/build.py
