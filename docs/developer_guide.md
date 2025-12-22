@@ -24,7 +24,7 @@ The project is intentionally structured as a reference-quality implementation ra
 - MacOS:
 
  ```sh
- ./build
+ ./build.sh
  ```
 
 - Win:
