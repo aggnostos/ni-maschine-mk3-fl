@@ -40,7 +40,7 @@ def OnRefresh(flags: int) -> None:
 
 def OnControlChange(msg: FlMidiMsg) -> None:
     """
-    Called after callbacks.OnMidiMsg() for control change (CC) MIDI events.
+    Called after `OnMidiMsg()` for control change (CC) MIDI events.
 
     Args:
         msg (fl_classes.FlMidiMsg): incoming control change MIDI message.
@@ -50,7 +50,7 @@ def OnControlChange(msg: FlMidiMsg) -> None:
 
 def OnNoteOn(msg: FlMidiMsg) -> None:
     """
-    Called after callbacks.OnMidiMsg() for note on MIDI events.
+    Called after `OnMidiMsg()` for note on MIDI events.
 
     Args:
         msg (fl_classes.FlMidiMsg): incoming note on MIDI message.
