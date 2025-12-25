@@ -8,11 +8,12 @@
     <wrapmode>0</wrapmode>
     <controls>
       <button version="1" id="Arranger">
+        <name>ARRANGER</name>
         <controller>36</controller>
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior onIfDown="on">toggle</behavior>
+        <behavior>trigger</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Auto">
@@ -25,19 +26,21 @@
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Browser">
+        <name>BROWSER</name>
         <controller>38</controller>
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior onIfDown="on">toggle</behavior>
+        <behavior>trigger</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Channel">
+        <name>CHANNEL</name>
         <controller>34</controller>
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior onIfDown="on">toggle</behavior>
+        <behavior>trigger</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Chords">
@@ -196,6 +199,7 @@
         <reaction>ondown</reaction>
       </footswitch>
       <button version="1" id="File">
+        <name>FILE</name>
         <controller>40</controller>
         <channel>0</channel>
         <off>0</off>
@@ -218,7 +222,7 @@
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior onIfDown="on">toggle</behavior>
+        <behavior>trigger</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="GroupA">
@@ -410,11 +414,12 @@
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Mixer">
+        <name>MIXER</name>
         <controller>37</controller>
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior onIfDown="on">toggle</behavior>
+        <behavior>trigger</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Mod">
@@ -506,6 +511,7 @@
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Plugin">
+        <name>PLUG-IN</name>
         <controller>35</controller>
         <channel>0</channel>
         <off>0</off>
@@ -568,11 +574,12 @@
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Setting">
+        <name>SETTINGS</name>
         <controller>41</controller>
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior onIfDown="on">toggle</behavior>
+        <behavior onIfDown="on">trigger</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Solo">
