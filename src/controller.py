@@ -506,6 +506,10 @@ class Controller:
                     general.undoUp()
                 elif note_num == 1:
                     general.undoDown()
+                elif note_num == 4:
+                    channels.quickQuantize(self._selected_channel)
+                elif note_num == 5:
+                    channels.quickQuantize(self._selected_channel, 1)
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
                 self._sync_patterns()

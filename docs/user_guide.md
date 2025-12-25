@@ -87,6 +87,8 @@ Groups have different meaning depending on what pad mode you are currently using
 
 - `Undo` moves up in the undo history
 - `Redo` moves down in the undo history
+- `Quantize` performs a quick quantize operation on the channel
+- `Quantize 50%` performs a quick quantize operation on the channel only for the start of the note
 
 ### Knob Page Section
 
