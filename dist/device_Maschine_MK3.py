@@ -67,8 +67,8 @@ class CC(IntEnum):
     SELECT = 90
     SOLO = 91
     MUTE = 92
-    PRESET_NEXT = 22
-    PRESET_PREV = 23
+    PRESET_PREV = 22
+    PRESET_NEXT = 23
     OCTAVE_DOWN = 26
     OCTAVE_UP = 27
     SEMI_DOWN = 28
@@ -527,20 +527,20 @@ class Controller:
                     channels.muteChannel(self._selected_channel)
                 elif ui.getFocused(midi.widMixer):
                     mixer.muteTrack(mixer.trackNumber())
-            case 22 | 23:
+            case 22 | 23 if cc_val:
                 if not plugins.isValid(self._selected_channel):
                     return
-                if cc_num == 22:
+                if cc_num == 23:
                     plugins.nextPreset(self._selected_channel)
                 else:
                     plugins.prevPreset(self._selected_channel)
-            case 26 if self._semi_offset > 12 * -5:
+            case 26 if cc_val and self._semi_offset > 12 * -5:
                 self._semi_offset -= 12
-            case 27 if self._semi_offset < 12 * 5:
+            case 27 if cc_val and self._semi_offset < 12 * 5:
                 self._semi_offset += 12
-            case 28 if self._semi_offset > 12 * -5:
+            case 28 if cc_val and self._semi_offset > 12 * -5:
                 self._semi_offset -= 1
-            case 29 if self._semi_offset < 12 * 5:
+            case 29 if cc_val and self._semi_offset < 12 * 5:
                 self._semi_offset += 1
             case 70:
                 mixer.setTrackNumber(cc_val)
