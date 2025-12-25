@@ -73,10 +73,6 @@ class CC(IntEnum):
     # BUTTONS
     PRESET_PREV = 22
     PRESET_NEXT = 23
-    OCTAVE_DOWN = 26
-    OCTAVE_UP = 27
-    SEMI_DOWN = 28
-    SEMI_UP = 29
 
     # KNOBS
     MIX_TRACK = 70

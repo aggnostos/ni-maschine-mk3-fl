@@ -89,6 +89,10 @@ Groups have different meaning depending on what pad mode you are currently using
 - `Redo` moves down in the undo history
 - `Quantize` performs a quick quantize operation on the channel
 - `Quantize 50%` performs a quick quantize operation on the channel only for the start of the note
+- `Semitone -` shifts notes triggered by -1 semitone
+- `Semitone +` shifts notes triggered by +1 semitone
+- `Octave -` shifts notes triggered by -1 octave (-12 semitones)
+- `Octave +` shifts notes triggered by +1 octave (+12 semitones)
 
 ### Knob Page Section
 
@@ -96,10 +100,6 @@ Groups have different meaning depending on what pad mode you are currently using
 
 - `PRESET -` selects previous **Plug-In** preset in selected channel
 - `PRESET +` selects next **Plug-In** preset in selected channel
-- `OCTAVE -` shifts notes triggered by -12 semitones
-- `OCTAVE +` shifts notes triggered by +12 semitones
-- `SEMI -` shifts notes triggered by -1 semitone
-- `SEMI +` shifts notes triggered by +1 semitone
 
 #### Knobs
 

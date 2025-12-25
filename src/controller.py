@@ -443,18 +443,6 @@ class Controller:
                 else:
                     plugins.prevPreset(self._selected_channel)
 
-            case CC.OCTAVE_DOWN if cc_val and self._semi_offset > MIN_SEMI_OFFSET:
-                self._semi_offset -= 12
-
-            case CC.OCTAVE_UP if cc_val and self._semi_offset < MAX_SEMI_OFFSET:
-                self._semi_offset += 12
-
-            case CC.SEMI_DOWN if cc_val and self._semi_offset > MIN_SEMI_OFFSET:
-                self._semi_offset -= 1
-
-            case CC.SEMI_UP if cc_val and self._semi_offset < MAX_SEMI_OFFSET:
-                self._semi_offset += 1
-
             # KNOBS
             case CC.MIX_TRACK:
                 mixer.setTrackNumber(cc_val)
@@ -502,17 +490,30 @@ class Controller:
 
         if note_vel:
             if self._shifting:
-                if note_num == 0:
-                    general.undoUp()
-                elif note_num == 1:
-                    general.undoDown()
-                elif note_num == 4:
-                    channels.quickQuantize(self._selected_channel)
-                elif note_num == 5:
-                    channels.quickQuantize(self._selected_channel, 1)
+                match note_num:
+                    case 0:
+                        general.undoUp()
+                    case 1:
+                        general.undoDown()
+                    case 4:
+                        channels.quickQuantize(self._selected_channel)
+                    case 5:
+                        channels.quickQuantize(self._selected_channel, 1)
+                    case 12 if self._semi_offset > MIN_SEMI_OFFSET:
+                        self._semi_offset -= 1
+                    case 13 if self._semi_offset < MAX_SEMI_OFFSET:
+                        self._semi_offset += 1
+                    case 14 if self._semi_offset > MIN_SEMI_OFFSET:
+                        self._semi_offset -= 12
+                    case 15 if self._semi_offset < MAX_SEMI_OFFSET:
+                        self._semi_offset += 12
+                    case _:
+                        pass
+
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
                 self._sync_patterns()
+
             if self._is_selecting_channel:
                 chan_idx = note_num + self._channel_page * NOTES_COUNT
                 if chan_idx < channels.channelCount():

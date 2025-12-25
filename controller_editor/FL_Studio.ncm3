@@ -729,39 +729,39 @@
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button5">
-          <name>OCTAVE -</name>
+          <disabled />
           <controller>26</controller>
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">gate</behavior>
+          <behavior onIfDown="on">toggle</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button6">
-          <name>OCTAVE +</name>
+          <disabled />
           <controller>27</controller>
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">gate</behavior>
+          <behavior onIfDown="on">toggle</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button7">
-          <name>SEMI -</name>
+          <disabled />
           <controller>28</controller>
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">gate</behavior>
+          <behavior onIfDown="on">toggle</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button8">
-          <name>SEMI +</name>
+          <disabled />
           <controller>29</controller>
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">gate</behavior>
+          <behavior onIfDown="on">toggle</behavior>
           <reaction>ondown</reaction>
         </button>
         <knob version="1" id="Knob1">
