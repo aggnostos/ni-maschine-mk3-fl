@@ -184,35 +184,37 @@ class Controller:
 
         match cc_num:
             # -------- CONTROL BUTTONS SECTION -------- #
-            case CC.CHANNEL:
-                if ui.getVisible(midi.widChannelRack):
-                    ui.hideWindow(midi.widChannelRack)
+            case CC.CHANNEL | CC.ARRANGER | CC.MIXER | CC.BROWSER:
+                match cc_num:
+                    case CC.CHANNEL:
+                        wid = midi.widChannelRack
+                    case CC.ARRANGER:
+                        wid = midi.widPlaylist
+                    case CC.MIXER:
+                        wid = midi.widMixer
+                    case CC.BROWSER:
+                        wid = midi.widBrowser
+                    case _:
+                        return
+
+                is_visible = ui.getVisible(wid)
+
+                if self._shifting:
+                    if not is_visible:
+                        ui.showWindow(wid)
+                    ui.setFocused(wid)
                 else:
-                    ui.showWindow(midi.widChannelRack)
+                    if is_visible:
+                        ui.hideWindow(wid)
+                    else:
+                        ui.showWindow(wid)
+
+                is_visible = ui.getVisible(wid)
+
+                _midi_out_msg_control_change(cc_num, _on_off(is_visible))
 
             case CC.PLUGIN:
                 channels.showCSForm(self._selected_channel, -1)
-
-            case CC.ARRANGER:
-                if ui.getVisible(midi.widPlaylist):
-                    ui.hideWindow(midi.widPlaylist)
-                else:
-                    ui.showWindow(midi.widPlaylist)
-
-            case CC.MIXER:
-                if ui.getVisible(midi.widMixer):
-                    ui.hideWindow(midi.widMixer)
-                else:
-                    ui.showWindow(midi.widMixer)
-
-            case CC.BROWSER if self._shifting:  # PLUGIN PICKER
-                self._is_plugin_picker_active = not self._is_plugin_picker_active
-                transport.globalTransport(midi.FPT_F8, 1)
-            case CC.BROWSER:
-                if ui.getVisible(midi.widBrowser):
-                    ui.hideWindow(midi.widBrowser)
-                else:
-                    ui.showWindow(midi.widBrowser)
 
             case CC.FILE_SAVE:
                 transport.globalTransport(midi.FPT_Save, 1)

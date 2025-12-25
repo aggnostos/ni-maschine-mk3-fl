@@ -7,10 +7,14 @@
 ### Control Buttons
 
 - `CHANNEL` toggles **Channel Rack** visibility
-- `PLUG-IN` toggles **Plug-In** window visibility for selected channel
+  - `+SHIFT` focuses **Channel Rack**
 - `ARRANGER` toggles **Playlist** visibility
+  - `+SHIFT` focuses **Playlist**
 - `MIXER` toggles **Mixer** visibility
+  - `+SHIFT` focuses **Mixer**
 - `BROWSER` toggles **Browser** visibility
+  - `+SHIFT` focuses **Browser**
+- `PLUG-IN` toggles **Plug-In** window visibility for selected channel
 - `FILE` saves current project (behaves same way as pressing `Ctrl+S`)
 - `SETTINGS` toggles **Settings** window visibility
 
