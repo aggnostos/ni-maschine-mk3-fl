@@ -134,10 +134,7 @@ class Controller:
             _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
 
         if pattern_event:
-            if self._is_selecting_pattern:
-                self._sync_patterns()
-            if not self._is_selecting_pattern:
-                self._sync_channel_pads()
+            self._sync_channel_pads()
 
         if control_values_event:
             if self._touch_strip_mode == TouchStripMode.PITCH:
@@ -399,16 +396,8 @@ class Controller:
                 self._sync_channel_pads()
 
             case CC.PATTERN:
-                for p in range(NOTES_COUNT):
-                    _midi_out_msg_note_on(p, ControllerColor.BLACK_0)
-
                 self._is_selecting_pattern = bool(cc_val)
-
-                if cc_val:
-                    self._sync_patterns()
-                else:
-                    if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
-                        self._sync_channel_pads()
+                self._sync_channel_pads()
 
             case CC.SELECT:
                 self._is_selecting_channel = bool(cc_val)
@@ -495,7 +484,7 @@ class Controller:
 
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
-                self._sync_patterns()
+                self._sync_channel_pads()
 
             if self._is_selecting_channel:
                 chan_idx = note_num + self._channel_page * NOTES_COUNT
@@ -651,7 +640,17 @@ class Controller:
         for note in range(NOTES_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
-        if self._pad_mode == PadMode.OMNI or self._is_selecting_channel:
+        if self._is_selecting_pattern:
+            for pattern in range(patterns.patternCount()):
+                _midi_out_msg_note_on(
+                    pattern,
+                    (
+                        ControllerColor.ORANGE_2
+                        if patterns.isPatternSelected(pattern + 1)
+                        else ControllerColor.ORANGE_0
+                    ),
+                )
+        elif self._pad_mode == PadMode.OMNI or self._is_selecting_channel:
             lower_channel = self._channel_page * NOTES_COUNT
             channel_count = channels.channelCount()
 
@@ -663,7 +662,6 @@ class Controller:
                 _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
 
             self._toggle_selected_channel_highlight()
-
         elif self._pad_mode == PadMode.STEP:
             lower_step = self._step_page * NOTES_COUNT
 
@@ -793,19 +791,6 @@ class Controller:
                     self._pad_mode_color
                     if cc == self._active_group
                     else ControllerColor.BLACK_0
-                ),
-            )
-
-    def _sync_patterns(self) -> None:
-        """Syncs the pattern selection state on the Maschine MK3 device with the current FL Studio state"""
-
-        for pattern in range(patterns.patternCount()):
-            _midi_out_msg_note_on(
-                pattern,
-                (
-                    ControllerColor.ORANGE_2
-                    if patterns.isPatternSelected(pattern + 1)
-                    else ControllerColor.ORANGE_0
                 ),
             )
 
