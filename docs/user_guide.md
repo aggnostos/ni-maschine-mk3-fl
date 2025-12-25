@@ -83,6 +83,11 @@ Groups have different meaning depending on what pad mode you are currently using
 - `MUTE` mutes the currently selected **Channel** or **Mixer Track**.
   - By default (whithout `SHIFT`) soloes mixer track, including send tracks that it is routed to, otherwise soloes mixer track, including source tracks routed to it
 
+#### Pads
+
+- `Undo` moves up in the undo history
+- `Redo` moves down in the undo history
+
 ### Knob Page Section
 
 #### Buttons
