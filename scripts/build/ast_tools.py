@@ -1,8 +1,7 @@
 import ast
 from typing import Optional, Set, Tuple, Dict
 
-from settings import MODULES, PACKAGES
-
+from config import cfg
 
 __all__ = [
     "ImportsCollector",
@@ -52,10 +51,11 @@ class ImportsRemover(ast.NodeTransformer):
 
     def _is_local(self, node: ast.AST) -> bool:
         if isinstance(node, ast.ImportFrom):
-            return node.module in MODULES or node.module in PACKAGES
+            return node.module in cfg.MODULES or node.module in cfg.PACKAGES
         if isinstance(node, ast.Import):
             return any(
-                alias.name in MODULES or alias.name in PACKAGES for alias in node.names
+                alias.name in cfg.MODULES or alias.name in cfg.PACKAGES
+                for alias in node.names
             )
         return False
 
