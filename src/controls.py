@@ -51,7 +51,7 @@ class CC(IntEnum):
     ERASE = 54
     TAP = 55
     PLAY = 57
-    GRID = 56
+    FOLLOW = 56
     REC = 58
     STOP = 59
 

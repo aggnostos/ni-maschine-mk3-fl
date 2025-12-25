@@ -343,7 +343,7 @@ class Controller:
             case CC.TAP:
                 transport.globalTransport(midi.FPT_TapTempo, 1)
 
-            case CC.GRID:
+            case CC.FOLLOW:
                 ui.snapOnOff()
 
             case CC.PLAY:
@@ -617,13 +617,13 @@ class Controller:
         _midi_out_msg_control_change(CC.CHANNEL,  _on_off(ui.getVisible(midi.widChannelRack)))
         _midi_out_msg_control_change(CC.ARRANGER, _on_off(ui.getVisible(midi.widPlaylist)))
         _midi_out_msg_control_change(CC.MIXER,    _on_off(ui.getVisible(midi.widMixer)))
-        _midi_out_msg_control_change(CC.RESTART,  _on_off(bool(transport.getLoopMode())))
         _midi_out_msg_control_change(CC.BROWSER,  _on_off(ui.getVisible(midi.widBrowser)))
+        _midi_out_msg_control_change(CC.RESTART,  _on_off(bool(transport.getLoopMode())))
         _midi_out_msg_control_change(CC.TAP,      _on_off(general.getUseMetronome()))
+        _midi_out_msg_control_change(CC.FOLLOW,     _on_off(ui.getSnapMode() != 3))
         _midi_out_msg_control_change(CC.PLAY,     _on_off(transport.isPlaying()))
         _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
         _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
-        _midi_out_msg_control_change(CC.GRID,     _on_off(ui.getSnapMode() != 3))
         # fmt: on
 
     def _sync_selected_channel(self) -> None:
