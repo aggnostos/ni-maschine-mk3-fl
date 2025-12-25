@@ -87,6 +87,7 @@ def main() -> None:
 
     args = parser.parse_args()
     cfg.OUT_PATH = Path(args.out)
+    cfg.SCRIPT_NAME = str(args.name)
 
     _process_modules_and_packages()
     _write_out()

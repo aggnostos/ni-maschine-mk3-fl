@@ -16,5 +16,12 @@ def init_parser() -> argparse.ArgumentParser:
         default=cfg.OUT_PATH,
         help="Path to output the built script file",
     )
+    parser.add_argument(
+        "-n",
+        "--name",
+        type=str,
+        default=cfg.SCRIPT_NAME,
+        help="Name of the script as it appears in FL Studio",
+    )
 
     return parser
