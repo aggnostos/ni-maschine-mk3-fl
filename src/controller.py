@@ -490,25 +490,7 @@ class Controller:
 
         if note_vel:
             if self._shifting:
-                match note_num:
-                    case 0:
-                        general.undoUp()
-                    case 1:
-                        general.undoDown()
-                    case 4:
-                        channels.quickQuantize(self._selected_channel)
-                    case 5:
-                        channels.quickQuantize(self._selected_channel, 1)
-                    case 12 if self._semi_offset > MIN_SEMI_OFFSET:
-                        self._semi_offset -= 1
-                    case 13 if self._semi_offset < MAX_SEMI_OFFSET:
-                        self._semi_offset += 1
-                    case 14 if self._semi_offset > MIN_SEMI_OFFSET:
-                        self._semi_offset -= 12
-                    case 15 if self._semi_offset < MAX_SEMI_OFFSET:
-                        self._semi_offset += 12
-                    case _:
-                        pass
+                self._handle_shift_note_on(note_num)
 
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
@@ -523,6 +505,33 @@ class Controller:
             msg.handled = True
             return
 
+        self._handle_note_on(note_num, note_vel)
+
+        msg.handled = True
+
+    def _handle_shift_note_on(self, note_num: int) -> None:
+        """Handles note on events when the shift button is pressed"""
+        match note_num:
+            case 0:
+                general.undoUp()
+            case 1:
+                general.undoDown()
+            case 4:
+                channels.quickQuantize(self._selected_channel)
+            case 5:
+                channels.quickQuantize(self._selected_channel, 1)
+            case 12 if self._semi_offset > MIN_SEMI_OFFSET:
+                self._semi_offset -= 1
+            case 13 if self._semi_offset < MAX_SEMI_OFFSET:
+                self._semi_offset += 1
+            case 14 if self._semi_offset > MIN_SEMI_OFFSET:
+                self._semi_offset -= 12
+            case 15 if self._semi_offset < MAX_SEMI_OFFSET:
+                self._semi_offset += 12
+            case _:
+                pass
+
+    def _handle_note_on(self, note_num: int, note_vel: int) -> None:
         match self._pad_mode:
             case PadMode.OMNI:
                 real_note = ROOT_NOTE + self._get_semi_offset()
@@ -585,9 +594,7 @@ class Controller:
                 )
 
             case _:
-                return
-
-        msg.handled = True
+                pass
 
     def _init_led_states(self) -> None:
         self._deinit_led_states()
