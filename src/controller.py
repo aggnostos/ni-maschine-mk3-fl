@@ -8,6 +8,7 @@ import channels
 import transport
 from fl_classes import FlMidiMsg
 
+from pads import *
 from enums import *
 from notes import *
 from consts import *
@@ -512,21 +513,21 @@ class Controller:
     def _handle_shift_note_on(self, note_num: int) -> None:
         """Handles note on events when the shift button is pressed"""
         match note_num:
-            case 0:
+            case Pad.UNDO:
                 general.undoUp()
-            case 1:
+            case Pad.REDO:
                 general.undoDown()
-            case 4:
+            case Pad.QUANTIZE:
                 channels.quickQuantize(self._selected_channel)
-            case 5:
+            case Pad.QUANTIZE_HALF:
                 channels.quickQuantize(self._selected_channel, 1)
-            case 12 if self._semi_offset > MIN_SEMI_OFFSET:
+            case Pad.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
                 self._semi_offset -= 1
-            case 13 if self._semi_offset < MAX_SEMI_OFFSET:
+            case Pad.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
                 self._semi_offset += 1
-            case 14 if self._semi_offset > MIN_SEMI_OFFSET:
+            case Pad.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
                 self._semi_offset -= 12
-            case 15 if self._semi_offset < MAX_SEMI_OFFSET:
+            case Pad.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
                 self._semi_offset += 12
             case _:
                 pass

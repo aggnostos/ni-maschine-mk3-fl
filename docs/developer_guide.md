@@ -49,6 +49,7 @@ The project is intentionally structured as a reference-quality implementation ra
 - `controls.py` defines CC mappings for the device
 - `enums.py` contains enumerations used globally
 - `notes.py` defines MIDI note constants
+- `pads.py` defines pad function mappings
 - `utilities.py` helper functions used by the script
 
 `dist/`:

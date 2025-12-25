@@ -20,6 +20,7 @@ class Config:
     MODULES: List[str] = field(
         default_factory=lambda: [
             "controls",
+            "pads",
             "consts",
             "enums",
             "notes",
