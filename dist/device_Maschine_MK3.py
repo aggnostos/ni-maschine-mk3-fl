@@ -452,8 +452,7 @@ class Controller:
             case 55 if self._shifting:
                 transport.globalTransport(midi.FPT_Metronome, 1)
             case 55:
-                if cc_val:
-                    transport.globalTransport(midi.FPT_TapTempo, 1)
+                transport.globalTransport(midi.FPT_TapTempo, 1)
             case 56:
                 ui.snapOnOff()
             case 57:

@@ -343,8 +343,7 @@ class Controller:
             case CC.TAP if self._shifting:  # METRO
                 transport.globalTransport(midi.FPT_Metronome, 1)
             case CC.TAP:
-                if cc_val:
-                    transport.globalTransport(midi.FPT_TapTempo, 1)
+                transport.globalTransport(midi.FPT_TapTempo, 1)
 
             case CC.GRID:
                 ui.snapOnOff()

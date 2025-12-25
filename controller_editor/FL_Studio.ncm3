@@ -168,7 +168,7 @@
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior>trigger</behavior>
+        <behavior onIfDown="on">trigger</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Events">
@@ -619,7 +619,7 @@
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Tap">
-        <name>METRO</name>
+        <name>TAP</name>
         <controller>55</controller>
         <channel>0</channel>
         <off>0</off>
