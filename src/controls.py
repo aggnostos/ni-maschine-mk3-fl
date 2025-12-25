@@ -71,8 +71,8 @@ class CC(IntEnum):
 
     # ---- KNOB PAGE SECTION ---- #
     # BUTTONS
-    PRESET_NEXT = 22
-    PRESET_PREV = 23
+    PRESET_PREV = 22
+    PRESET_NEXT = 23
     OCTAVE_DOWN = 26
     OCTAVE_UP = 27
     SEMI_DOWN = 28

@@ -441,7 +441,7 @@ class Controller:
 
             # ---- KNOB PAGE SECTION ---- #
             # BUTTONS
-            case CC.PRESET_NEXT | CC.PRESET_PREV:  # TODO: add mixer logic
+            case CC.PRESET_PREV | CC.PRESET_NEXT if cc_val:  # TODO: add mixer logic
                 if not plugins.isValid(self._selected_channel):
                     return
 
@@ -450,16 +450,16 @@ class Controller:
                 else:
                     plugins.prevPreset(self._selected_channel)
 
-            case CC.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+            case CC.OCTAVE_DOWN if cc_val and self._semi_offset > MIN_SEMI_OFFSET:
                 self._semi_offset -= 12
 
-            case CC.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
+            case CC.OCTAVE_UP if cc_val and self._semi_offset < MAX_SEMI_OFFSET:
                 self._semi_offset += 12
 
-            case CC.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+            case CC.SEMI_DOWN if cc_val and self._semi_offset > MIN_SEMI_OFFSET:
                 self._semi_offset -= 1
 
-            case CC.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
+            case CC.SEMI_UP if cc_val and self._semi_offset < MAX_SEMI_OFFSET:
                 self._semi_offset += 1
 
             # KNOBS

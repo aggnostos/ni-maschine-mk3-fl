@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <ni-controller-midi-map version="1">
-  <midi-map type="MaschineMK3" name="FL Studio" port="internal">
+  <midi-map type="MaschineMK3" name="FL_Studio" port="internal">
     <handleGroupControls />
     <handleKnobControls />
     <velocitycurve>3</velocitycurve>
@@ -684,19 +684,14 @@
     </controls>
     <pages>
       <current_index>0</current_index>
-      <page name="Knob Page 1" colorColumn1-index="18" colorColumn1B-index="18"
-        colorColumn2-index="18" colorColumn2B-index="18" colorColumn3-index="18"
-        colorColumn3B-index="18" colorColumn4-index="18" colorColumn4B-index="18"
-        colorColumn5-index="18" colorColumn5B-index="18" colorColumn6-index="18"
-        colorColumn6B-index="18" colorColumn7-index="18" colorColumn7B-index="18"
-        colorColumn8-index="18" colorColumn8B-index="18" explicitMCU="0">
+      <page name="Knob Page 1" colorColumn1-index="18" colorColumn1B-index="18" colorColumn2-index="18" colorColumn2B-index="18" colorColumn3-index="18" colorColumn3B-index="18" colorColumn4-index="18" colorColumn4B-index="18" colorColumn5-index="18" colorColumn5B-index="18" colorColumn6-index="18" colorColumn6B-index="18" colorColumn7-index="18" colorColumn7B-index="18" colorColumn8-index="18" colorColumn8B-index="18" explicitMCU="0">
         <button version="1" id="Button1">
           <name>PRESET -</name>
           <controller>22</controller>
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">trigger</behavior>
+          <behavior onIfDown="on">gate</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button2">
@@ -705,7 +700,7 @@
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">trigger</behavior>
+          <behavior onIfDown="on">gate</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button3">
@@ -732,7 +727,7 @@
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">trigger</behavior>
+          <behavior onIfDown="on">gate</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button6">
@@ -741,7 +736,7 @@
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">trigger</behavior>
+          <behavior onIfDown="on">gate</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button7">
@@ -750,7 +745,7 @@
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">trigger</behavior>
+          <behavior onIfDown="on">gate</behavior>
           <reaction>ondown</reaction>
         </button>
         <button version="1" id="Button8">
@@ -759,7 +754,7 @@
           <channel>0</channel>
           <off>0</off>
           <on>127</on>
-          <behavior onIfDown="on">trigger</behavior>
+          <behavior onIfDown="on">gate</behavior>
           <reaction>ondown</reaction>
         </button>
         <knob version="1" id="Knob1">
