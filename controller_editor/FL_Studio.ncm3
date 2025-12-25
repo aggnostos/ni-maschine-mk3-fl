@@ -446,7 +446,7 @@
         <channel>0</channel>
         <off>0</off>
         <on>127</on>
-        <behavior>gate</behavior>
+        <behavior onIfDown="on">gate</behavior>
         <reaction>ondown</reaction>
       </button>
       <button version="1" id="Notes">
