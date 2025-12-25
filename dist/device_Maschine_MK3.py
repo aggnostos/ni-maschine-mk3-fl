@@ -340,31 +340,31 @@ class Controller:
     def on_control_change(self, msg) -> None:
         cc_num, cc_val = (msg.controlNum, msg.controlVal)
         match cc_num:
-            case 34:
-                if ui.getVisible(midi.widChannelRack):
-                    ui.hideWindow(midi.widChannelRack)
+            case 34 | 36 | 37 | 38:
+                match cc_num:
+                    case 34:
+                        wid = midi.widChannelRack
+                    case 36:
+                        wid = midi.widPlaylist
+                    case 37:
+                        wid = midi.widMixer
+                    case 38:
+                        wid = midi.widBrowser
+                    case _:
+                        return
+                is_visible = ui.getVisible(wid)
+                if self._shifting:
+                    if not is_visible:
+                        ui.showWindow(wid)
+                    ui.setFocused(wid)
+                elif is_visible:
+                    ui.hideWindow(wid)
                 else:
-                    ui.showWindow(midi.widChannelRack)
+                    ui.showWindow(wid)
+                is_visible = ui.getVisible(wid)
+                _midi_out_msg_control_change(cc_num, _on_off(is_visible))
             case 35:
                 channels.showCSForm(self._selected_channel, -1)
-            case 36:
-                if ui.getVisible(midi.widPlaylist):
-                    ui.hideWindow(midi.widPlaylist)
-                else:
-                    ui.showWindow(midi.widPlaylist)
-            case 37:
-                if ui.getVisible(midi.widMixer):
-                    ui.hideWindow(midi.widMixer)
-                else:
-                    ui.showWindow(midi.widMixer)
-            case 38 if self._shifting:
-                self._is_plugin_picker_active = not self._is_plugin_picker_active
-                transport.globalTransport(midi.FPT_F8, 1)
-            case 38:
-                if ui.getVisible(midi.widBrowser):
-                    ui.hideWindow(midi.widBrowser)
-                else:
-                    ui.showWindow(midi.widBrowser)
             case 40:
                 transport.globalTransport(midi.FPT_Save, 1)
             case 41:
@@ -579,17 +579,15 @@ class Controller:
                     general.undoUp()
                 elif note_num == 1:
                     general.undoDown()
-                msg.handled = True
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
                 self._sync_patterns()
-                msg.handled = True
             if self._is_selecting_channel:
                 chan_idx = note_num + self._channel_page * 16
                 if chan_idx < channels.channelCount():
                     channels.selectOneChannel(chan_idx)
-                msg.handled = True
-        if msg.handled or self._is_selecting_pattern or self._is_selecting_channel:
+        if self._shifting or self._is_selecting_pattern or self._is_selecting_channel:
+            msg.handled = True
             return
         match self._pad_mode:
             case 0:
