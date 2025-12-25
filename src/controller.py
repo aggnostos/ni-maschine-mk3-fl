@@ -479,18 +479,17 @@ class Controller:
         note_num, note_vel = msg.note, msg.velocity
         # velocity == 0 means note off
 
-        if note_vel:
-            if self._shifting:
-                self._handle_shift_note_on(note_num)
+        if self._shifting:
+            self._handle_shift_note_on(note_num, note_vel)
 
-            if self._is_selecting_pattern:
-                patterns.jumpToPattern(note_num + 1)
-                self._sync_channel_pads()
+        if self._is_selecting_pattern and note_vel:
+            patterns.jumpToPattern(note_num + 1)
+            self._sync_channel_pads()
 
-            if self._is_selecting_channel:
-                chan_idx = note_num + self._channel_page * NOTES_COUNT
-                if chan_idx < channels.channelCount():
-                    channels.selectOneChannel(chan_idx)
+        if self._is_selecting_channel and note_vel:
+            chan_idx = note_num + self._channel_page * NOTES_COUNT
+            if chan_idx < channels.channelCount():
+                channels.selectOneChannel(chan_idx)
 
         if self._shifting or self._is_selecting_pattern or self._is_selecting_channel:
             msg.handled = True
@@ -500,30 +499,32 @@ class Controller:
 
         msg.handled = True
 
-    def _handle_shift_note_on(self, note_num: int) -> None:
+    def _handle_shift_note_on(self, note_num: int, note_vel: int) -> None:
         """Handles note on events when the shift button is pressed"""
 
-        self._sync_channel_pads()
-
-        match note_num:
-            case Pad.UNDO:
-                general.undoUp()
-            case Pad.REDO:
-                general.undoDown()
-            case Pad.QUANTIZE:
-                channels.quickQuantize(self._selected_channel)
-            case Pad.QUANTIZE_HALF:
-                channels.quickQuantize(self._selected_channel, 1)
-            case Pad.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
-                self._semi_offset -= 1
-            case Pad.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
-                self._semi_offset += 1
-            case Pad.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
-                self._semi_offset -= 12
-            case Pad.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
-                self._semi_offset += 12
-            case _:
-                pass
+        if not note_vel:  # handle action on note off
+            _midi_out_msg_note_on(note_num, ControllerColor.WHITE_0)
+            match note_num:
+                case Pad.UNDO:
+                    general.undoUp()
+                case Pad.REDO:
+                    general.undoDown()
+                case Pad.QUANTIZE:
+                    channels.quickQuantize(self._selected_channel)
+                case Pad.QUANTIZE_HALF:
+                    channels.quickQuantize(self._selected_channel, 1)
+                case Pad.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+                    self._semi_offset -= 1
+                case Pad.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
+                    self._semi_offset += 1
+                case Pad.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+                    self._semi_offset -= 12
+                case Pad.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
+                    self._semi_offset += 12
+                case _:
+                    pass
+        else:
+            _midi_out_msg_note_on(note_num, ControllerColor.WHITE_2)
 
     def _handle_note_on(self, note_num: int, note_vel: int) -> None:
         match self._pad_mode:
