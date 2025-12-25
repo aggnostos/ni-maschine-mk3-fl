@@ -1,3 +1,5 @@
+from enum import Enum
+
 import midi
 import device
 import plugins
@@ -12,6 +14,7 @@ __all__ = [
     "_on_off",
     "_percent_to_bipolar",
     "_bipolar_to_percent",
+    "_is_enum_value",
 ]
 
 
@@ -106,3 +109,12 @@ def _percent_to_bipolar(percent: int) -> float:
 def _bipolar_to_percent(bipolar: float) -> int:
     """Convert a bipolar value (-1.0 to 1.0) to a percent value (0-100)"""
     return round((bipolar + 1.0) * 50)
+
+
+def _is_enum_value(enum_cls: type[Enum], value: object) -> bool:
+    """Check if a value is a valid member of the given Enum class"""
+    try:
+        enum_cls(value)
+        return True
+    except ValueError:
+        return False

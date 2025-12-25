@@ -467,6 +467,7 @@ class Controller:
             # -------- SHIFT -------- #
             case CC.SHIFT:
                 self._shifting = bool(cc_val)
+                self._sync_channel_pads()
 
             # -------- DEFAULT -------- #
             case _:
@@ -501,6 +502,9 @@ class Controller:
 
     def _handle_shift_note_on(self, note_num: int) -> None:
         """Handles note on events when the shift button is pressed"""
+
+        self._sync_channel_pads()
+
         match note_num:
             case Pad.UNDO:
                 general.undoUp()
@@ -640,7 +644,11 @@ class Controller:
         for note in range(NOTES_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
-        if self._is_selecting_pattern:
+        if self._shifting:
+            for note in range(NOTES_COUNT):
+                if _is_enum_value(Pad, note):
+                    _midi_out_msg_note_on(note, ControllerColor.WHITE_0)
+        elif self._is_selecting_pattern:
             for pattern in range(patterns.patternCount()):
                 _midi_out_msg_note_on(
                     pattern,
