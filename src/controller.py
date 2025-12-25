@@ -62,9 +62,6 @@ class Controller:
     _shifting: bool
     """Indicates whether the shift button is currently pressed"""
 
-    _is_plugin_picker_active: bool
-    """Indicates whether the plugin picker is currently active"""
-
     _is_selecting_pattern: bool
     """Indicates whether the user is currently selecting a pattern"""
 
@@ -86,7 +83,6 @@ class Controller:
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
         self._shifting = False
-        self._is_plugin_picker_active = False
         self._is_selecting_pattern = False
         self._is_selecting_channel = False
 
@@ -120,13 +116,10 @@ class Controller:
         # that are related to `channel_event` in that case.
         if channel_event:
             self._sync_selected_channel()
-            if not self._is_plugin_picker_active:
-                self._sync_channel_controls()
-            if not self._is_plugin_picker_active:
-                self._sync_channel_pads()
+            self._sync_channel_controls()
+            self._sync_channel_pads()
         elif mixer_sel_event or mixer_display_event or mixer_controls_event:
-            if not self._is_plugin_picker_active:
-                self._sync_mixer_controls()
+            self._sync_mixer_controls()
         elif leds_event:
             self._sync_cc_led_states()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
@@ -148,8 +141,7 @@ class Controller:
         if control_values_event:
             if self._touch_strip_mode == TouchStripMode.PITCH:
                 self._sync_touch_strip_value(self._touch_strip_mode)
-            if not self._is_plugin_picker_active:
-                self._sync_channel_controls()
+            self._sync_channel_controls()
 
         # # Debugging output for refresh flags
         # if flags & midi.HW_Dirty_Mixer_Sel:
