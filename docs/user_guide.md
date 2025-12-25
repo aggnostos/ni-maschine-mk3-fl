@@ -59,8 +59,8 @@ Groups have different meaning depending on what pad mode you are currently using
 - `ERASE` behaves same way as pressing `Delete` key in Piano Roll
 - `TAP` allows you to tap tempo
   - `+ SHIFT` turns the metronome on/off
+- `GRID` toggles **Snap (to grid)** mode (**Main** snap setting)
 - `PLAY` starts playback from the current playhead position
-- `GRID` toggles **Snap (Grid)** mode
 - `REC` starts or stops recording
   - `+ SHIFT` toggles **Precount** mode if pressed with
 - `STOP` stops playback and resets the playhead
