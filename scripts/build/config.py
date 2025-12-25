@@ -9,14 +9,7 @@ __all__ = ["cfg"]
 class Config:
     SRC = Path("src")
 
-    # Modify if you want to change the output location.
-    # For example directly to FL Studio's MIDI scripts folder.
-    DIST = Path("dist")
-    DIST.mkdir(exist_ok=True)
-
-    OUT_FILE = "device_Maschine_MK3.py"
-
-    OUT_PATH: Path = DIST / OUT_FILE
+    OUT_PATH: Path = Path("dist/device_Maschine_MK3.py")
 
     # List of local packages (folders with __init__.py) to include
     PACKAGES: List[str] = field(default_factory=list[str])
