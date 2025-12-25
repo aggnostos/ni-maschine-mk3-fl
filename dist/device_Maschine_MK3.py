@@ -10,6 +10,7 @@
 
 
 from enum import IntEnum
+from enum import Enum
 import midi
 import device
 import plugins
@@ -69,10 +70,6 @@ class CC(IntEnum):
     MUTE = 92
     PRESET_PREV = 22
     PRESET_NEXT = 23
-    OCTAVE_DOWN = 26
-    OCTAVE_UP = 27
-    SEMI_DOWN = 28
-    SEMI_UP = 29
     MIX_TRACK = 70
     MIX_VOL = 71
     MIX_PAN = 72
@@ -82,6 +79,17 @@ class CC(IntEnum):
     CHAN_PAN = 76
     FIX_VEL = 77
     SHIFT = 46
+
+
+class Pad(IntEnum):
+    UNDO = 0
+    REDO = 1
+    QUANTIZE = 4
+    QUANTIZE_HALF = 5
+    SEMI_DOWN = 12
+    SEMI_UP = 13
+    OCTAVE_DOWN = 14
+    OCTAVE_UP = 15
 
 
 class ControllerColor(IntEnum):
@@ -234,6 +242,14 @@ def _bipolar_to_percent(bipolar: float) -> int:
     return round((bipolar + 1.0) * 50)
 
 
+def _is_enum_value(enum_cls: type[Enum], value: object) -> bool:
+    try:
+        enum_cls(value)
+        return True
+    except ValueError:
+        return False
+
+
 class Controller:
     _pad_mode: PadMode
     "Current pad mode. See PadMode Enum"
@@ -321,10 +337,7 @@ class Controller:
         if mixer_controls_event and leds_event:
             _midi_out_msg_control_change(58, _on_off(transport.isRecording()))
         if pattern_event:
-            if self._is_selecting_pattern:
-                self._sync_patterns()
-            if not self._is_selecting_pattern:
-                self._sync_channel_pads()
+            self._sync_channel_pads()
         if control_values_event:
             if self._touch_strip_mode == 1:
                 self._sync_touch_strip_value(self._touch_strip_mode)
@@ -492,13 +505,8 @@ class Controller:
                 self._change_group_colors()
                 self._sync_channel_pads()
             case 86:
-                for p in range(16):
-                    _midi_out_msg_note_on(p, 0)
                 self._is_selecting_pattern = bool(cc_val)
-                if cc_val:
-                    self._sync_patterns()
-                elif self._pad_mode in (0, 3):
-                    self._sync_channel_pads()
+                self._sync_channel_pads()
             case 90:
                 self._is_selecting_channel = bool(cc_val)
                 self._sync_channel_pads()
@@ -526,14 +534,6 @@ class Controller:
                     plugins.nextPreset(self._selected_channel)
                 else:
                     plugins.prevPreset(self._selected_channel)
-            case 26 if cc_val and self._semi_offset > 12 * -5:
-                self._semi_offset -= 12
-            case 27 if cc_val and self._semi_offset < 12 * 5:
-                self._semi_offset += 12
-            case 28 if cc_val and self._semi_offset > 12 * -5:
-                self._semi_offset -= 1
-            case 29 if cc_val and self._semi_offset < 12 * 5:
-                self._semi_offset += 1
             case 70:
                 mixer.setTrackNumber(cc_val)
             case 71:
@@ -559,28 +559,54 @@ class Controller:
                 self._fixed_velocity = cc_val
             case 46:
                 self._shifting = bool(cc_val)
+                self._sync_channel_pads()
             case _:
                 return
         msg.handled = True
 
     def on_note_on(self, msg) -> None:
         note_num, note_vel = (msg.note, msg.velocity)
-        if note_vel:
-            if self._shifting:
-                if note_num == 0:
-                    general.undoUp()
-                elif note_num == 1:
-                    general.undoDown()
-            if self._is_selecting_pattern:
-                patterns.jumpToPattern(note_num + 1)
-                self._sync_patterns()
-            if self._is_selecting_channel:
-                chan_idx = note_num + self._channel_page * 16
-                if chan_idx < channels.channelCount():
-                    channels.selectOneChannel(chan_idx)
+        if self._shifting:
+            self._handle_shift_note_on(note_num, note_vel)
+        if self._is_selecting_pattern and note_vel:
+            patterns.jumpToPattern(note_num + 1)
+            self._sync_channel_pads()
+        if self._is_selecting_channel and note_vel:
+            chan_idx = note_num + self._channel_page * 16
+            if chan_idx < channels.channelCount():
+                channels.selectOneChannel(chan_idx)
         if self._shifting or self._is_selecting_pattern or self._is_selecting_channel:
             msg.handled = True
             return
+        self._handle_note_on(note_num, note_vel)
+        msg.handled = True
+
+    def _handle_shift_note_on(self, note_num: int, note_vel: int) -> None:
+        if not note_vel:
+            _midi_out_msg_note_on(note_num, 68)
+            match note_num:
+                case 0:
+                    general.undoUp()
+                case 1:
+                    general.undoDown()
+                case 4:
+                    channels.quickQuantize(self._selected_channel)
+                case 5:
+                    channels.quickQuantize(self._selected_channel, 1)
+                case 12 if self._semi_offset > 12 * -5:
+                    self._semi_offset -= 1
+                case 13 if self._semi_offset < 12 * 5:
+                    self._semi_offset += 1
+                case 14 if self._semi_offset > 12 * -5:
+                    self._semi_offset -= 12
+                case 15 if self._semi_offset < 12 * 5:
+                    self._semi_offset += 12
+                case _:
+                    pass
+        else:
+            _midi_out_msg_note_on(note_num, 70)
+
+    def _handle_note_on(self, note_num: int, note_vel: int) -> None:
         match self._pad_mode:
             case 0:
                 real_note = 48 + self._get_semi_offset()
@@ -791,8 +817,7 @@ class Controller:
                     not channels.getGridBit(selected_channel, chan_idx),
                 )
             case _:
-                return
-        msg.handled = True
+                pass
 
     def _init_led_states(self) -> None:
         self._deinit_led_states()
@@ -831,7 +856,16 @@ class Controller:
     def _sync_channel_pads(self) -> None:
         for note in range(16):
             _midi_out_msg_note_on(note, 0)
-        if self._pad_mode == 0 or self._is_selecting_channel:
+        if self._shifting:
+            for note in range(16):
+                if _is_enum_value(Pad, note):
+                    _midi_out_msg_note_on(note, 68)
+        elif self._is_selecting_pattern:
+            for pattern in range(patterns.patternCount()):
+                _midi_out_msg_note_on(
+                    pattern, 10 if patterns.isPatternSelected(pattern + 1) else 8
+                )
+        elif self._pad_mode == 0 or self._is_selecting_channel:
             lower_channel = self._channel_page * 16
             channel_count = channels.channelCount()
             for channel in range(lower_channel, channel_count):
@@ -941,12 +975,6 @@ class Controller:
         for cc in range(100, 107 + 1):
             _midi_out_msg_control_change(
                 cc, self._pad_mode_color if cc == self._active_group else 0
-            )
-
-    def _sync_patterns(self) -> None:
-        for pattern in range(patterns.patternCount()):
-            _midi_out_msg_note_on(
-                pattern, 10 if patterns.isPatternSelected(pattern + 1) else 8
             )
 
     def _get_semi_offset(self) -> int:
