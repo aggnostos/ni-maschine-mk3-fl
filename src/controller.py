@@ -513,18 +513,16 @@ class Controller:
                     general.undoUp()
                 elif note_num == 1:
                     general.undoDown()
-                msg.handled = True
             if self._is_selecting_pattern:
                 patterns.jumpToPattern(note_num + 1)
                 self._sync_patterns()
-                msg.handled = True
             if self._is_selecting_channel:
                 chan_idx = note_num + self._channel_page * NOTES_COUNT
                 if chan_idx < channels.channelCount():
                     channels.selectOneChannel(chan_idx)
-                msg.handled = True
 
-        if msg.handled or self._is_selecting_pattern or self._is_selecting_channel:
+        if self._shifting or self._is_selecting_pattern or self._is_selecting_channel:
+            msg.handled = True
             return
 
         match self._pad_mode:
