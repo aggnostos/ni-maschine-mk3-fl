@@ -117,7 +117,7 @@ class PadMode(IntEnum):
 
 
 class PadModeColor(IntEnum):
-    """Pad Mode Colors"""
+    """Pad Mode Colors (any ControllerColor value with _2 suffix)"""
 
     OMNI = ControllerColor.ORANGE_2
     KEYBOARD = ControllerColor.BLUE_2

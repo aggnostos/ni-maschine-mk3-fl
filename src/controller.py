@@ -793,20 +793,23 @@ class Controller:
         """Updates the group button colors based on the current pad mode"""
 
         for idx, cc in enumerate(range(CC.GROUP_A, CC.GROUP_H + 1)):
-            is_non_empty_channel_page = (
-                self._pad_mode == PadMode.OMNI
-                and channels.channelCount() > idx * NOTES_COUNT
-            )
-
-            is_non_empty_step_page = self._pad_mode == PadMode.STEP and any(
-                channels.getGridBit(self._selected_channel, gb) for gb in _get_grid(idx)
-            )
-
-            color = ControllerColor.BLACK_0
             if cc == self._active_group:
                 color = self._pad_mode_color
-            elif is_non_empty_channel_page or is_non_empty_step_page:
-                color = self._pad_mode_color - 2
+            elif (
+                self._pad_mode == PadMode.OMNI
+                and channels.channelCount() > idx * NOTES_COUNT
+            ):
+                color = PadModeColor.OMNI - 2
+            elif self._pad_mode == PadMode.STEP and any(
+                channels.getGridBit(self._selected_channel, gb) for gb in _get_grid(idx)
+            ):
+                color = PadModeColor.STEP - 2
+            elif self._pad_mode == PadMode.KEYBOARD and SCALES[idx]:
+                color = PadModeColor.KEYBOARD - 2
+            elif self._pad_mode == PadMode.CHORDS and CHORD_SETS[idx]:
+                color = PadModeColor.CHORDS - 2
+            else:
+                color = ControllerColor.BLACK_0
 
             _midi_out_msg_control_change(cc, color)
 
