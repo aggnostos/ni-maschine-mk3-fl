@@ -56,7 +56,7 @@ class CC(IntEnum):
     ERASE = 54
     TAP = 55
     PLAY = 57
-    GRID = 56
+    FOLLOW = 56
     REC = 58
     STOP = 59
     FIXED_VEL = 81
@@ -250,6 +250,11 @@ def _is_enum_value(enum_cls: type[Enum], value: object) -> bool:
         return False
 
 
+def _get_grid(page: int) -> range:
+    lower_step = page * 16
+    return range(lower_step, lower_step + 16)
+
+
 class Controller:
     _pad_mode: PadMode
     "Current pad mode. See PadMode Enum"
@@ -310,6 +315,7 @@ class Controller:
         self._sync_channel_controls()
         self._sync_mixer_controls()
         self._sync_song_position()
+        self._sync_groups()
 
     def on_de_init(self) -> None:
         self._deinit_led_states()
@@ -326,6 +332,7 @@ class Controller:
             self._sync_selected_channel()
             self._sync_channel_controls()
             self._sync_channel_pads()
+            self._sync_groups()
         elif mixer_sel_event or mixer_display_event or mixer_controls_event:
             self._sync_mixer_controls()
         elif leds_event:
@@ -453,7 +460,7 @@ class Controller:
                     case _:
                         return
                 self._active_group = PadGroup(cc_num)
-                self._change_group_colors()
+                self._sync_groups()
                 self._sync_channel_pads()
             case 53 if self._shifting:
                 transport.setLoopMode()
@@ -502,7 +509,7 @@ class Controller:
                     case _:
                         pass
                 self._active_group = PadGroup(active_group)
-                self._change_group_colors()
+                self._sync_groups()
                 self._sync_channel_pads()
             case 86:
                 self._is_selecting_pattern = bool(cc_val)
@@ -836,13 +843,13 @@ class Controller:
         _midi_out_msg_control_change(34, _on_off(ui.getVisible(midi.widChannelRack)))
         _midi_out_msg_control_change(36, _on_off(ui.getVisible(midi.widPlaylist)))
         _midi_out_msg_control_change(37, _on_off(ui.getVisible(midi.widMixer)))
-        _midi_out_msg_control_change(53, _on_off(bool(transport.getLoopMode())))
         _midi_out_msg_control_change(38, _on_off(ui.getVisible(midi.widBrowser)))
+        _midi_out_msg_control_change(53, _on_off(bool(transport.getLoopMode())))
         _midi_out_msg_control_change(55, _on_off(general.getUseMetronome()))
+        _midi_out_msg_control_change(56, _on_off(ui.getSnapMode() != 3))
         _midi_out_msg_control_change(57, _on_off(transport.isPlaying()))
         _midi_out_msg_control_change(58, _on_off(transport.isRecording()))
         _midi_out_msg_control_change(59, _on_off(not transport.isPlaying()))
-        _midi_out_msg_control_change(56, _on_off(ui.getSnapMode() != 3))
 
     def _sync_selected_channel(self) -> None:
         self._selected_channel = channels.selectedChannel()
@@ -875,12 +882,9 @@ class Controller:
                 _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
             self._toggle_selected_channel_highlight()
         elif self._pad_mode == 3:
-            lower_step = self._step_page * 16
-            for gridbit in range(lower_step, lower_step + 16):
-                idx = gridbit - lower_step
+            for idx, gb in enumerate(_get_grid(self._step_page)):
                 _midi_out_msg_note_on(
-                    idx,
-                    58 if channels.getGridBit(self._selected_channel, gridbit) else 0,
+                    idx, 58 if channels.getGridBit(self._selected_channel, gb) else 0
                 )
 
     def _sync_channel_controls(self) -> None:
@@ -971,11 +975,186 @@ class Controller:
     def _sync_song_position(self) -> None:
         _midi_out_msg_control_change(1, int(transport.getSongPos() * 100))
 
-    def _change_group_colors(self) -> None:
-        for cc in range(100, 107 + 1):
-            _midi_out_msg_control_change(
-                cc, self._pad_mode_color if cc == self._active_group else 0
-            )
+    def _sync_groups(self) -> None:
+        for idx, cc in enumerate(range(100, 107 + 1)):
+            if cc == self._active_group:
+                color = self._pad_mode_color
+            elif self._pad_mode == 0 and channels.channelCount() > idx * 16:
+                color = 10 - 2
+            elif self._pad_mode == 3 and any(
+                (
+                    channels.getGridBit(self._selected_channel, gb)
+                    for gb in _get_grid(idx)
+                )
+            ):
+                color = 58 - 2
+            elif (
+                self._pad_mode == 1
+                and [
+                    [36, 38, 44, 46, 37, 40, 45, 41, 47, 42, 39, 43, 48, 49, 50, 55],
+                    [48, 50, 51, 53, 55, 56, 58, 60, 62, 63, 65, 67, 68, 70, 72, 74],
+                    [48, 50, 52, 53, 55, 57, 59, 60, 62, 64, 65, 67, 69, 71, 72, 74],
+                    [37, 36, 42, 82, 40, 38, 46, 44, 48, 47, 45, 43, 49, 55, 51, 53],
+                    [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
+                    [48, 49, 52, 53, 55, 56, 59, 60, 61, 64, 65, 67, 68, 71, 72, 73],
+                    [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
+                    [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63],
+                ][idx]
+            ):
+                color = 46 - 2
+            elif (
+                self._pad_mode == 2
+                and [
+                    [
+                        [36, 48, 51, 55],
+                        [39, 48, 51, 55],
+                        [41, 36, 53, 56],
+                        [31, 47, 50, 55],
+                        [32, 48, 51, 55],
+                        [39, 46, 51, 55],
+                        [31, 46, 50, 55],
+                        [34, 46, 50, 53],
+                        [29, 45, 48, 53],
+                        [32, 48, 53, 56],
+                        [31, 48, 51, 55],
+                        [31, 47, 50, 55],
+                        [29, 38, 53, 56],
+                        [38, 50, 53, 58],
+                        [38, 48, 50, 55],
+                        [36, 48, 53, 55],
+                    ],
+                    [
+                        [36, 43, 48, 51],
+                        [35, 43, 47, 51],
+                        [34, 43, 48, 51],
+                        [31, 47, 50, 55],
+                        [32, 48, 51, 55],
+                        [39, 46, 51, 55],
+                        [31, 46, 50, 55],
+                        [34, 46, 50, 53],
+                        [29, 45, 48, 53],
+                        [32, 48, 53, 56],
+                        [31, 48, 51, 55],
+                        [31, 47, 50, 55],
+                        [36, 48, 51, 55],
+                        [29, 38, 53, 56],
+                        [34, 38, 53, 58],
+                        [34, 38, 50, 55],
+                    ],
+                    [
+                        [36, 43, 48, 50, 55],
+                        [36, 43, 46, 50, 53],
+                        [38, 45, 48, 50, 53],
+                        [38, 57, 48, 52, 55],
+                        [40, 43, 48, 50, 55],
+                        [38, 43, 46, 50, 53],
+                        [33, 45, 48, 50, 53],
+                        [33, 45, 48, 52, 55],
+                        [39, 51, 54, 58],
+                        [39, 49, 53, 56],
+                        [37, 49, 53, 56],
+                        [39, 53, 56, 61],
+                        [37, 53, 56, 61],
+                        [36, 51, 56, 60],
+                        [36, 51, 55, 58],
+                        [34, 38, 55, 58],
+                    ],
+                    [
+                        [25, 38, 43, 46],
+                        [29, 36, 41, 45],
+                        [31, 38, 43, 46],
+                        [34, 41, 46, 50],
+                        [26, 33, 38, 41],
+                        [24, 31, 36, 39],
+                        [29, 36, 41, 45],
+                        [31, 38, 43, 46],
+                        [36, 48, 51, 55],
+                        [36, 48, 51, 55],
+                        [36, 48, 51, 55],
+                        [36, 48, 51, 55],
+                        [36, 48, 51, 55],
+                        [36, 48, 51, 55],
+                        [36, 48, 51, 55],
+                        [36, 48, 51, 55],
+                    ],
+                    [
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                    ],
+                    [
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                    ],
+                    [
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                    ],
+                    [
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                        [36, 48, 52, 55],
+                    ],
+                ][idx]
+            ):
+                color = 6 - 2
+            else:
+                color = 0
+            _midi_out_msg_control_change(cc, color)
 
     def _get_semi_offset(self) -> int:
         return self._semi_offset + 12
