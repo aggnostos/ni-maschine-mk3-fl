@@ -4,7 +4,8 @@ import midi
 import device
 import plugins
 
-from enums import *
+from consts import NOTES_COUNT
+from enums import PluginColor, ChannelColor
 
 
 __all__ = [
@@ -15,6 +16,7 @@ __all__ = [
     "_percent_to_bipolar",
     "_bipolar_to_percent",
     "_is_enum_value",
+    "_get_grid",
 ]
 
 
@@ -118,3 +120,9 @@ def _is_enum_value(enum_cls: type[Enum], value: object) -> bool:
         return True
     except ValueError:
         return False
+
+
+def _get_grid(page: int) -> range:
+    """Get the step grid range for a given offset (page)"""
+    lower_step = page * NOTES_COUNT
+    return range(lower_step, lower_step + NOTES_COUNT)

@@ -95,6 +95,7 @@ class Controller:
         self._sync_channel_controls()
         self._sync_mixer_controls()
         self._sync_song_position()
+        self._sync_groups()
 
     def on_de_init(self) -> None:
         self._deinit_led_states()
@@ -119,6 +120,7 @@ class Controller:
             self._sync_selected_channel()
             self._sync_channel_controls()
             self._sync_channel_pads()
+            self._sync_groups()
         elif mixer_sel_event or mixer_display_event or mixer_controls_event:
             self._sync_mixer_controls()
         elif leds_event:
@@ -324,7 +326,7 @@ class Controller:
                         return
 
                 self._active_group = PadGroup(cc_num)
-                self._change_group_colors()
+                self._sync_groups()
 
                 self._sync_channel_pads()
 
@@ -391,7 +393,7 @@ class Controller:
                         pass
 
                 self._active_group = PadGroup(active_group)
-                self._change_group_colors()
+                self._sync_groups()
 
                 self._sync_channel_pads()
 
@@ -672,16 +674,13 @@ class Controller:
 
             self._toggle_selected_channel_highlight()
         elif self._pad_mode == PadMode.STEP:
-            lower_step = self._step_page * NOTES_COUNT
-
             # turn on pads for step sequencer grid bits
-            for gridbit in range(lower_step, lower_step + NOTES_COUNT):
-                idx = gridbit - lower_step
+            for idx, gb in enumerate(_get_grid(self._step_page)):
                 _midi_out_msg_note_on(
                     idx,
                     (
                         PadModeColor.STEP
-                        if channels.getGridBit(self._selected_channel, gridbit)
+                        if channels.getGridBit(self._selected_channel, gb)
                         else ControllerColor.BLACK_0
                     ),
                 )
@@ -790,17 +789,25 @@ class Controller:
 
         _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 100))
 
-    def _change_group_colors(self) -> None:
+    def _sync_groups(self) -> None:
         """Updates the group button colors based on the current pad mode"""
 
-        for cc in range(CC.GROUP_A, CC.GROUP_H + 1):
+        for idx, cc in enumerate(range(CC.GROUP_A, CC.GROUP_H + 1)):
+            color = ControllerColor.BLACK_0
+
+            if self._pad_mode == PadMode.OMNI:
+                if channels.channelCount() > idx * NOTES_COUNT:
+                    color = self._pad_mode_color - 2
+            elif self._pad_mode == PadMode.STEP:
+                if any(
+                    channels.getGridBit(self._selected_channel, gb)
+                    for gb in _get_grid(idx)
+                ):
+                    color = self._pad_mode_color - 2
+
             _midi_out_msg_control_change(
                 cc,
-                (
-                    self._pad_mode_color
-                    if cc == self._active_group
-                    else ControllerColor.BLACK_0
-                ),
+                (self._pad_mode_color if cc == self._active_group else color),
             )
 
     def _get_semi_offset(self) -> int:
