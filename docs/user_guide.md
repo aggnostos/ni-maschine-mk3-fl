@@ -1,6 +1,6 @@
 # User Guide
 
-## Controls
+## Control Changes
 
 - `SHIFT` original **SHIFT** button is reserved by Maschine so we assign it to another CC that is not used - **NOTE REPEAT (Arp)**
 
@@ -83,17 +83,6 @@ Groups have different meaning depending on what pad mode you are currently using
 - `MUTE` mutes the currently selected **Channel** or **Mixer Track**.
   - By default (whithout `SHIFT`) soloes mixer track, including send tracks that it is routed to, otherwise soloes mixer track, including source tracks routed to it
 
-#### Pads
-
-- `Undo` moves up in the undo history
-- `Redo` moves down in the undo history
-- `Quantize` performs a quick quantize operation on the channel
-- `Quantize 50%` performs a quick quantize operation on the channel only for the start of the note
-- `Semitone -` shifts notes triggered by -1 semitone
-- `Semitone +` shifts notes triggered by +1 semitone
-- `Octave -` shifts notes triggered by -1 octave (-12 semitones)
-- `Octave +` shifts notes triggered by +1 octave (+12 semitones)
-
 ### Knob Page Section
 
 #### Buttons
@@ -111,6 +100,17 @@ Groups have different meaning depending on what pad mode you are currently using
 - `CHAN. VOL.` controls the volume of the currently selected channel
 - `CHAN. PAN.` controls the pan for selected channel
 - `FIX. VEL.` controls the velocity of notes when **FIXED VELOCITY** mode is turned on
+
+## Notes
+
+- `Undo` moves up in the undo history
+- `Redo` moves down in the undo history
+- `Quantize` performs a quick quantize operation on the channel
+- `Quantize 50%` performs a quick quantize operation on the channel only for the start of the note
+- `Semitone -` shifts notes triggered by -1 semitone
+- `Semitone +` shifts notes triggered by +1 semitone
+- `Octave -` shifts notes triggered by -1 octave (-12 semitones)
+- `Octave +` shifts notes triggered by +1 octave (+12 semitones)
 
 > ## Note
 >
