@@ -119,7 +119,7 @@ class Controller:
         # so we only want to run the full leds sync logic when no other events are present.
         # e.g. `leds_event` is triggered alongside `channel_event`, so we only want to sync leds
         # that are related to `channel_event` in that case.
-        if channel_event and leds_event:
+        if channel_event:
             self._sync_selected_channel()
             self._sync_channel_controls()
             self._sync_pads()
@@ -129,7 +129,8 @@ class Controller:
             self._sync_mixer_controls()
             # for some reason turning record on/off triggers `mixer_controls_event` alongside `leds_event`,
             # so we need to handle it separately
-            _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
+            if mixer_controls_event:
+                _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
         elif leds_event:
             self._sync_cc_led_states()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
@@ -147,31 +148,31 @@ class Controller:
 
         # # Debugging output for refresh flags
         # if flags & midi.HW_Dirty_Mixer_Sel:
-        #     print("midi.HW_Dirty_Mixer_Sel")
+        #     print("HW_Dirty_Mixer_Sel")
         # if flags & midi.HW_Dirty_Mixer_Display:
-        #     print("midi.HW_Dirty_Mixer_Display")
+        #     print("HW_Dirty_Mixer_Display")
         # if flags & midi.HW_Dirty_Mixer_Controls:
-        #     print("midi.HW_Dirty_Mixer_Controls")
+        #     print("HW_Dirty_Mixer_Controls")
         # if flags & midi.HW_Dirty_FocusedWindow:
-        #     print("midi.HW_Dirty_FocusedWindow")
+        #     print("HW_Dirty_FocusedWindow")
         # if flags & midi.HW_Dirty_Performance:
-        #     print("midi.HW_Dirty_Performance")
+        #     print("HW_Dirty_Performance")
         # if flags & midi.HW_Dirty_LEDs:
-        #     print("midi.HW_Dirty_LEDs")
+        #     print("HW_Dirty_LEDs")
         # if flags & midi.HW_Dirty_Patterns:
-        #     print("midi.HW_Dirty_Patterns")
+        #     print("HW_Dirty_Patterns")
         # if flags & midi.HW_Dirty_Tracks:
-        #     print("midi.HW_Dirty_Tracks")
+        #     print("HW_Dirty_Tracks")
         # if flags & midi.HW_Dirty_ControlValues:
-        #     print("midi.HW_Dirty_ControlValues")
+        #     print("HW_Dirty_ControlValues")
         # if flags & midi.HW_Dirty_Colors:
-        #     print("midi.HW_Dirty_Colors")
+        #     print("HW_Dirty_Colors")
         # if flags & midi.HW_Dirty_Names:
-        #     print("midi.HW_Dirty_Names")
+        #     print("HW_Dirty_Names")
         # if flags & midi.HW_Dirty_ChannelRackGroup:
-        #     print("midi.HW_Dirty_ChannelRackGroup")
+        #     print("HW_Dirty_ChannelRackGroup")
         # if flags & midi.HW_ChannelEvent:
-        #     print("midi.HW_ChannelEvent")
+        #     print("HW_ChannelEvent")
 
     def on_control_change(self, msg: FlMidiMsg) -> None:
         cc_num, cc_val = msg.controlNum, msg.controlVal
