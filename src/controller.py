@@ -369,7 +369,7 @@ class Controller:
 
             case CC.PAD_MODE | CC.KEYBOARD_MODE | CC.CHORDS_MODE | CC.STEP_MODE:
                 for cc in (CC.PAD_MODE, CC.KEYBOARD_MODE, CC.CHORDS_MODE, CC.STEP_MODE):
-                    _midi_out_msg_control_change(cc, 127 if cc == cc_num else 0)
+                    _midi_out_msg_control_change(cc, _on_off(cc == cc_num))
 
                 active_group = PadGroup.A
                 match cc_num:
@@ -741,8 +741,7 @@ class Controller:
 
         for cc in (CC.ENCODER_VOLUME, CC.ENCODER_SWING, CC.ENCODER_TEMPO):
             _midi_out_msg_control_change(
-                cc,
-                (127 if cc == cc_num and mode != FourDEncoderMode.JOG else 0),
+                cc, _on_off(cc == cc_num and mode != FourDEncoderMode.JOG)
             )
 
         self._encoder_mode = mode
@@ -760,8 +759,7 @@ class Controller:
             CC.TOUCH_STRIP_NOTES,
         ):
             _midi_out_msg_control_change(
-                cc,
-                (127 if cc == cc_num and mode != TouchStripMode.TRANSPORT else 0),
+                cc, _on_off(cc == cc_num and mode != TouchStripMode.TRANSPORT)
             )
 
         self._touch_strip_mode = mode
