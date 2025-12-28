@@ -57,17 +57,15 @@ Before installing the script, make sure you have the following:
 
 ### 3. Install the MIDI script in FL Studio
 
-1. Locate the FL Studio MIDI scripts directory:
-
-- **macOS**: `~/Documents/Image-Line/FL Studio/Settings/Hardware/`
-- **Windows**: `Documents/Image-Line\FL Studio\Settings\Hardware\`
-
-1. Create a **new folder** with any name, for example: `NI_Maschine_MK3`
-2. Copy the file `device_Maschine_MK3.py` into the newly created folder
+1. Locate the FL Studio MIDI scripts directory, it's usually:
+   - **MacOS**: `~/Documents/Image-Line/FL\ Studio/Settings/Hardware/`
+   - **Windows**: ```~\Documents\Image-Line\FL` Studio\Settings\Hardware\```
+2. Create a new folder with any name, for example: `NI_Maschine_MK3`
+3. Copy the file `device_Maschine_MK3.py` into the newly created folder
 
 The final folder structure should look like this:
 
-``` md
+``` plaintext
 ...
 └── Hardware/
  └── NI_Maschine_MK3/
