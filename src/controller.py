@@ -106,23 +106,33 @@ class Controller:
         # allowing multiple updates to be signaled at once.
 
         channel_event = flags & midi.HW_ChannelEvent
-        selected_channel_event = flags & midi.HW_Dirty_FocusedWindow
+        focused_window_event = flags & midi.HW_Dirty_FocusedWindow
         pattern_event = flags & midi.HW_Dirty_Patterns
         control_values_event = flags & midi.HW_Dirty_ControlValues
         mixer_sel_event = flags & midi.HW_Dirty_Mixer_Sel
         mixer_controls_event = flags & midi.HW_Dirty_Mixer_Controls
         leds_event = flags & midi.HW_Dirty_LEDs
 
-        # This `elif` block is needed because `leds_event` is triggered alongside other events
-        # so we only want to run the full leds sync logic when no other events are present.
-        # e.g. `leds_event` is triggered alongside `channel_event`, so we only want to sync leds
-        # that are related to `channel_event` in that case.
-        if channel_event or selected_channel_event:
+        # This `elif` block is needed because some events are triggered alongside other events
+        # (e.g., 'leds_event` alongside `focused_window_event` and `channel_event`),
+        # so we want to avoid redundant syncing.
+        if channel_event or focused_window_event:
             self._sync_channel()
             self._sync_channel_controls()
+            if self._touch_strip_mode == TouchStripMode.PITCH:
+                self._sync_touch_strip()
             if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
                 self._sync_pad_leds()
                 self._sync_group_leds()
+
+        elif pattern_event and self._pad_mode == PadMode.STEP:
+            self._sync_pad_leds()
+
+        elif control_values_event:
+            self._sync_channel_controls()
+            if self._touch_strip_mode == TouchStripMode.PITCH:
+                self._sync_touch_strip()
+
         elif mixer_sel_event or mixer_controls_event:
             self._sync_track()
             self._sync_mixer_controls()
@@ -130,18 +140,11 @@ class Controller:
             # so we need to handle it separately
             if mixer_controls_event:
                 _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
+
         elif leds_event:
             self._sync_cc_leds()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
-
-        if pattern_event:
-            self._sync_pad_leds()
-
-        if control_values_event:
-            if self._touch_strip_mode == TouchStripMode.PITCH:
-                self._sync_touch_strip()
-            self._sync_channel_controls()
 
         # Debugging output for refresh flags
         if flags & midi.HW_Dirty_Mixer_Sel:
@@ -170,6 +173,7 @@ class Controller:
             print("HW_Dirty_ChannelRackGroup")
         if flags & midi.HW_ChannelEvent:
             print("HW_ChannelEvent")
+        print("----")
 
     def on_control_change(self, msg: FlMidiMsg) -> None:
         cc_num, cc_val = msg.controlNum, msg.controlVal
