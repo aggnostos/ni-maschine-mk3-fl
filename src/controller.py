@@ -525,9 +525,9 @@ class Controller:
                 case Pad.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
                     self._semi_offset += 1
                 case Pad.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
-                    self._semi_offset -= 12
+                    self._semi_offset -= SEMITONES_IN_OCTAVE
                 case Pad.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
-                    self._semi_offset += 12
+                    self._semi_offset += SEMITONES_IN_OCTAVE
                 case _:
                     pass
         else:
