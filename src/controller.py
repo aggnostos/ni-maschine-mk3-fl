@@ -509,6 +509,9 @@ class Controller:
     def _handle_shift_note_on(self, note_num: int, note_vel: int) -> None:
         """Handles note on events when the shift button is pressed"""
 
+        if not _is_enum_value(Pad, note_num):
+            return
+
         if not note_vel:  # handle action on note off
             _midi_out_msg_note_on(note_num, ControllerColor.WHITE_0)
             match note_num:
