@@ -40,19 +40,19 @@ class Controller:
     """Currently selected channel index"""
 
     _channel_page: int
-    """Current channel page (0-15) for OMNI mode pad display"""
+    """Current channel page (0-7) for OMNI mode pad display"""
 
     _step_page: int
-    """Current step sequence page (0-15) for STEP mode pad display"""
+    """Current step sequence page (0-7) for STEP mode pad display"""
 
     _semi_offset: int
     """Current semitone offset"""
 
-    _scale_index: int
-    """Current scale index for keyboard mode (0-7)"""
+    _active_scale: int
+    """Currently active scale index for keyboard mode (0-7)"""
 
-    _chordset_index: int
-    """Current chord set index for chords mode (0-7)"""
+    _active_chordset: int
+    """Currently active chord set index for chords mode (0-7)"""
 
     _fixed_velocity: int
     """Fixed velocity value for pads when fixed velocity mode is enabled"""
@@ -60,7 +60,7 @@ class Controller:
     _is_fixed_velocity: bool
     """Indicates whether fixed velocity mode is enabled"""
 
-    _shifting: bool
+    _is_shifting: bool
     """Indicates whether the shift button is currently pressed"""
 
     _is_selecting_pattern: bool
@@ -79,11 +79,11 @@ class Controller:
         self._channel_page = 0
         self._step_page = 0
         self._semi_offset = 0
-        self._scale_index = 0
-        self._chordset_index = 0
+        self._active_scale = 0
+        self._active_chordset = 0
         self._fixed_velocity = 100
         self._is_fixed_velocity = False
-        self._shifting = False
+        self._is_shifting = False
         self._is_selecting_pattern = False
         self._is_selecting_channel = False
 
@@ -191,7 +191,7 @@ class Controller:
 
                 is_visible = ui.getVisible(wid)
 
-                if self._shifting:
+                if self._is_shifting:
                     if not is_visible:
                         ui.showWindow(wid)
                     ui.setFocused(wid)
@@ -317,9 +317,9 @@ class Controller:
                     case PadMode.OMNI:
                         self._channel_page = page_idx
                     case PadMode.KEYBOARD:
-                        self._scale_index = page_idx
+                        self._active_scale = page_idx
                     case PadMode.CHORDS:
-                        self._chordset_index = page_idx
+                        self._active_chordset = page_idx
                     case PadMode.STEP:
                         self._step_page = page_idx
                     case _:
@@ -331,7 +331,7 @@ class Controller:
                 self._sync_channel_pads()
 
             # -------- TRASPORT SECTION -------- #
-            case CC.RESTART if self._shifting:  # LOOP
+            case CC.RESTART if self._is_shifting:  # LOOP
                 transport.setLoopMode()
             case CC.RESTART:
                 transport.stop()
@@ -340,7 +340,7 @@ class Controller:
             case CC.ERASE:
                 ui.delete()
 
-            case CC.TAP if self._shifting:  # METRO
+            case CC.TAP if self._is_shifting:  # METRO
                 transport.globalTransport(midi.FPT_Metronome, 1)
             case CC.TAP:
                 transport.globalTransport(midi.FPT_TapTempo, 1)
@@ -354,7 +354,7 @@ class Controller:
             case CC.STOP:
                 transport.stop()
 
-            case CC.REC if self._shifting:  # Count-in
+            case CC.REC if self._is_shifting:  # Count-in
                 transport.globalTransport(midi.FPT_CountDown, 1)
             case CC.REC:
                 transport.record()
@@ -377,12 +377,12 @@ class Controller:
                     case CC.KEYBOARD_MODE:
                         self._pad_mode = PadMode.KEYBOARD
                         self._pad_mode_color = PadModeColor.KEYBOARD
-                        active_group += self._scale_index
+                        active_group += self._active_scale
 
                     case CC.CHORDS_MODE:
                         self._pad_mode = PadMode.CHORDS
                         self._pad_mode_color = PadModeColor.CHORDS
-                        active_group += self._chordset_index
+                        active_group += self._active_chordset
 
                     case CC.STEP_MODE:
                         self._pad_mode = PadMode.STEP
@@ -409,7 +409,7 @@ class Controller:
                 if ui.getFocused(midi.widChannelRack):
                     channels.soloChannel(self._selected_channel)
                 elif ui.getFocused(midi.widMixer):
-                    if self._shifting:
+                    if self._is_shifting:
                         mixer.soloTrack(
                             mixer.trackNumber(), -1, midi.fxSoloModeWithSourceTracks
                         )
@@ -470,7 +470,7 @@ class Controller:
 
             # -------- SHIFT -------- #
             case CC.SHIFT:
-                self._shifting = bool(cc_val)
+                self._is_shifting = bool(cc_val)
                 self._sync_channel_pads()
 
             # -------- DEFAULT -------- #
@@ -483,7 +483,7 @@ class Controller:
         note_num, note_vel = msg.note, msg.velocity
         # velocity == 0 means note off
 
-        if self._shifting:
+        if self._is_shifting:
             self._handle_shift_note_on(note_num, note_vel)
 
         if self._is_selecting_pattern and note_vel:
@@ -495,7 +495,11 @@ class Controller:
             if chan_idx < channels.channelCount():
                 channels.selectOneChannel(chan_idx)
 
-        if self._shifting or self._is_selecting_pattern or self._is_selecting_channel:
+        if (
+            self._is_shifting
+            or self._is_selecting_pattern
+            or self._is_selecting_channel
+        ):
             msg.handled = True
             return
 
@@ -551,7 +555,7 @@ class Controller:
 
             case PadMode.KEYBOARD:
                 real_note = (
-                    SCALES[self._scale_index][note_num] + self._get_semi_offset()
+                    SCALES[self._active_scale][note_num] + self._get_semi_offset()
                 )
                 if note_vel:
                     channels.midiNoteOn(
@@ -565,7 +569,7 @@ class Controller:
                     _midi_out_msg_note_on(note_num, ControllerColor.BLACK_0)
 
             case PadMode.CHORDS:
-                chord_notes = CHORD_SETS[self._chordset_index][note_num]
+                chord_notes = CHORD_SETS[self._active_chordset][note_num]
                 for note in chord_notes:
                     real_note = note + self._get_semi_offset()
                     if note_vel:
@@ -649,7 +653,7 @@ class Controller:
         for note in range(NOTES_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
-        if self._shifting:
+        if self._is_shifting:
             for note in range(NOTES_COUNT):
                 if _is_enum_value(Pad, note):
                     _midi_out_msg_note_on(note, ControllerColor.WHITE_0)
