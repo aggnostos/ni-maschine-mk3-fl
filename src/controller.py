@@ -686,10 +686,11 @@ class Controller:
                     break
                 _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
 
-            _midi_out_msg_note_on(
-                self._channel - self._channel_page * PAD_COUNT,
-                _get_channel_color(self._channel, self._is_selecting_channel),
-            )
+            if self._is_selecting_channel:
+                _midi_out_msg_note_on(
+                    self._channel - self._channel_page * PAD_COUNT,
+                    _get_channel_color(self._channel, True),
+                )
 
         elif self._pad_mode == PadMode.STEP:
             # turn on pads for step sequencer grid bits
