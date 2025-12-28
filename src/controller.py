@@ -334,6 +334,8 @@ class Controller:
 
                 self._sync_pad_leds()
 
+                self._notes_off()
+
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._is_shifting:  # LOOP
                 transport.setLoopMode()
@@ -401,13 +403,19 @@ class Controller:
 
                 self._sync_pad_leds()
 
+                self._notes_off()
+
             case CC.PATTERN:
                 self._is_selecting_pattern = bool(cc_val)
                 self._sync_pad_leds()
+                if cc_val:
+                    self._notes_off()
 
             case CC.SELECT:
                 self._is_selecting_channel = bool(cc_val)
                 self._sync_pad_leds()
+                if cc_val:
+                    self._notes_off()
 
             case CC.SOLO:
                 if ui.getFocused(midi.widChannelRack):
@@ -471,6 +479,8 @@ class Controller:
             case CC.SHIFT:
                 self._is_shifting = bool(cc_val)
                 self._sync_pad_leds()
+                if cc_val:
+                    self._notes_off()
 
             # -------- DEFAULT -------- #
             case _:
@@ -817,3 +827,10 @@ class Controller:
     def _get_semi_offset(self) -> int:
         """Returns the current semitone offset"""
         return self._semi_offset + SEMITONES_IN_OCTAVE
+
+    @staticmethod
+    def _notes_off() -> None:
+        """Turns off all currently playing notes on the active channel"""
+        for chan in range(channels.channelCount()):
+            for note in range(0, 128):
+                channels.midiNoteOn(chan, note, 0)
