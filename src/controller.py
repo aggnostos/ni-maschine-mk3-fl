@@ -230,7 +230,10 @@ class Controller:
 
                 match self._encoder_mode:
                     case FourDEncoderMode.JOG:
-                        ui.jog(1 * multiplier)
+                        if not self._is_shifting:
+                            ui.jog(1 * multiplier)
+                        else:
+                            ui.jog2(1 * multiplier)
 
                     case FourDEncoderMode.VOLUME:
                         if ui.getFocused(midi.widMixer):

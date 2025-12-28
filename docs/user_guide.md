@@ -24,7 +24,7 @@
 #### Encoder actions
 
 - `PUSH` behaves same way as pressing `Enter` key
-- `TURN` performes action depending the selected 4D Encoder mode. If **JOG** (default) mode is selected, performing **next** or **previous** actions.
+- `TURN` performes action depending the selected 4D Encoder mode. In **JOG (default)** mode works as [**jog control**](https://il-group.github.io/FL-Studio-API-Stubs/midi_controller_scripting/ui/navigation/#ui.__navigation.jog) or as [**alternate jog control**](https://il-group.github.io/FL-Studio-API-Stubs/midi_controller_scripting/ui/navigation/#ui.__navigation.jog2) with `SHIFT`.
 - `UP` behaves same way as pressing `Up Arrow` key
 - `RIGHT` behaves same way as pressing `Right Arrow` key
 - `DOWN` behaves same way as pressing `Down Arrow` key
@@ -38,7 +38,7 @@
 
 ### Performance (Touch Strip) Section
 
-- `TOUCH STRIP` allows you to adjust specific parameter depending on what Touch Strip mode You are using. In **TRANSPORT** (default) mode Touch strip is adjusting a current song position.
+- `TOUCH STRIP` allows you to adjust specific parameter depending on what Touch Strip mode You are using. In **TRANSPORT (default)** mode Touch strip is adjusting a current song position.
 - `PITCH` changes Touch Strip mode to **PITCH** allowing you to adjust Pitch of selected channel
 - `MOD` changes Touch Strip mode to **MOD** (NOT IMPLEMENTED)
 - `PERFORM` changes Touch Strip mode to **PERFORM** (NOT IMPLEMENTED)
