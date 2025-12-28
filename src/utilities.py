@@ -4,7 +4,7 @@ import midi
 import device
 import plugins
 
-from consts import NOTES_COUNT
+from consts import PAD_COUNT
 from enums import PluginColor, ChannelColor
 
 
@@ -124,5 +124,5 @@ def _is_enum_value(enum_cls: type[Enum], value: object) -> bool:
 
 def _get_grid(page: int) -> range:
     """Get the step grid range for a given offset (page)"""
-    lower_step = page * NOTES_COUNT
-    return range(lower_step, lower_step + NOTES_COUNT)
+    lower_step = page * PAD_COUNT
+    return range(lower_step, lower_step + PAD_COUNT)

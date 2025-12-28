@@ -1,6 +1,6 @@
 __all__ = [
     "CC_COUNT",
-    "NOTES_COUNT",
+    "PAD_COUNT",
     "SEMITONES_IN_OCTAVE",
     "MIN_SEMI_OFFSET",
     "MAX_SEMI_OFFSET",
@@ -11,7 +11,7 @@ __all__ = [
 
 CC_COUNT = 128
 
-NOTES_COUNT = 16
+PAD_COUNT = 16
 
 MIN_OCTAVE = -5
 MAX_OCTAVE = 5

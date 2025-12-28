@@ -102,7 +102,7 @@ class Controller:
         self._sync_groups()
 
     def on_de_init(self) -> None:
-        self._deinit_led_states()
+        self._leds_off()
 
     def on_refresh(self, flags: int) -> None:
         # `flags` is a bitmask — a single integer where each bit represents a different type of state change,
@@ -487,7 +487,7 @@ class Controller:
             self._sync_pads()
 
         if self._is_selecting_channel and note_vel:
-            chan_idx = note_num + self._channel_page * NOTES_COUNT
+            chan_idx = note_num + self._channel_page * PAD_COUNT
             if chan_idx < channels.channelCount():
                 channels.selectOneChannel(chan_idx)
 
@@ -534,7 +534,7 @@ class Controller:
         match self._pad_mode:
             case PadMode.OMNI:
                 real_note = ROOT_NOTE + self._get_semi_offset()
-                chan_idx = note_num + self._channel_page * NOTES_COUNT
+                chan_idx = note_num + self._channel_page * PAD_COUNT
                 if chan_idx >= channels.channelCount():
                     return
                 if note_vel:
@@ -584,34 +584,42 @@ class Controller:
                         _midi_out_msg_note_on(note_num, ControllerColor.BLACK_0)
 
             case PadMode.STEP if note_vel:
-                chan_idx = note_num + self._step_page * NOTES_COUNT
-                selected_channel = self._channel
+                chan_idx = note_num + self._step_page * PAD_COUNT
                 channels.setGridBit(
-                    selected_channel,
+                    self._channel,
                     chan_idx,
-                    not channels.getGridBit(selected_channel, chan_idx),
+                    not channels.getGridBit(self._channel, chan_idx),
                 )
 
             case _:
                 pass
 
     def _init_led_states(self) -> None:
-        self._deinit_led_states()
+        """Initializes the LED states on the Maschine MK3 device"""
 
-        # fmt: off
+        self._leds_off()
+
         _midi_out_msg_control_change(CC.GROUP_A, self._pad_mode_color)
         _midi_out_msg_control_change(CC.PAD_MODE, 127)
         _midi_out_msg_control_change(CC.FIX_VEL, 100)
-        # fmt: on
+
+    def _leds_off(self) -> None:
+        """Turns off all LEDs on the Maschine MK3 device"""
+
+        self._cc_leds_off()
+        self._pad_leds_off()
 
     @staticmethod
-    def _deinit_led_states() -> None:
-        """De-initializes the LED states on the Maschine MK3 device"""
+    def _cc_leds_off() -> None:
+        """Turns off all CC LED states on the Maschine MK3 device"""
 
         for cc in range(CC_COUNT):
             _midi_out_msg_control_change(cc, ControllerColor.BLACK_0)
 
-        for note in range(NOTES_COUNT):
+    def _pad_leds_off(self) -> None:
+        """Turns off all pad LEDs on the Maschine MK3 device"""
+
+        for note in range(PAD_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
     def _sync_cc_led_states(self) -> None:
@@ -632,22 +640,19 @@ class Controller:
 
     def _sync_channel(self) -> None:
         """Syncs the selected channel index with the current FL Studio selected channel"""
-
         self._channel = channels.selectedChannel()
 
     def _sync_track(self) -> None:
         """Syncs the selected mixer track index with the current FL Studio selected mixer track"""
-
         self._track = mixer.trackNumber()
 
     def _sync_pads(self) -> None:
         """Syncs the pad LEDs on the Maschine MK3 device"""
 
-        for note in range(NOTES_COUNT):
-            _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
+        self._pad_leds_off()
 
         if self._is_shifting:
-            for note in range(NOTES_COUNT):
+            for note in range(PAD_COUNT):
                 if _is_enum_value(Pad, note):
                     _midi_out_msg_note_on(note, ControllerColor.WHITE_0)
 
@@ -663,18 +668,18 @@ class Controller:
                 )
 
         elif self._pad_mode == PadMode.OMNI or self._is_selecting_channel:
-            lower_channel = self._channel_page * NOTES_COUNT
+            lower_channel = self._channel_page * PAD_COUNT
             channel_count = channels.channelCount()
 
             # turn on pads for available channels
             for channel in range(lower_channel, channel_count):
                 idx = channel - lower_channel
-                if idx == NOTES_COUNT:
+                if idx == PAD_COUNT:
                     break
                 _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
 
             _midi_out_msg_note_on(
-                self._channel - self._channel_page * NOTES_COUNT,
+                self._channel - self._channel_page * PAD_COUNT,
                 _get_channel_color(self._channel, self._is_selecting_channel),
             )
 
@@ -777,7 +782,7 @@ class Controller:
                 color = self._pad_mode_color
             elif (
                 self._pad_mode == PadMode.OMNI
-                and channels.channelCount() > idx * NOTES_COUNT
+                and channels.channelCount() > idx * PAD_COUNT
             ):
                 color = PadModeColor.OMNI - 2
             elif self._pad_mode == PadMode.STEP and any(
