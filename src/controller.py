@@ -329,7 +329,7 @@ class Controller:
                     case _:
                         return
 
-                self._active_group = PadGroup(cc_num)
+                self._sync_active_group(cc_num)
                 self._sync_group_leds()
 
                 self._sync_pad_leds()
@@ -396,7 +396,7 @@ class Controller:
                     case _:
                         pass
 
-                self._active_group = PadGroup(active_group)
+                self._sync_active_group(active_group)
                 self._sync_group_leds()
 
                 self._sync_pad_leds()
@@ -655,6 +655,10 @@ class Controller:
     def _sync_active_track(self) -> None:
         """Syncs the selected mixer track index with the current FL Studio selected mixer track"""
         self._active_track = mixer.trackNumber()
+
+    def _sync_active_group(self, group_idx: int) -> None:
+        """Syncs the selected pad group with the current FL Studio selected channel group"""
+        self._active_group = PadGroup(group_idx)
 
     def _sync_pad_leds(self) -> None:
         """Syncs the pad LEDs on the Maschine MK3 device"""
