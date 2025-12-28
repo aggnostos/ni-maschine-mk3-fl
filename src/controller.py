@@ -719,16 +719,7 @@ class Controller:
     def _toggle_encoder_mode(self, cc: int) -> None:
         """Toggles the 4D encoder mode based on the given control change number"""
 
-        match cc:
-            case CC.ENCODER_VOLUME:
-                mode = FourDEncoderMode.VOLUME
-            case CC.ENCODER_SWING:
-                mode = FourDEncoderMode.SWING
-            case CC.ENCODER_TEMPO:
-                mode = FourDEncoderMode.TEMPO
-            case _:
-                mode = FourDEncoderMode.JOG
-
+        mode = FourDEncoderMode(cc)
         mode = mode if self._encoder_mode != mode else FourDEncoderMode.JOG
 
         for cc_num in (CC.ENCODER_VOLUME, CC.ENCODER_SWING, CC.ENCODER_TEMPO):

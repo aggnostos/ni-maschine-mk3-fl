@@ -129,9 +129,9 @@ class FourDEncoderMode(IntEnum):
     """4D Encoder Modes"""
 
     JOG = 0
-    VOLUME = 1
-    SWING = 2
-    TEMPO = 3
+    VOLUME = 44
+    SWING = 45
+    TEMPO = 47
 
 
 class TouchStripMode(IntEnum):
