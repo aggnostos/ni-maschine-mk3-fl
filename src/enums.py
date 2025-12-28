@@ -138,10 +138,10 @@ class TouchStripMode(IntEnum):
     """Touch Strip Modes"""
 
     TRANSPORT = 0
-    PITCH = 1
-    MOD = 2
-    PERFORM = 3
-    NOTES = 4
+    PITCH = 49
+    MOD = 50
+    PERFORM = 51
+    NOTES = 52
 
 
 class PadGroup(IntEnum):

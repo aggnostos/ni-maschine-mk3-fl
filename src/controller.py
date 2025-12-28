@@ -459,6 +459,7 @@ class Controller:
 
             case CC.CHAN_VOL:
                 channels.setChannelVolume(self._selected_channel, cc_val / 100)
+
             case CC.CHAN_PAN:
                 channels.setChannelPan(
                     self._selected_channel, _percent_to_bipolar(cc_val)
@@ -738,18 +739,7 @@ class Controller:
     def _toggle_touch_strip_mode(self, cc: int) -> None:
         """Toggles the touch strip mode based on the given control change number"""
 
-        match cc:
-            case CC.TOUCH_STRIP_PITCH:
-                mode = TouchStripMode.PITCH
-            case CC.TOUCH_STRIP_MOD:
-                mode = TouchStripMode.MOD
-            case CC.TOUCH_STRIP_PERFORM:
-                mode = TouchStripMode.PERFORM
-            case CC.TOUCH_STRIP_NOTES:
-                mode = TouchStripMode.NOTES
-            case _:
-                mode = TouchStripMode.TRANSPORT
-
+        mode = TouchStripMode(cc)
         mode = mode if self._touch_strip_mode != mode else TouchStripMode.TRANSPORT
 
         for cc_num in (
