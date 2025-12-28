@@ -112,7 +112,6 @@ class Controller:
         pattern_event = flags & midi.HW_Dirty_Patterns
         control_values_event = flags & midi.HW_Dirty_ControlValues
         mixer_sel_event = flags & midi.HW_Dirty_Mixer_Sel
-        mixer_display_event = flags & midi.HW_Dirty_Mixer_Display
         mixer_controls_event = flags & midi.HW_Dirty_Mixer_Controls
         leds_event = flags & midi.HW_Dirty_LEDs
 
@@ -120,25 +119,23 @@ class Controller:
         # so we only want to run the full leds sync logic when no other events are present.
         # e.g. `leds_event` is triggered alongside `channel_event`, so we only want to sync leds
         # that are related to `channel_event` in that case.
-        if channel_event:
+        if channel_event and leds_event:
             self._sync_selected_channel()
             self._sync_channel_controls()
             self._sync_pads()
             self._sync_groups()
-        elif mixer_sel_event or mixer_display_event or mixer_controls_event:
-            self._sync_mixer_controls()
+        elif mixer_sel_event or mixer_controls_event:
             self._sync_selected_track()
+            self._sync_mixer_controls()
+            # for some reason turning record on/off triggers `mixer_controls_event` alongside `leds_event`,
+            # so we need to handle it separately
+            _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
         elif leds_event:
             self._sync_cc_led_states()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
             if not self._is_selecting_pattern:
                 self._sync_pads()
-
-        # for some reason turning record on/off triggers `mixer_controls_event` alongside `leds_event`,
-        # so we need to handle it separately
-        if mixer_controls_event and leds_event:
-            _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
 
         if pattern_event:
             self._sync_pads()
@@ -709,19 +706,16 @@ class Controller:
         _midi_out_msg_control_change(CC.MUTE, _on_off(channels.isChannelMuted(self._selected_channel)))        
         # fmt: on
 
-    @staticmethod
-    def _sync_mixer_controls() -> None:
+    def _sync_mixer_controls(self) -> None:
         """Syncs the mixer (encoders) values on the Maschine MK3 device with the current FL Studio mixer state"""
 
-        track_number = mixer.trackNumber()
-
         # fmt: off
-        _midi_out_msg_control_change(CC.MIX_TRACK, track_number)
-        _midi_out_msg_control_change(CC.MIX_VOL, round(mixer.getTrackVolume(track_number) * 125))
-        _midi_out_msg_control_change(CC.MIX_PAN, _bipolar_to_percent(mixer.getTrackPan(track_number)))
-        _midi_out_msg_control_change(CC.MIX_SS, _bipolar_to_percent(mixer.getTrackStereoSep(track_number)))
-        _midi_out_msg_control_change(CC.SOLO, _on_off(mixer.isTrackSolo(track_number)))
-        _midi_out_msg_control_change(CC.MUTE, _on_off(mixer.isTrackMuted(track_number)))
+        _midi_out_msg_control_change(CC.MIX_TRACK, self._selected_track)
+        _midi_out_msg_control_change(CC.MIX_VOL, round(mixer.getTrackVolume(self._selected_track) * 125))
+        _midi_out_msg_control_change(CC.MIX_PAN, _bipolar_to_percent(mixer.getTrackPan(self._selected_track)))
+        _midi_out_msg_control_change(CC.MIX_SS, _bipolar_to_percent(mixer.getTrackStereoSep(self._selected_track)))
+        _midi_out_msg_control_change(CC.SOLO, _on_off(mixer.isTrackSolo(self._selected_track)))
+        _midi_out_msg_control_change(CC.MUTE, _on_off(mixer.isTrackMuted(self._selected_track)))
         # fmt: on
 
     def _toggle_encoder_mode(self, cc: int) -> None:
