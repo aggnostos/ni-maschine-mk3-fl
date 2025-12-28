@@ -120,7 +120,7 @@ class Controller:
             self._sync_channel()
             self._sync_channel_controls()
             self._sync_pad_leds()
-            self._sync_groups()
+            self._sync_group_leds()
         elif mixer_sel_event or mixer_controls_event:
             self._sync_track()
             self._sync_mixer_controls()
@@ -326,7 +326,7 @@ class Controller:
                         return
 
                 self._group = PadGroup(cc_num)
-                self._sync_groups()
+                self._sync_group_leds()
 
                 self._sync_pad_leds()
 
@@ -393,7 +393,7 @@ class Controller:
                         pass
 
                 self._group = PadGroup(active_group)
-                self._sync_groups()
+                self._sync_group_leds()
 
                 self._sync_pad_leds()
 
@@ -602,8 +602,8 @@ class Controller:
 
         self._sync_cc_leds()
         self._sync_pad_leds()
+        self._sync_group_leds()
         self._sync_song_position()
-        self._sync_groups()
 
     def _leds_off(self) -> None:
         """Turns off all LEDs on the Maschine MK3 device"""
@@ -778,7 +778,7 @@ class Controller:
         """Syncs the touch strip song position value on the Maschine MK3 device"""
         _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 100))
 
-    def _sync_groups(self) -> None:
+    def _sync_group_leds(self) -> None:
         """Updates the group button colors based on the current pad mode"""
 
         for idx, cc in enumerate(range(CC.GROUP_A, CC.GROUP_H + 1)):
