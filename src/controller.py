@@ -640,16 +640,8 @@ class Controller:
 
         self._track = mixer.trackNumber()
 
-    def _toggle_channel_highlight(self) -> None:
-        """Highlights the selected channel pad on the Maschine MK3 device"""
-
-        _midi_out_msg_note_on(
-            self._channel - self._channel_page * NOTES_COUNT,
-            _get_channel_color(self._channel, self._is_selecting_channel),
-        )
-
     def _sync_pads(self) -> None:
-        """Syncs the channel rack state with the pad LEDs on the Maschine MK3 device"""
+        """Syncs the pad LEDs on the Maschine MK3 device"""
 
         for note in range(NOTES_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
@@ -658,6 +650,7 @@ class Controller:
             for note in range(NOTES_COUNT):
                 if _is_enum_value(Pad, note):
                     _midi_out_msg_note_on(note, ControllerColor.WHITE_0)
+
         elif self._is_selecting_pattern:
             for pattern in range(patterns.patternCount()):
                 _midi_out_msg_note_on(
@@ -668,6 +661,7 @@ class Controller:
                         else ControllerColor.ORANGE_0
                     ),
                 )
+
         elif self._pad_mode == PadMode.OMNI or self._is_selecting_channel:
             lower_channel = self._channel_page * NOTES_COUNT
             channel_count = channels.channelCount()
@@ -679,7 +673,11 @@ class Controller:
                     break
                 _midi_out_msg_note_on(idx, _get_channel_color(channel, False))
 
-            self._toggle_channel_highlight()
+            _midi_out_msg_note_on(
+                self._channel - self._channel_page * NOTES_COUNT,
+                _get_channel_color(self._channel, self._is_selecting_channel),
+            )
+
         elif self._pad_mode == PadMode.STEP:
             # turn on pads for step sequencer grid bits
             for idx, gb in enumerate(_get_grid(self._step_page)):
