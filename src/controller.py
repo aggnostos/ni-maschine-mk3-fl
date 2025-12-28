@@ -93,13 +93,10 @@ class Controller:
 
     def on_init(self) -> None:
         self._init_led_states()
-        self._sync_cc_led_states()
         self._sync_channel()
-        self._sync_pads()
+        self._sync_track()
         self._sync_channel_controls()
         self._sync_mixer_controls()
-        self._sync_song_position()
-        self._sync_groups()
 
     def on_de_init(self) -> None:
         self._leds_off()
@@ -122,7 +119,7 @@ class Controller:
         if channel_event:
             self._sync_channel()
             self._sync_channel_controls()
-            self._sync_pads()
+            self._sync_pad_leds()
             self._sync_groups()
         elif mixer_sel_event or mixer_controls_event:
             self._sync_track()
@@ -132,14 +129,14 @@ class Controller:
             if mixer_controls_event:
                 _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
         elif leds_event:
-            self._sync_cc_led_states()
+            self._sync_cc_leds()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
             if not self._is_selecting_pattern:
-                self._sync_pads()
+                self._sync_pad_leds()
 
         if pattern_event:
-            self._sync_pads()
+            self._sync_pad_leds()
 
         if control_values_event:
             if self._touch_strip_mode == TouchStripMode.PITCH:
@@ -331,7 +328,7 @@ class Controller:
                 self._group = PadGroup(cc_num)
                 self._sync_groups()
 
-                self._sync_pads()
+                self._sync_pad_leds()
 
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._is_shifting:  # LOOP
@@ -398,15 +395,15 @@ class Controller:
                 self._group = PadGroup(active_group)
                 self._sync_groups()
 
-                self._sync_pads()
+                self._sync_pad_leds()
 
             case CC.PATTERN:
                 self._is_selecting_pattern = bool(cc_val)
-                self._sync_pads()
+                self._sync_pad_leds()
 
             case CC.SELECT:
                 self._is_selecting_channel = bool(cc_val)
-                self._sync_pads()
+                self._sync_pad_leds()
 
             case CC.SOLO:
                 if ui.getFocused(midi.widChannelRack):
@@ -467,7 +464,7 @@ class Controller:
             # -------- SHIFT -------- #
             case CC.SHIFT:
                 self._is_shifting = bool(cc_val)
-                self._sync_pads()
+                self._sync_pad_leds()
 
             # -------- DEFAULT -------- #
             case _:
@@ -484,7 +481,7 @@ class Controller:
 
         if self._is_selecting_pattern and note_vel:
             patterns.jumpToPattern(note_num + 1)
-            self._sync_pads()
+            self._sync_pad_leds()
 
         if self._is_selecting_channel and note_vel:
             chan_idx = note_num + self._channel_page * PAD_COUNT
@@ -603,6 +600,11 @@ class Controller:
         _midi_out_msg_control_change(CC.PAD_MODE, 127)
         _midi_out_msg_control_change(CC.FIX_VEL, 100)
 
+        self._sync_cc_leds()
+        self._sync_pad_leds()
+        self._sync_song_position()
+        self._sync_groups()
+
     def _leds_off(self) -> None:
         """Turns off all LEDs on the Maschine MK3 device"""
 
@@ -616,13 +618,15 @@ class Controller:
         for cc in range(CC_COUNT):
             _midi_out_msg_control_change(cc, ControllerColor.BLACK_0)
 
-    def _pad_leds_off(self) -> None:
+    @staticmethod
+    def _pad_leds_off() -> None:
         """Turns off all pad LEDs on the Maschine MK3 device"""
 
         for note in range(PAD_COUNT):
             _midi_out_msg_note_on(note, ControllerColor.BLACK_0)
 
-    def _sync_cc_led_states(self) -> None:
+    @staticmethod
+    def _sync_cc_leds() -> None:
         """Syncs the CC LED states with the current FL Studio state"""
 
         # fmt: off
@@ -646,7 +650,7 @@ class Controller:
         """Syncs the selected mixer track index with the current FL Studio selected mixer track"""
         self._track = mixer.trackNumber()
 
-    def _sync_pads(self) -> None:
+    def _sync_pad_leds(self) -> None:
         """Syncs the pad LEDs on the Maschine MK3 device"""
 
         self._pad_leds_off()
@@ -769,9 +773,9 @@ class Controller:
             case TouchStripMode.NOTES:
                 pass  # TODO
 
-    def _sync_song_position(self) -> None:
+    @staticmethod
+    def _sync_song_position() -> None:
         """Syncs the touch strip song position value on the Maschine MK3 device"""
-
         _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 100))
 
     def _sync_groups(self) -> None:
