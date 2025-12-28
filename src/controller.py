@@ -91,7 +91,7 @@ class Controller:
         self._init_led_states()
         self._sync_cc_led_states()
         self._sync_selected_channel()
-        self._sync_channel_pads()
+        self._sync_pads()
         self._sync_channel_controls()
         self._sync_mixer_controls()
         self._sync_song_position()
@@ -119,7 +119,7 @@ class Controller:
         if channel_event:
             self._sync_selected_channel()
             self._sync_channel_controls()
-            self._sync_channel_pads()
+            self._sync_pads()
             self._sync_groups()
         elif mixer_sel_event or mixer_display_event or mixer_controls_event:
             self._sync_mixer_controls()
@@ -128,7 +128,7 @@ class Controller:
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
             if not self._is_selecting_pattern:
-                self._sync_channel_pads()
+                self._sync_pads()
 
         # for some reason turning record on/off triggers `mixer_controls_event` alongside `leds_event`,
         # so we need to handle it separately
@@ -136,7 +136,7 @@ class Controller:
             _midi_out_msg_control_change(CC.REC, _on_off(transport.isRecording()))
 
         if pattern_event:
-            self._sync_channel_pads()
+            self._sync_pads()
 
         if control_values_event:
             if self._touch_strip_mode == TouchStripMode.PITCH:
@@ -210,7 +210,6 @@ class Controller:
 
             case CC.FILE_SAVE if self._is_shifting:  # SAVE NEW
                 transport.globalTransport(midi.FPT_SaveNew, 1)
-
             case CC.FILE_SAVE:
                 transport.globalTransport(midi.FPT_Save, 1)
 
@@ -331,7 +330,7 @@ class Controller:
                 self._active_group = PadGroup(cc_num)
                 self._sync_groups()
 
-                self._sync_channel_pads()
+                self._sync_pads()
 
             # -------- TRASPORT SECTION -------- #
             case CC.RESTART if self._is_shifting:  # LOOP
@@ -398,28 +397,29 @@ class Controller:
                 self._active_group = PadGroup(active_group)
                 self._sync_groups()
 
-                self._sync_channel_pads()
+                self._sync_pads()
 
             case CC.PATTERN:
                 self._is_selecting_pattern = bool(cc_val)
-                self._sync_channel_pads()
+                self._sync_pads()
 
             case CC.SELECT:
                 self._is_selecting_channel = bool(cc_val)
-                self._sync_channel_pads()
+                self._sync_pads()
 
             case CC.SOLO:
                 if ui.getFocused(midi.widChannelRack):
                     channels.soloChannel(self._selected_channel)
                 elif ui.getFocused(midi.widMixer):
-                    if self._is_shifting:
-                        mixer.soloTrack(
-                            mixer.trackNumber(), -1, midi.fxSoloModeWithSourceTracks
-                        )
-                    else:
-                        mixer.soloTrack(
-                            mixer.trackNumber(), -1, midi.fxSoloModeWithDestTracks
-                        )
+                    mixer.soloTrack(
+                        mixer.trackNumber(),
+                        -1,
+                        (
+                            midi.fxSoloModeWithSourceTracks
+                            if self._is_shifting
+                            else midi.fxSoloModeWithDestTracks
+                        ),
+                    )
 
             case CC.MUTE:
                 if ui.getFocused(midi.widChannelRack):
@@ -429,14 +429,10 @@ class Controller:
 
             # ---- KNOB PAGE SECTION ---- #
             # BUTTONS
-            case CC.PRESET_PREV if cc_val and plugins.isValid(
-                self._selected_channel
-            ):  # TODO: add mixer logic
+            case CC.PRESET_PREV if cc_val and plugins.isValid(self._selected_channel):
                 plugins.prevPreset(self._selected_channel)
 
-            case CC.PRESET_NEXT if cc_val and plugins.isValid(
-                self._selected_channel
-            ):  # TODO: add mixer logic
+            case CC.PRESET_NEXT if cc_val and plugins.isValid(self._selected_channel):
                 plugins.nextPreset(self._selected_channel)
 
             # KNOBS
@@ -474,7 +470,7 @@ class Controller:
             # -------- SHIFT -------- #
             case CC.SHIFT:
                 self._is_shifting = bool(cc_val)
-                self._sync_channel_pads()
+                self._sync_pads()
 
             # -------- DEFAULT -------- #
             case _:
@@ -491,7 +487,7 @@ class Controller:
 
         if self._is_selecting_pattern and note_vel:
             patterns.jumpToPattern(note_num + 1)
-            self._sync_channel_pads()
+            self._sync_pads()
 
         if self._is_selecting_channel and note_vel:
             chan_idx = note_num + self._channel_page * NOTES_COUNT
@@ -650,7 +646,7 @@ class Controller:
             _get_channel_color(self._selected_channel, self._is_selecting_channel),
         )
 
-    def _sync_channel_pads(self) -> None:
+    def _sync_pads(self) -> None:
         """Syncs the channel rack state with the pad LEDs on the Maschine MK3 device"""
 
         for note in range(NOTES_COUNT):
