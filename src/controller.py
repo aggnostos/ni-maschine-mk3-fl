@@ -426,14 +426,15 @@ class Controller:
 
             # ---- KNOB PAGE SECTION ---- #
             # BUTTONS
-            case CC.PRESET_PREV | CC.PRESET_NEXT if cc_val:  # TODO: add mixer logic
-                if not plugins.isValid(self._selected_channel):
-                    return
+            case CC.PRESET_PREV if cc_val and plugins.isValid(
+                self._selected_channel
+            ):  # TODO: add mixer logic
+                plugins.prevPreset(self._selected_channel)
 
-                if cc_num == CC.PRESET_NEXT:
-                    plugins.nextPreset(self._selected_channel)
-                else:
-                    plugins.prevPreset(self._selected_channel)
+            case CC.PRESET_NEXT if cc_val and plugins.isValid(
+                self._selected_channel
+            ):  # TODO: add mixer logic
+                plugins.nextPreset(self._selected_channel)
 
             # KNOBS
             case CC.MIX_TRACK:
