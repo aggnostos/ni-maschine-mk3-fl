@@ -208,6 +208,9 @@ class Controller:
             case CC.PLUGIN:
                 channels.showCSForm(self._selected_channel, -1)
 
+            case CC.FILE_SAVE if self._is_shifting:  # SAVE NEW
+                transport.globalTransport(midi.FPT_SaveNew, 1)
+
             case CC.FILE_SAVE:
                 transport.globalTransport(midi.FPT_Save, 1)
 

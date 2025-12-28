@@ -16,6 +16,7 @@
   - `+SHIFT` focuses **Browser**
 - `PLUG-IN` toggles **Plug-In** window visibility for selected channel
 - `FILE` saves current project (behaves same way as pressing `Ctrl+S`)
+  - `+ SHIFT` saves new version of current project (behaves same way as pressing `Ctrl+N`)
 - `SETTINGS` toggles **Settings** window visibility
 
 ### Edit (Encoder) Section
@@ -55,14 +56,14 @@ Groups have different meaning depending on what pad mode you are currently using
 ### Transport Section
 
 - `RESTART` stops playback and immediately starts it again from the current song position
-  - `+ SHIFT` toggles the **Loop** mode if pressed with
+  - `+ SHIFT` toggles the **Loop** mode
 - `ERASE` behaves same way as pressing `Delete` key in Piano Roll
 - `TAP` allows you to tap tempo
   - `+ SHIFT` turns the metronome on/off
 - `FOLLOW` toggles **Snap (to grid)** mode (**Main** snap setting)
 - `PLAY` starts playback from the current playhead position
 - `REC` starts or stops recording
-  - `+ SHIFT` toggles **Precount** mode if pressed with
+  - `+ SHIFT` toggles **Precount** mode
 - `STOP` stops playback and resets the playhead
 
 ### Pad Section
