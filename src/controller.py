@@ -106,6 +106,7 @@ class Controller:
         # allowing multiple updates to be signaled at once.
 
         channel_event = flags & midi.HW_ChannelEvent
+        selected_channel_event = flags & midi.HW_Dirty_FocusedWindow
         pattern_event = flags & midi.HW_Dirty_Patterns
         control_values_event = flags & midi.HW_Dirty_ControlValues
         mixer_sel_event = flags & midi.HW_Dirty_Mixer_Sel
@@ -116,11 +117,12 @@ class Controller:
         # so we only want to run the full leds sync logic when no other events are present.
         # e.g. `leds_event` is triggered alongside `channel_event`, so we only want to sync leds
         # that are related to `channel_event` in that case.
-        if channel_event:
+        if channel_event or selected_channel_event:
             self._sync_channel()
             self._sync_channel_controls()
-            self._sync_pad_leds()
-            self._sync_group_leds()
+            if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
+                self._sync_pad_leds()
+                self._sync_group_leds()
         elif mixer_sel_event or mixer_controls_event:
             self._sync_track()
             self._sync_mixer_controls()
@@ -132,8 +134,6 @@ class Controller:
             self._sync_cc_leds()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
-            if not self._is_selecting_pattern:
-                self._sync_pad_leds()
 
         if pattern_event:
             self._sync_pad_leds()
@@ -143,33 +143,33 @@ class Controller:
                 self._sync_touch_strip()
             self._sync_channel_controls()
 
-        # # Debugging output for refresh flags
-        # if flags & midi.HW_Dirty_Mixer_Sel:
-        #     print("HW_Dirty_Mixer_Sel")
-        # if flags & midi.HW_Dirty_Mixer_Display:
-        #     print("HW_Dirty_Mixer_Display")
-        # if flags & midi.HW_Dirty_Mixer_Controls:
-        #     print("HW_Dirty_Mixer_Controls")
-        # if flags & midi.HW_Dirty_FocusedWindow:
-        #     print("HW_Dirty_FocusedWindow")
-        # if flags & midi.HW_Dirty_Performance:
-        #     print("HW_Dirty_Performance")
-        # if flags & midi.HW_Dirty_LEDs:
-        #     print("HW_Dirty_LEDs")
-        # if flags & midi.HW_Dirty_Patterns:
-        #     print("HW_Dirty_Patterns")
-        # if flags & midi.HW_Dirty_Tracks:
-        #     print("HW_Dirty_Tracks")
-        # if flags & midi.HW_Dirty_ControlValues:
-        #     print("HW_Dirty_ControlValues")
-        # if flags & midi.HW_Dirty_Colors:
-        #     print("HW_Dirty_Colors")
-        # if flags & midi.HW_Dirty_Names:
-        #     print("HW_Dirty_Names")
-        # if flags & midi.HW_Dirty_ChannelRackGroup:
-        #     print("HW_Dirty_ChannelRackGroup")
-        # if flags & midi.HW_ChannelEvent:
-        #     print("HW_ChannelEvent")
+        # Debugging output for refresh flags
+        if flags & midi.HW_Dirty_Mixer_Sel:
+            print("HW_Dirty_Mixer_Sel")
+        if flags & midi.HW_Dirty_Mixer_Display:
+            print("HW_Dirty_Mixer_Display")
+        if flags & midi.HW_Dirty_Mixer_Controls:
+            print("HW_Dirty_Mixer_Controls")
+        if flags & midi.HW_Dirty_FocusedWindow:
+            print("HW_Dirty_FocusedWindow")
+        if flags & midi.HW_Dirty_Performance:
+            print("HW_Dirty_Performance")
+        if flags & midi.HW_Dirty_LEDs:
+            print("HW_Dirty_LEDs")
+        if flags & midi.HW_Dirty_Patterns:
+            print("HW_Dirty_Patterns")
+        if flags & midi.HW_Dirty_Tracks:
+            print("HW_Dirty_Tracks")
+        if flags & midi.HW_Dirty_ControlValues:
+            print("HW_Dirty_ControlValues")
+        if flags & midi.HW_Dirty_Colors:
+            print("HW_Dirty_Colors")
+        if flags & midi.HW_Dirty_Names:
+            print("HW_Dirty_Names")
+        if flags & midi.HW_Dirty_ChannelRackGroup:
+            print("HW_Dirty_ChannelRackGroup")
+        if flags & midi.HW_ChannelEvent:
+            print("HW_ChannelEvent")
 
     def on_control_change(self, msg: FlMidiMsg) -> None:
         cc_num, cc_val = msg.controlNum, msg.controlVal
