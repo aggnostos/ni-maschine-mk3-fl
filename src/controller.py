@@ -140,7 +140,7 @@ class Controller:
 
         if control_values_event:
             if self._touch_strip_mode == TouchStripMode.PITCH:
-                self._sync_touch_strip_value(self._touch_strip_mode)
+                self._sync_touch_strip(self._touch_strip_mode)
             self._sync_channel_controls()
 
         # # Debugging output for refresh flags
@@ -300,7 +300,7 @@ class Controller:
                 | CC.TOUCH_STRIP_NOTES
             ):
                 self._toggle_touch_strip_mode(cc_num)
-                self._sync_touch_strip_value(self._touch_strip_mode)
+                self._sync_touch_strip(self._touch_strip_mode)
 
             # -------- GROUP SECTION -------- #
             case (
@@ -758,7 +758,7 @@ class Controller:
 
         self._touch_strip_mode = mode
 
-    def _sync_touch_strip_value(self, mode: TouchStripMode) -> None:
+    def _sync_touch_strip(self, mode: TouchStripMode) -> None:
         """Syncs the touch strip value on the Maschine MK3 device with the current FL Studio state based on the given mode"""
 
         match mode:
