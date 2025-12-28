@@ -39,6 +39,9 @@ class Controller:
     _selected_channel: int
     """Currently selected channel index"""
 
+    _selected_track: int
+    """Currently selected mixer track index"""
+
     _channel_page: int
     """Current channel page (0-7) for OMNI mode pad display"""
 
@@ -76,6 +79,7 @@ class Controller:
         self._touch_strip_mode = TouchStripMode.TRANSPORT
         self._active_group = PadGroup.A
         self._selected_channel = 0
+        self._selected_track = 0
         self._channel_page = 0
         self._step_page = 0
         self._semi_offset = 0
@@ -123,6 +127,7 @@ class Controller:
             self._sync_groups()
         elif mixer_sel_event or mixer_display_event or mixer_controls_event:
             self._sync_mixer_controls()
+            self._sync_selected_track()
         elif leds_event:
             self._sync_cc_led_states()
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
@@ -224,8 +229,6 @@ class Controller:
                 is_clockwise = cc_val == 65  # CLOCKWISE
                 multiplier = 1 if is_clockwise else -1
 
-                track_number = mixer.trackNumber()
-
                 match self._encoder_mode:
                     case FourDEncoderMode.JOG:
                         ui.jog(1 * multiplier)
@@ -233,11 +236,11 @@ class Controller:
                     case FourDEncoderMode.VOLUME:
                         if ui.getFocused(midi.widMixer):
                             target_vol = (
-                                mixer.getTrackVolume(track_number)
+                                mixer.getTrackVolume(self._selected_track)
                                 + MIXER_TRACK_VOL_STEP * multiplier
                             )
                             if 0.0 < target_vol < 1.0:
-                                mixer.setTrackVolume(track_number, target_vol)
+                                mixer.setTrackVolume(self._selected_track, target_vol)
                         elif ui.getFocused(midi.widChannelRack):
                             channels.setChannelVolume(
                                 self._selected_channel,
@@ -412,7 +415,7 @@ class Controller:
                     channels.soloChannel(self._selected_channel)
                 elif ui.getFocused(midi.widMixer):
                     mixer.soloTrack(
-                        mixer.trackNumber(),
+                        self._selected_track,
                         -1,
                         (
                             midi.fxSoloModeWithSourceTracks
@@ -425,7 +428,7 @@ class Controller:
                 if ui.getFocused(midi.widChannelRack):
                     channels.muteChannel(self._selected_channel)
                 elif ui.getFocused(midi.widMixer):
-                    mixer.muteTrack(mixer.trackNumber())
+                    mixer.muteTrack(self._selected_track)
 
             # ---- KNOB PAGE SECTION ---- #
             # BUTTONS
@@ -440,14 +443,14 @@ class Controller:
                 mixer.setTrackNumber(cc_val)
 
             case CC.MIX_VOL:
-                mixer.setTrackVolume(mixer.trackNumber(), cc_val / 125)
+                mixer.setTrackVolume(self._selected_track, cc_val / 125)
 
             case CC.MIX_PAN:
-                mixer.setTrackPan(mixer.trackNumber(), _percent_to_bipolar(cc_val))
+                mixer.setTrackPan(self._selected_track, _percent_to_bipolar(cc_val))
 
             case CC.MIX_SS:
                 mixer.setTrackStereoSep(
-                    mixer.trackNumber(), _percent_to_bipolar(cc_val)
+                    self._selected_track, _percent_to_bipolar(cc_val)
                 )
 
             case CC.CHAN_SEL:
@@ -637,6 +640,11 @@ class Controller:
         """Syncs the selected channel index with the current FL Studio selected channel"""
 
         self._selected_channel = channels.selectedChannel()
+
+    def _sync_selected_track(self) -> None:
+        """Syncs the selected mixer track index with the current FL Studio selected mixer track"""
+
+        self._selected_track = mixer.trackNumber()
 
     def _toggle_selected_channel_highlight(self) -> None:
         """Highlights the selected channel pad on the Maschine MK3 device"""
