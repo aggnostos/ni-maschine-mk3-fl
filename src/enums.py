@@ -1,5 +1,7 @@
 from enum import IntEnum
 
+from controls import CC
+
 __all__ = [
     "ControllerColor",
     "PluginColor",
@@ -131,29 +133,29 @@ class FourDEncoderMode(IntEnum):
     """4D Encoder Modes"""
 
     JOG = 0
-    VOLUME = 44
-    SWING = 45
-    TEMPO = 47
+    VOLUME = CC.ENCODER_VOLUME
+    SWING = CC.ENCODER_SWING
+    TEMPO = CC.ENCODER_TEMPO
 
 
 class TouchStripMode(IntEnum):
     """Touch Strip Modes"""
 
     TRANSPORT = 0
-    PITCH = 49
-    MOD = 50
-    PERFORM = 51
-    NOTES = 52
+    PITCH = CC.TOUCH_STRIP_PITCH
+    MOD = CC.TOUCH_STRIP_MOD
+    PERFORM = CC.TOUCH_STRIP_PERFORM
+    NOTES = CC.TOUCH_STRIP_NOTES
 
 
 class PadGroup(IntEnum):
     """Pad Groups"""
 
-    A = 100
-    B = 101
-    C = 102
-    D = 103
-    E = 104
-    F = 105
-    G = 106
-    H = 107
+    A = CC.GROUP_A
+    B = CC.GROUP_B
+    C = CC.GROUP_C
+    D = CC.GROUP_D
+    E = CC.GROUP_E
+    F = CC.GROUP_F
+    G = CC.GROUP_G
+    H = CC.GROUP_H
