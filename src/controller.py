@@ -566,7 +566,8 @@ class Controller:
                         real_note,
                         self._fixed_velocity if self._is_fixed_velocity else note_vel,
                     )
-                    channels.selectOneChannel(chan_idx)
+                    if self._pad_mode & PadMode.PAD:
+                        channels.selectOneChannel(chan_idx)
                 else:
                     channels.midiNoteOn(chan_idx, real_note, 0)
                 _midi_out_msg_note_on(
