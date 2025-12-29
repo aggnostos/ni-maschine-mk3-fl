@@ -67,6 +67,7 @@ def _write_out() -> None:
         body = ConstInliner(consts).visit(body)
         body = ConstRemover(consts).visit(body)
         body = EnumInliner(enums).visit(body)
+        body = ConstExprEvaluator().visit(body)
         ast.fix_missing_locations(body)
         out.write(ast.unparse(body))
 

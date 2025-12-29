@@ -1,4 +1,5 @@
 import ast
+from types import EllipsisType
 from typing import Optional, Set, Tuple, Dict
 
 from config import cfg
@@ -15,6 +16,7 @@ __all__ = [
     "ConstRemover",
     "EnumCollector",
     "EnumInliner",
+    "ConstExprEvaluator",
 ]
 
 
@@ -227,3 +229,84 @@ class EnumInliner(ast.NodeTransformer):
             if enum_name in self.enums and member_name in self.enums[enum_name]:
                 return self.visit(self.enums[enum_name][member_name])
         return node
+
+
+type ConstantValue = str | bytes | bool | int | float | complex | EllipsisType | None
+
+
+class ConstExprEvaluator(ast.NodeTransformer):
+    def visit_BinOp(self, node: ast.BinOp) -> ast.AST:
+        # First, recursively visit children
+        node = self.generic_visit(node)  # type: ignore[assignment]
+
+        # Try to evaluate if both operands are constants
+        left = node.left
+        right = node.right
+
+        if isinstance(left, ast.Constant) and isinstance(right, ast.Constant):
+            try:
+                result = self._eval_binop(node.op, left.value, right.value)
+                return ast.Constant(value=result)
+            except Exception:
+                # If evaluation fails, return original node
+                return node
+
+        return node
+
+    def visit_UnaryOp(self, node: ast.UnaryOp) -> ast.AST:
+        # Recursively visit children
+        node = self.generic_visit(node)  # type: ignore[assignment]
+
+        operand = node.operand
+        if isinstance(operand, ast.Constant):
+            try:
+                result = self._eval_unaryop(node.op, operand.value)
+                return ast.Constant(value=result)
+            except Exception:
+                return node
+
+        return node
+
+    def _eval_binop(
+        self, op: ast.operator, left: ConstantValue, right: ConstantValue
+    ) -> ConstantValue:
+        """Evaluate binary operation"""
+        if isinstance(op, ast.Add):
+            return left + right  # type: ignore[operator]
+        elif isinstance(op, ast.Sub):
+            return left - right  # type: ignore[operator]
+        elif isinstance(op, ast.Mult):
+            return left * right  # type: ignore[operator]
+        elif isinstance(op, ast.Div):
+            return left / right  # type: ignore[operator]
+        elif isinstance(op, ast.FloorDiv):
+            return left // right  # type: ignore[operator]
+        elif isinstance(op, ast.Mod):
+            return left % right  # type: ignore[operator]
+        elif isinstance(op, ast.Pow):
+            return left**right  # type: ignore[operator]
+        elif isinstance(op, ast.LShift):
+            return left << right  # type: ignore[operator]
+        elif isinstance(op, ast.RShift):
+            return left >> right  # type: ignore[operator]
+        elif isinstance(op, ast.BitOr):
+            return left | right  # type: ignore[operator]
+        elif isinstance(op, ast.BitXor):
+            return left ^ right  # type: ignore[operator]
+        elif isinstance(op, ast.BitAnd):
+            return left & right  # type: ignore[operator]
+        else:
+            raise ValueError(f"Unsupported binary operator: {op}")
+
+    def _eval_unaryop(self, op: ast.unaryop, operand: ConstantValue) -> ConstantValue:
+        """Evaluate unary operation"""
+        if isinstance(op, ast.UAdd):
+            return +operand  # type: ignore[operator]
+        elif isinstance(op, ast.USub):
+            return -operand  # type: ignore[operator]
+        elif isinstance(op, ast.Not):
+            return not operand
+        elif isinstance(op, ast.Invert):
+            return ~operand  # type: ignore[operator]
+        else:
+            raise ValueError(f"Unsupported unary operator: {op}")
