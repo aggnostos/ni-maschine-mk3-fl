@@ -74,7 +74,7 @@ class Controller:
 
     def __init__(self):
         self._pad_mode = PadMode.PAD
-        self._pad_mode_color = PadModeColor.OMNI
+        self._pad_mode_color = PadModeColor.PAD
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.TRANSPORT
         self._active_group = PadGroup.A
@@ -92,9 +92,9 @@ class Controller:
         self._is_selecting_channel = False
 
     def on_init(self) -> None:
-        self._init_led_states()
         self._sync_active_channel()
         self._sync_active_track()
+        self._init_led_states()
         self._sync_channel_controls()
         self._sync_mixer_controls()
 
@@ -121,7 +121,10 @@ class Controller:
             self._sync_channel_controls()
             if self._touch_strip_mode == TouchStripMode.PITCH:
                 self._sync_touch_strip()
-            if self._pad_mode & (PadMode.PAD | PadMode.OMNI | PadMode.STEP):
+            if (
+                self._pad_mode & (PadMode.PAD | PadMode.OMNI | PadMode.STEP)
+                or self._is_selecting_channel
+            ):
                 self._sync_pad_leds()
                 self._sync_group_leds()
 
@@ -382,10 +385,10 @@ class Controller:
                         if self._pad_mode & PadMode.PAD:
                             self._pad_mode = PadMode.OMNI
                             self._pad_mode_color = PadModeColor.OMNI
-                            active_group += self._channel_page
-                        elif self._pad_mode & PadMode.OMNI:
+                        else:
                             self._pad_mode = PadMode.PAD
                             self._pad_mode_color = PadModeColor.PAD
+                        active_group += self._channel_page
 
                     case CC.KEYBOARD_MODE:
                         self._pad_mode = PadMode.KEYBOARD
@@ -570,9 +573,11 @@ class Controller:
                         channels.selectOneChannel(chan_idx)
                 else:
                     channels.midiNoteOn(chan_idx, real_note, 0)
-                _midi_out_msg_note_on(
-                    note_num, _get_channel_color(chan_idx, bool(note_vel))
-                )
+
+                if self._pad_mode & PadMode.OMNI:
+                    _midi_out_msg_note_on(
+                        note_num, _get_channel_color(chan_idx, bool(note_vel))
+                    )
 
             case PadMode.KEYBOARD:
                 real_note = (
@@ -704,8 +709,8 @@ class Controller:
                 )
 
         elif (
-            self._pad_mode & (PadMode.PAD | PadMode.OMNI) or self._is_selecting_channel
-        ):
+            self._pad_mode & (PadMode.PAD | PadMode.OMNI)
+        ) or self._is_selecting_channel:
             lower_channel = self._channel_page * PAD_COUNT
             channel_count = channels.channelCount()
 
@@ -719,10 +724,11 @@ class Controller:
                     _get_channel_color(
                         chan,
                         (
-                            True
-                            if self._is_selecting_channel
-                            or self._pad_mode & PadMode.PAD
-                            else False
+                            (
+                                self._is_selecting_channel
+                                or bool(self._pad_mode & PadMode.PAD)
+                            )
+                            and chan == self._active_channel
                         ),
                     ),
                 )
