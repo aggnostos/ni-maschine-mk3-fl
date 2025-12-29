@@ -43,10 +43,10 @@ class Controller:
     """Current selected mixer track index"""
 
     _channel_page: int
-    """Current channel page (0-7) for OMNI mode pad display"""
+    """Current channel page (0-7) for PAD and OMNI modes"""
 
     _step_page: int
-    """Current step sequence page (0-7) for STEP mode pad display"""
+    """Current step sequence page (0-7) for STEP mode"""
 
     _semi_offset: int
     """Current semitone offset"""
@@ -73,7 +73,7 @@ class Controller:
     """Indicates whether the user is currently selecting a channel"""
 
     def __init__(self):
-        self._pad_mode = PadMode.OMNI
+        self._pad_mode = PadMode.PAD
         self._pad_mode_color = PadModeColor.OMNI
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.TRANSPORT
@@ -121,7 +121,7 @@ class Controller:
             self._sync_channel_controls()
             if self._touch_strip_mode == TouchStripMode.PITCH:
                 self._sync_touch_strip()
-            if self._pad_mode in (PadMode.OMNI, PadMode.STEP):
+            if self._pad_mode in (PadMode.PAD, PadMode.OMNI, PadMode.STEP):
                 self._sync_pad_leds()
                 self._sync_group_leds()
 
@@ -321,7 +321,7 @@ class Controller:
                 page_idx = cc_num - 100
 
                 match self._pad_mode:
-                    case PadMode.OMNI:
+                    case PadMode.PAD | PadMode.OMNI:
                         self._channel_page = page_idx
                     case PadMode.KEYBOARD:
                         self._active_scale = page_idx
@@ -379,9 +379,13 @@ class Controller:
                 active_group = PadGroup.A
                 match cc_num:
                     case CC.PAD_MODE:
-                        self._pad_mode = PadMode.OMNI
-                        self._pad_mode_color = PadModeColor.OMNI
-                        active_group += self._channel_page
+                        if self._pad_mode == PadMode.PAD:
+                            self._pad_mode = PadMode.OMNI
+                            self._pad_mode_color = PadModeColor.OMNI
+                            active_group += self._channel_page
+                        elif self._pad_mode == PadMode.OMNI:
+                            self._pad_mode = PadMode.PAD
+                            self._pad_mode_color = PadModeColor.PAD
 
                     case CC.KEYBOARD_MODE:
                         self._pad_mode = PadMode.KEYBOARD
@@ -551,7 +555,7 @@ class Controller:
 
     def _handle_note_on(self, note_num: int, note_vel: int) -> None:
         match self._pad_mode:
-            case PadMode.OMNI:
+            case PadMode.PAD | PadMode.OMNI:
                 real_note = ROOT_NOTE + self._get_semi_offset()
                 chan_idx = note_num + self._channel_page * PAD_COUNT
                 if chan_idx >= channels.channelCount():
@@ -562,6 +566,7 @@ class Controller:
                         real_note,
                         self._fixed_velocity if self._is_fixed_velocity else note_vel,
                     )
+                    channels.selectOneChannel(chan_idx)
                 else:
                     channels.midiNoteOn(chan_idx, real_note, 0)
                 _midi_out_msg_note_on(
@@ -697,7 +702,9 @@ class Controller:
                     ),
                 )
 
-        elif self._pad_mode == PadMode.OMNI or self._is_selecting_channel:
+        elif (
+            self._pad_mode in (PadMode.PAD, PadMode.OMNI) or self._is_selecting_channel
+        ):
             lower_channel = self._channel_page * PAD_COUNT
             channel_count = channels.channelCount()
 
@@ -706,12 +713,17 @@ class Controller:
                 pad_idx = chan - lower_channel
                 if pad_idx == PAD_COUNT:
                     break
-                _midi_out_msg_note_on(pad_idx, _get_channel_color(chan, False))
-
-            if self._is_selecting_channel:
                 _midi_out_msg_note_on(
-                    self._active_channel - self._channel_page * PAD_COUNT,
-                    _get_channel_color(self._active_channel, True),
+                    pad_idx,
+                    _get_channel_color(
+                        chan,
+                        (
+                            True
+                            if self._is_selecting_channel
+                            or self._pad_mode == PadMode.PAD
+                            else False
+                        ),
+                    ),
                 )
 
         elif self._pad_mode == PadMode.STEP:
@@ -810,10 +822,10 @@ class Controller:
             if cc == self._active_group:
                 color = self._pad_mode_color
             elif (
-                self._pad_mode == PadMode.OMNI
+                self._pad_mode in (PadMode.PAD, PadMode.OMNI)
                 and channels.channelCount() > idx * PAD_COUNT
             ):
-                color = PadModeColor.OMNI - 2
+                color = self._pad_mode_color - 2
             elif self._pad_mode == PadMode.STEP and any(
                 channels.getGridBit(self._active_channel, gb) for gb in _get_grid(idx)
             ):

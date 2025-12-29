@@ -110,16 +110,18 @@ class ChannelColor(IntEnum):
 class PadMode(IntEnum):
     """Pad Modes"""
 
-    OMNI = 0
-    KEYBOARD = 1
-    CHORDS = 2
-    STEP = 3
+    PAD = 0
+    OMNI = 1
+    KEYBOARD = 2
+    CHORDS = 3
+    STEP = 4
 
 
 class PadModeColor(IntEnum):
     """Pad Mode Colors (any ControllerColor value with _2 suffix)"""
 
-    OMNI = ControllerColor.ORANGE_2
+    PAD = ControllerColor.ORANGE_2
+    OMNI = ControllerColor.LIGHT_ORANGE_2
     KEYBOARD = ControllerColor.BLUE_2
     CHORDS = ControllerColor.RED_2
     STEP = ControllerColor.PURPLE_2
