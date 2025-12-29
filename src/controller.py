@@ -128,7 +128,11 @@ class Controller:
                 self._sync_pad_leds()
                 self._sync_group_leds()
 
-        elif pattern_event and self._pad_mode & PadMode.STEP:
+        elif (
+            pattern_event
+            and self._is_selecting_pattern
+            or (self._pad_mode & PadMode.STEP)
+        ):
             self._sync_pad_leds()
 
         elif control_values_event:
@@ -507,7 +511,6 @@ class Controller:
 
         if self._is_selecting_pattern and note_vel:
             patterns.jumpToPattern(note_num + 1)
-            self._sync_pad_leds()
 
         if self._is_selecting_channel and note_vel:
             chan_idx = note_num + self._channel_page * PAD_COUNT
