@@ -506,27 +506,27 @@ class Controller:
     def _handle_shift_note_on(self, note_num: int, note_vel: int) -> None:
         """Handles note on events when the shift button is pressed"""
 
-        if not _is_enum_value(Pad, note_num):
+        if not _is_enum_value(PadAction, note_num):
             return
 
         if not note_vel:  # handle action on note off
             _midi_out_msg_note_on(note_num, ControllerColor.WHITE_0)
             match note_num:
-                case Pad.UNDO:
+                case PadAction.UNDO:
                     general.undoUp()
-                case Pad.REDO:
+                case PadAction.REDO:
                     general.undoDown()
-                case Pad.QUANTIZE:
+                case PadAction.QUANTIZE:
                     channels.quickQuantize(self._active_channel)
-                case Pad.QUANTIZE_HALF:
+                case PadAction.QUANTIZE_HALF:
                     channels.quickQuantize(self._active_channel, 1)
-                case Pad.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+                case PadAction.SEMI_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
                     self._semi_offset -= 1
-                case Pad.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
+                case PadAction.SEMI_UP if self._semi_offset < MAX_SEMI_OFFSET:
                     self._semi_offset += 1
-                case Pad.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
+                case PadAction.OCTAVE_DOWN if self._semi_offset > MIN_SEMI_OFFSET:
                     self._semi_offset -= SEMITONES_IN_OCTAVE
-                case Pad.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
+                case PadAction.OCTAVE_UP if self._semi_offset < MAX_SEMI_OFFSET:
                     self._semi_offset += SEMITONES_IN_OCTAVE
                 case _:
                     pass
@@ -742,7 +742,7 @@ class Controller:
 
         if self._is_shifting:
             for pad in range(PAD_COUNT):
-                if _is_enum_value(Pad, pad):
+                if _is_enum_value(PadAction, pad):
                     _midi_out_msg_note_on(pad, ControllerColor.WHITE_0)
 
         elif self._is_selecting_pattern:
