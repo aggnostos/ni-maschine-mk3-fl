@@ -116,7 +116,17 @@ class Controller:
         # This `elif` block is needed because some events are triggered alongside other events
         # (e.g., 'leds_event` alongside `focused_window_event` and `channel_event`),
         # so we want to avoid redundant syncing.
-        if channel_event or focused_window_event:
+        if control_values_event:
+            self._sync_active_channel()
+            self._sync_channel_controls()
+
+            if self._pad_mode & (PadMode.SOLO | PadMode.MUTE):
+                self._sync_pad_leds()
+
+            if self._touch_strip_mode == TouchStripMode.PITCH:
+                self._sync_touch_strip()
+
+        elif channel_event or focused_window_event:
             self._sync_active_channel()
             self._sync_channel_controls()
 
@@ -136,15 +146,6 @@ class Controller:
             or (self._pad_mode & PadMode.STEP)
         ):
             self._sync_pad_leds()
-
-        elif control_values_event:
-            self._sync_channel_controls()
-
-            if self._pad_mode & PadMode.SOLO:
-                self._sync_pad_leds()
-
-            if self._touch_strip_mode == TouchStripMode.PITCH:
-                self._sync_touch_strip()
 
         elif mixer_sel_event or mixer_controls_event:
             self._sync_active_track()
@@ -334,7 +335,7 @@ class Controller:
                 page_idx = cc_num - 100
 
                 match self._pad_mode:
-                    case PadMode.PAD | PadMode.OMNI | PadMode.SOLO:
+                    case PadMode.PAD | PadMode.OMNI | PadMode.SOLO | PadMode.MUTE:
                         self._channel_page = page_idx
                     case PadMode.KEYBOARD:
                         self._active_scale = page_idx
@@ -416,6 +417,8 @@ class Controller:
                         ),
                     )
 
+            case CC.MUTE if self._is_shifting:
+                self._toggle_pad_mode(CC.MUTE)
             case CC.MUTE:
                 if ui.getFocused(midi.widChannelRack):
                     channels.muteChannel(self._active_channel)
@@ -600,7 +603,14 @@ class Controller:
                 if chan_idx >= channels.channelCount():
                     return
                 channels.soloChannel(chan_idx)
+                channels.selectOneChannel(chan_idx)
 
+            case PadMode.MUTE if note_vel:
+                chan_idx = note_num + self._channel_page * PAD_COUNT
+                if chan_idx >= channels.channelCount():
+                    return
+                channels.muteChannel(chan_idx)
+                channels.selectOneChannel(chan_idx)
             case _:
                 pass
 
@@ -674,6 +684,7 @@ class Controller:
             CC.CHORDS_MODE,
             CC.STEP_MODE,
             CC.SOLO,
+            CC.MUTE,
         ):
             _midi_out_msg_control_change(cc, _on_off(cc == cc_num))
 
@@ -707,6 +718,11 @@ class Controller:
             case CC.SOLO:
                 self._pad_mode = PadMode.SOLO
                 self._pad_mode_color = PadModeColor.SOLO
+                active_group += self._channel_page
+
+            case CC.MUTE:
+                self._pad_mode = PadMode.MUTE
+                self._pad_mode_color = PadModeColor.MUTE
                 active_group += self._channel_page
 
             case _:
@@ -790,7 +806,25 @@ class Controller:
                     pad_idx,
                     _get_channel_color(
                         chan,
-                        channels.isChannelSolo(chan),
+                        channels.isChannelSolo(chan)
+                        or not channels.isChannelMuted(chan),
+                    ),
+                )
+
+        elif self._pad_mode & PadMode.MUTE:
+            lower_channel = self._channel_page * PAD_COUNT
+            channel_count = channels.channelCount()
+
+            for chan in range(lower_channel, channel_count):
+                pad_idx = chan - lower_channel
+                if pad_idx == PAD_COUNT:
+                    break
+
+                _midi_out_msg_note_on(
+                    pad_idx,
+                    _get_channel_color(
+                        chan,
+                        not channels.isChannelMuted(chan),
                     ),
                 )
 
@@ -801,8 +835,9 @@ class Controller:
         _midi_out_msg_control_change(CC.CHAN_SEL, self._active_channel)
         _midi_out_msg_control_change(CC.CHAN_VOL, round(channels.getChannelVolume(self._active_channel) * 100))
         _midi_out_msg_control_change(CC.CHAN_PAN, _bipolar_to_percent(channels.getChannelPan(self._active_channel)))
-        _midi_out_msg_control_change(CC.SOLO, _on_off(channels.isChannelSolo(self._active_channel)))
-        _midi_out_msg_control_change(CC.MUTE, _on_off(channels.isChannelMuted(self._active_channel)))        
+        if not self._pad_mode & (PadMode.SOLO | PadMode.MUTE):
+            _midi_out_msg_control_change(CC.SOLO, _on_off(channels.isChannelSolo(self._active_channel)))
+            _midi_out_msg_control_change(CC.MUTE, _on_off(channels.isChannelMuted(self._active_channel)))        
         # fmt: on
 
     def _sync_mixer_controls(self) -> None:
@@ -881,7 +916,7 @@ class Controller:
                 color = self._pad_mode_color
             else:
                 match self._pad_mode:
-                    case PadMode.PAD | PadMode.OMNI | PadMode.SOLO if (
+                    case PadMode.PAD | PadMode.OMNI | PadMode.SOLO | PadMode.MUTE if (
                         channels.channelCount() > idx * PAD_COUNT
                     ):
                         color = self._pad_mode_color - 2

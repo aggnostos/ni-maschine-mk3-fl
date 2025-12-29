@@ -1,4 +1,4 @@
-from enum import IntEnum
+from enum import IntEnum, IntFlag
 
 from controls import CC
 
@@ -109,7 +109,7 @@ class ChannelColor(IntEnum):
 # ------------------------------------------------------------------------------------------------------------------------
 
 
-class PadMode(IntEnum):
+class PadMode(IntFlag):
     """Pad Modes (bitwise flags)"""
 
     PAD = 0x1
@@ -118,6 +118,7 @@ class PadMode(IntEnum):
     CHORDS = 0x8
     STEP = 0x10
     SOLO = 0x20
+    MUTE = 0x40
 
 
 class PadModeColor(IntEnum):
@@ -129,6 +130,7 @@ class PadModeColor(IntEnum):
     CHORDS = ControllerColor.RED_2
     STEP = ControllerColor.PURPLE_2
     SOLO = ControllerColor.LIME_2
+    MUTE = ControllerColor.CYAN_2
 
 
 class FourDEncoderMode(IntEnum):
