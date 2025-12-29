@@ -119,14 +119,16 @@ class Controller:
         if channel_event or focused_window_event:
             self._sync_active_channel()
             self._sync_channel_controls()
-            if self._touch_strip_mode == TouchStripMode.PITCH:
-                self._sync_touch_strip()
+
             if (
                 self._pad_mode & (PadMode.PAD | PadMode.OMNI | PadMode.STEP)
                 or self._is_selecting_channel
             ):
                 self._sync_pad_leds()
                 self._sync_group_leds()
+
+            if self._touch_strip_mode == TouchStripMode.PITCH:
+                self._sync_touch_strip()
 
         elif (
             pattern_event
@@ -137,6 +139,10 @@ class Controller:
 
         elif control_values_event:
             self._sync_channel_controls()
+
+            if self._pad_mode & PadMode.SOLO:
+                self._sync_pad_leds()
+
             if self._touch_strip_mode == TouchStripMode.PITCH:
                 self._sync_touch_strip()
 
@@ -328,7 +334,7 @@ class Controller:
                 page_idx = cc_num - 100
 
                 match self._pad_mode:
-                    case PadMode.PAD | PadMode.OMNI:
+                    case PadMode.PAD | PadMode.OMNI | PadMode.SOLO:
                         self._channel_page = page_idx
                     case PadMode.KEYBOARD:
                         self._active_scale = page_idx
@@ -380,44 +386,7 @@ class Controller:
                 self._is_fixed_velocity = bool(cc_val)
 
             case CC.PAD_MODE | CC.KEYBOARD_MODE | CC.CHORDS_MODE | CC.STEP_MODE:
-                for cc in (CC.PAD_MODE, CC.KEYBOARD_MODE, CC.CHORDS_MODE, CC.STEP_MODE):
-                    _midi_out_msg_control_change(cc, _on_off(cc == cc_num))
-
-                active_group = PadGroup.A
-                match cc_num:
-                    case CC.PAD_MODE:
-                        if self._pad_mode & PadMode.PAD:
-                            self._pad_mode = PadMode.OMNI
-                            self._pad_mode_color = PadModeColor.OMNI
-                        else:
-                            self._pad_mode = PadMode.PAD
-                            self._pad_mode_color = PadModeColor.PAD
-                        active_group += self._channel_page
-
-                    case CC.KEYBOARD_MODE:
-                        self._pad_mode = PadMode.KEYBOARD
-                        self._pad_mode_color = PadModeColor.KEYBOARD
-                        active_group += self._active_scale
-
-                    case CC.CHORDS_MODE:
-                        self._pad_mode = PadMode.CHORDS
-                        self._pad_mode_color = PadModeColor.CHORDS
-                        active_group += self._active_chordset
-
-                    case CC.STEP_MODE:
-                        self._pad_mode = PadMode.STEP
-                        self._pad_mode_color = PadModeColor.STEP
-                        active_group += self._step_page
-
-                    case _:
-                        pass
-
-                self._sync_active_group(active_group)
-                self._sync_group_leds()
-
-                self._sync_pad_leds()
-
-                self._notes_off()
+                self._toggle_pad_mode(cc_num)
 
             case CC.PATTERN:
                 self._is_selecting_pattern = bool(cc_val)
@@ -431,6 +400,8 @@ class Controller:
                 if cc_val:
                     self._notes_off()
 
+            case CC.SOLO if self._is_shifting:
+                self._toggle_pad_mode(CC.SOLO)
             case CC.SOLO:
                 if ui.getFocused(midi.widChannelRack):
                     channels.soloChannel(self._active_channel)
@@ -624,6 +595,12 @@ class Controller:
                     not channels.getGridBit(self._active_channel, chan_idx),
                 )
 
+            case PadMode.SOLO if note_vel:
+                chan_idx = note_num + self._channel_page * PAD_COUNT
+                if chan_idx >= channels.channelCount():
+                    return
+                channels.soloChannel(chan_idx)
+
             case _:
                 pass
 
@@ -672,7 +649,7 @@ class Controller:
         _midi_out_msg_control_change(CC.BROWSER,  _on_off(ui.getVisible(midi.widBrowser)))
         _midi_out_msg_control_change(CC.RESTART,  _on_off(bool(transport.getLoopMode())))
         _midi_out_msg_control_change(CC.TAP,      _on_off(general.getUseMetronome()))
-        _midi_out_msg_control_change(CC.FOLLOW,     _on_off(ui.getSnapMode() != 3))
+        _midi_out_msg_control_change(CC.FOLLOW,   _on_off(ui.getSnapMode() != 3))
         _midi_out_msg_control_change(CC.PLAY,     _on_off(transport.isPlaying()))
         _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
         _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
@@ -689,6 +666,58 @@ class Controller:
     def _sync_active_group(self, group_idx: int) -> None:
         """Syncs the selected pad group with the current FL Studio selected channel group"""
         self._active_group = PadGroup(group_idx)
+
+    def _toggle_pad_mode(self, cc_num: int) -> None:
+        for cc in (
+            CC.PAD_MODE,
+            CC.KEYBOARD_MODE,
+            CC.CHORDS_MODE,
+            CC.STEP_MODE,
+            CC.SOLO,
+        ):
+            _midi_out_msg_control_change(cc, _on_off(cc == cc_num))
+
+        active_group = PadGroup.A
+
+        match cc_num:
+            case CC.PAD_MODE:
+                if self._pad_mode & PadMode.PAD:
+                    self._pad_mode = PadMode.OMNI
+                    self._pad_mode_color = PadModeColor.OMNI
+                else:
+                    self._pad_mode = PadMode.PAD
+                    self._pad_mode_color = PadModeColor.PAD
+                active_group += self._channel_page
+
+            case CC.KEYBOARD_MODE:
+                self._pad_mode = PadMode.KEYBOARD
+                self._pad_mode_color = PadModeColor.KEYBOARD
+                active_group += self._active_scale
+
+            case CC.CHORDS_MODE:
+                self._pad_mode = PadMode.CHORDS
+                self._pad_mode_color = PadModeColor.CHORDS
+                active_group += self._active_chordset
+
+            case CC.STEP_MODE:
+                self._pad_mode = PadMode.STEP
+                self._pad_mode_color = PadModeColor.STEP
+                active_group += self._step_page
+
+            case CC.SOLO:
+                self._pad_mode = PadMode.SOLO
+                self._pad_mode_color = PadModeColor.SOLO
+                active_group += self._channel_page
+
+            case _:
+                pass
+
+        self._sync_active_group(active_group)
+        self._sync_group_leds()
+
+        self._sync_pad_leds()
+
+        self._notes_off()
 
     def _sync_pad_leds(self) -> None:
         """Syncs the pad LEDs on the Maschine MK3 device"""
@@ -717,11 +746,11 @@ class Controller:
             lower_channel = self._channel_page * PAD_COUNT
             channel_count = channels.channelCount()
 
-            # turn on pads for available channels
             for chan in range(lower_channel, channel_count):
                 pad_idx = chan - lower_channel
                 if pad_idx == PAD_COUNT:
                     break
+
                 _midi_out_msg_note_on(
                     pad_idx,
                     _get_channel_color(
@@ -745,6 +774,23 @@ class Controller:
                         PadModeColor.STEP
                         if channels.getGridBit(self._active_channel, gb)
                         else ControllerColor.BLACK_0
+                    ),
+                )
+
+        elif self._pad_mode & PadMode.SOLO:
+            lower_channel = self._channel_page * PAD_COUNT
+            channel_count = channels.channelCount()
+
+            for chan in range(lower_channel, channel_count):
+                pad_idx = chan - lower_channel
+                if pad_idx == PAD_COUNT:
+                    break
+
+                _midi_out_msg_note_on(
+                    pad_idx,
+                    _get_channel_color(
+                        chan,
+                        channels.isChannelSolo(chan),
                     ),
                 )
 
@@ -829,23 +875,31 @@ class Controller:
         """Updates the group button colors based on the current pad mode"""
 
         for idx, cc in enumerate(range(CC.GROUP_A, CC.GROUP_H + 1)):
+            color = ControllerColor.BLACK_0
+
             if cc == self._active_group:
                 color = self._pad_mode_color
-            elif (
-                self._pad_mode & (PadMode.PAD | PadMode.OMNI)
-                and channels.channelCount() > idx * PAD_COUNT
-            ):
-                color = self._pad_mode_color - 2
-            elif self._pad_mode & PadMode.STEP and any(
-                channels.getGridBit(self._active_channel, gb) for gb in _get_grid(idx)
-            ):
-                color = PadModeColor.STEP - 2
-            elif self._pad_mode & PadMode.KEYBOARD and SCALES[idx]:
-                color = PadModeColor.KEYBOARD - 2
-            elif self._pad_mode & PadMode.CHORDS and CHORD_SETS[idx]:
-                color = PadModeColor.CHORDS - 2
             else:
-                color = ControllerColor.BLACK_0
+                match self._pad_mode:
+                    case PadMode.PAD | PadMode.OMNI | PadMode.SOLO if (
+                        channels.channelCount() > idx * PAD_COUNT
+                    ):
+                        color = self._pad_mode_color - 2
+
+                    case PadMode.STEP if any(
+                        channels.getGridBit(self._active_channel, gb)
+                        for gb in _get_grid(idx)
+                    ):
+                        color = PadModeColor.STEP - 2
+
+                    case PadMode.KEYBOARD if SCALES[idx]:
+                        color = PadModeColor.KEYBOARD - 2
+
+                    case PadMode.CHORDS if CHORD_SETS[idx]:
+                        color = PadModeColor.CHORDS - 2
+
+                    case _:
+                        pass
 
             _midi_out_msg_control_change(cc, color)
 

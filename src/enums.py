@@ -112,11 +112,12 @@ class ChannelColor(IntEnum):
 class PadMode(IntEnum):
     """Pad Modes (bitwise flags)"""
 
-    PAD = 0x1  # 0b00001
-    OMNI = 0x2  # 0b00010
-    KEYBOARD = 0x4  # 0b00100
-    CHORDS = 0x8  # 0b01000
-    STEP = 0x10  # 0b10000
+    PAD = 0x1
+    OMNI = 0x2
+    KEYBOARD = 0x4
+    CHORDS = 0x8
+    STEP = 0x10
+    SOLO = 0x20
 
 
 class PadModeColor(IntEnum):
@@ -127,6 +128,7 @@ class PadModeColor(IntEnum):
     KEYBOARD = ControllerColor.BLUE_2
     CHORDS = ControllerColor.RED_2
     STEP = ControllerColor.PURPLE_2
+    SOLO = ControllerColor.LIME_2
 
 
 class FourDEncoderMode(IntEnum):
