@@ -108,13 +108,13 @@ class ChannelColor(IntEnum):
 
 
 class PadMode(IntEnum):
-    """Pad Modes"""
+    """Pad Modes (bitwise flags)"""
 
-    PAD = 0
-    OMNI = 1
-    KEYBOARD = 2
-    CHORDS = 3
-    STEP = 4
+    PAD = 0x1  # 0b00001
+    OMNI = 0x2  # 0b00010
+    KEYBOARD = 0x4  # 0b00100
+    CHORDS = 0x8  # 0b01000
+    STEP = 0x10  # 0b10000
 
 
 class PadModeColor(IntEnum):

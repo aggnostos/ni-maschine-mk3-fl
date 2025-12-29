@@ -121,11 +121,11 @@ class Controller:
             self._sync_channel_controls()
             if self._touch_strip_mode == TouchStripMode.PITCH:
                 self._sync_touch_strip()
-            if self._pad_mode in (PadMode.PAD, PadMode.OMNI, PadMode.STEP):
+            if self._pad_mode & (PadMode.PAD | PadMode.OMNI | PadMode.STEP):
                 self._sync_pad_leds()
                 self._sync_group_leds()
 
-        elif pattern_event and self._pad_mode == PadMode.STEP:
+        elif pattern_event and self._pad_mode & PadMode.STEP:
             self._sync_pad_leds()
 
         elif control_values_event:
@@ -379,11 +379,11 @@ class Controller:
                 active_group = PadGroup.A
                 match cc_num:
                     case CC.PAD_MODE:
-                        if self._pad_mode == PadMode.PAD:
+                        if self._pad_mode & PadMode.PAD:
                             self._pad_mode = PadMode.OMNI
                             self._pad_mode_color = PadModeColor.OMNI
                             active_group += self._channel_page
-                        elif self._pad_mode == PadMode.OMNI:
+                        elif self._pad_mode & PadMode.OMNI:
                             self._pad_mode = PadMode.PAD
                             self._pad_mode_color = PadModeColor.PAD
 
@@ -703,7 +703,7 @@ class Controller:
                 )
 
         elif (
-            self._pad_mode in (PadMode.PAD, PadMode.OMNI) or self._is_selecting_channel
+            self._pad_mode & (PadMode.PAD | PadMode.OMNI) or self._is_selecting_channel
         ):
             lower_channel = self._channel_page * PAD_COUNT
             channel_count = channels.channelCount()
@@ -720,13 +720,13 @@ class Controller:
                         (
                             True
                             if self._is_selecting_channel
-                            or self._pad_mode == PadMode.PAD
+                            or self._pad_mode & PadMode.PAD
                             else False
                         ),
                     ),
                 )
 
-        elif self._pad_mode == PadMode.STEP:
+        elif self._pad_mode & PadMode.STEP:
             # turn on pads for step sequencer grid bits
             for idx, gb in enumerate(_get_grid(self._step_page)):
                 _midi_out_msg_note_on(
@@ -822,17 +822,17 @@ class Controller:
             if cc == self._active_group:
                 color = self._pad_mode_color
             elif (
-                self._pad_mode in (PadMode.PAD, PadMode.OMNI)
+                self._pad_mode & (PadMode.PAD | PadMode.OMNI)
                 and channels.channelCount() > idx * PAD_COUNT
             ):
                 color = self._pad_mode_color - 2
-            elif self._pad_mode == PadMode.STEP and any(
+            elif self._pad_mode & PadMode.STEP and any(
                 channels.getGridBit(self._active_channel, gb) for gb in _get_grid(idx)
             ):
                 color = PadModeColor.STEP - 2
-            elif self._pad_mode == PadMode.KEYBOARD and SCALES[idx]:
+            elif self._pad_mode & PadMode.KEYBOARD and SCALES[idx]:
                 color = PadModeColor.KEYBOARD - 2
-            elif self._pad_mode == PadMode.CHORDS and CHORD_SETS[idx]:
+            elif self._pad_mode & PadMode.CHORDS and CHORD_SETS[idx]:
                 color = PadModeColor.CHORDS - 2
             else:
                 color = ControllerColor.BLACK_0
