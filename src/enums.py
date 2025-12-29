@@ -4,8 +4,6 @@ from controls import CC
 
 __all__ = [
     "ControllerColor",
-    "PluginColor",
-    "ChannelColor",
     "FourDEncoderMode",
     "TouchStripMode",
     "PadGroup",
@@ -87,24 +85,6 @@ class ControllerColor(IntEnum):
     WHITE_1 = 69
     WHITE_2 = 70
     WHITE_3 = 71
-
-
-# -------- Plugin and channel colors for OMNI/PAD modes, feel free to change these with any others from the list --------
-class PluginColor(IntEnum):
-    """Plugin Colors"""
-
-    DEFAULT = ControllerColor.ORANGE_0
-    HIGHLIGHTED = ControllerColor.ORANGE_2
-
-
-class ChannelColor(IntEnum):
-    """Channel Colors"""
-
-    DEFAULT = ControllerColor.WHITE_0
-    HIGHLIGHTED = ControllerColor.WHITE_2
-
-
-# ------------------------------------------------------------------------------------------------------------------------
 
 
 class FourDEncoderMode(IntEnum):

@@ -553,7 +553,8 @@ class Controller:
 
                 if self._pad_mode & PadMode.OMNI:
                     _midi_out_msg_note_on(
-                        note_num, _get_channel_color(chan_idx, bool(note_vel))
+                        note_num,
+                        _get_channel_color(chan_idx, self._pad_mode, bool(note_vel)),
                     )
 
             case PadMode.KEYBOARD:
@@ -750,9 +751,9 @@ class Controller:
                 _midi_out_msg_note_on(
                     pat,
                     (
-                        ControllerColor.ORANGE_2
+                        self._pad_mode_color
                         if patterns.isPatternSelected(pat + 1)
-                        else ControllerColor.ORANGE_0
+                        else self._pad_mode_color - 2
                     ),
                 )
 
@@ -771,6 +772,7 @@ class Controller:
                     pad_idx,
                     _get_channel_color(
                         chan,
+                        self._pad_mode,
                         (
                             (
                                 self._is_selecting_channel
@@ -806,6 +808,7 @@ class Controller:
                     pad_idx,
                     _get_channel_color(
                         chan,
+                        self._pad_mode,
                         channels.isChannelSolo(chan)
                         or not channels.isChannelMuted(chan),
                     ),
@@ -824,6 +827,7 @@ class Controller:
                     pad_idx,
                     _get_channel_color(
                         chan,
+                        self._pad_mode,
                         not channels.isChannelMuted(chan),
                     ),
                 )

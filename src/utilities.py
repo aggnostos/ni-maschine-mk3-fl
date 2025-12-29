@@ -5,8 +5,8 @@ import device
 import plugins
 
 from consts import PAD_COUNT
-from enums import PluginColor, ChannelColor
-
+from enums import ControllerColor
+from pads import PadMode, PadModeColor
 
 __all__ = [
     "_get_channel_color",
@@ -22,6 +22,7 @@ __all__ = [
 
 def _get_channel_color(
     channel: int,
+    pad_mode: PadMode,
     highlighted: bool,
 ) -> int:
     """
@@ -29,13 +30,17 @@ def _get_channel_color(
 
     Args:
         channel: Channel index to test for plugin validity.
+        pad_mode: Current pad mode.
         highlighted: Whether the pad should use the highlighted color.
 
     Returns:
         MIDI color value for the pad LED.
     """
-    color = PluginColor if plugins.isValid(channel) else ChannelColor
-    return color.HIGHLIGHTED.value if highlighted else color.DEFAULT.value  # type: ignore[attr-defined]
+    if plugins.isValid(channel):
+        color = PadModeColor[str(pad_mode.name)]
+    else:
+        color = ControllerColor.WHITE_2
+    return color if highlighted else color - 2  # type: ignore[attr-defined]
 
 
 def _midi_out_msg_note_on(

@@ -36,7 +36,7 @@ class PadModeColor(IntEnum):
     PAD = ControllerColor.ORANGE_2
     OMNI = ControllerColor.LIGHT_ORANGE_2
     KEYBOARD = ControllerColor.BLUE_2
-    CHORDS = ControllerColor.RED_2
+    CHORDS = ControllerColor.PLUM_2
     STEP = ControllerColor.PURPLE_2
     SOLO = ControllerColor.LIME_2
-    MUTE = ControllerColor.CYAN_2
+    MUTE = ControllerColor.MINT_2
