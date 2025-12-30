@@ -36,6 +36,9 @@ class Controller:
     _active_group: PadGroup
     """Current selected group (A-H)"""
 
+    _channel_count: int
+    """Current total number of channels in the channel rack"""
+
     _active_channel: int
     """Current selected channel index"""
 
@@ -78,6 +81,7 @@ class Controller:
         self._encoder_mode = FourDEncoderMode.JOG
         self._touch_strip_mode = TouchStripMode.TRANSPORT
         self._active_group = PadGroup.A
+        self._channel_count = 0
         self._active_channel = 0
         self._active_track = 0
         self._channel_page = 0
@@ -92,6 +96,7 @@ class Controller:
         self._is_selecting_channel = False
 
     def on_init(self) -> None:
+        self._sync_channel_count()
         self._sync_active_channel()
         self._sync_active_track()
         self._init_led_states()
@@ -117,6 +122,7 @@ class Controller:
         # (e.g., 'leds_event` alongside `focused_window_event` and `channel_event`),
         # so we want to avoid redundant syncing.
         if control_values_event:
+            self._sync_channel_count()
             self._sync_active_channel()
             self._sync_channel_controls()
 
@@ -127,6 +133,7 @@ class Controller:
                 self._sync_touch_strip()
 
         elif channel_event or focused_window_event:
+            self._sync_channel_count()
             self._sync_active_channel()
             self._sync_channel_controls()
 
@@ -418,7 +425,7 @@ class Controller:
                 mixer.setTrackStereoSep(self._active_track, _percent_to_bipolar(cc_val))
 
             case CC.CHAN_SEL:
-                if cc_val < channels.channelCount():
+                if cc_val < self._channel_count:
                     channels.selectOneChannel(cc_val)
                 else:
                     _midi_out_msg_control_change(CC.CHAN_SEL, self._active_channel)
@@ -459,7 +466,7 @@ class Controller:
 
         if self._is_selecting_channel and note_vel:
             chan_idx = note_num + self._channel_page * PAD_COUNT
-            if chan_idx < channels.channelCount():
+            if chan_idx < self._channel_count:
                 channels.selectOneChannel(chan_idx)
 
         if (
@@ -509,7 +516,7 @@ class Controller:
             case PadMode.PAD | PadMode.OMNI:
                 real_note = ROOT_NOTE + self._get_semi_offset()
                 chan_idx = note_num + self._channel_page * PAD_COUNT
-                if chan_idx >= channels.channelCount():
+                if chan_idx >= self._channel_count:
                     return
                 if note_vel:
                     channels.midiNoteOn(
@@ -572,14 +579,14 @@ class Controller:
 
             case PadMode.SOLO if note_vel:
                 chan_idx = note_num + self._channel_page * PAD_COUNT
-                if chan_idx >= channels.channelCount():
+                if chan_idx >= self._channel_count:
                     return
                 channels.soloChannel(chan_idx)
                 channels.selectOneChannel(chan_idx)
 
             case PadMode.MUTE if note_vel:
                 chan_idx = note_num + self._channel_page * PAD_COUNT
-                if chan_idx >= channels.channelCount():
+                if chan_idx >= self._channel_count:
                     return
                 channels.muteChannel(chan_idx)
                 channels.selectOneChannel(chan_idx)
@@ -648,7 +655,7 @@ class Controller:
             self._pad_mode & (PadMode.PAD | PadMode.OMNI)
         ) or self._is_selecting_channel:
             lower_channel = self._channel_page * PAD_COUNT
-            channel_count = channels.channelCount()
+            channel_count = self._channel_count
 
             for chan in range(lower_channel, channel_count):
                 pad_idx = chan - lower_channel
@@ -684,7 +691,7 @@ class Controller:
 
         elif self._pad_mode & PadMode.SOLO:
             lower_channel = self._channel_page * PAD_COUNT
-            channel_count = channels.channelCount()
+            channel_count = self._channel_count
 
             for chan in range(lower_channel, channel_count):
                 pad_idx = chan - lower_channel
@@ -703,7 +710,7 @@ class Controller:
 
         elif self._pad_mode & PadMode.MUTE:
             lower_channel = self._channel_page * PAD_COUNT
-            channel_count = channels.channelCount()
+            channel_count = self._channel_count
 
             for chan in range(lower_channel, channel_count):
                 pad_idx = chan - lower_channel
@@ -754,7 +761,7 @@ class Controller:
             else:
                 match self._pad_mode:
                     case PadMode.PAD | PadMode.OMNI | PadMode.SOLO | PadMode.MUTE if (
-                        channels.channelCount() > idx * PAD_COUNT
+                        self._channel_count > idx * PAD_COUNT
                     ):
                         color = self._pad_mode_color - 2
 
@@ -796,6 +803,10 @@ class Controller:
     def _sync_active_channel(self) -> None:
         """Syncs the selected channel index with the current FL Studio selected channel"""
         self._active_channel = channels.selectedChannel()
+
+    def _sync_channel_count(self) -> None:
+        """Syncs the channel count (used for pad LED updates)"""
+        self._channel_count = channels.channelCount()
 
     def _sync_active_track(self) -> None:
         """Syncs the selected mixer track index with the current FL Studio selected mixer track"""
@@ -913,9 +924,8 @@ class Controller:
         for pad in range(PAD_COUNT):
             _midi_out_msg_note_on(pad, ControllerColor.BLACK_0)
 
-    @staticmethod
-    def _notes_off() -> None:
+    def _notes_off(self) -> None:
         """Turns off all currently playing notes on the active channel"""
-        for chan in range(channels.channelCount()):
+        for chan in range(self._channel_count):
             for note in range(0, 128):
                 channels.midiNoteOn(chan, note, 0)
