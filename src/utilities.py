@@ -41,12 +41,7 @@ def _midi_out_msg_note_on(
     Returns:
         None
     """
-    device.midiOutMsg(
-        midi.MIDI_NOTEON,
-        channel,
-        note,
-        velocity,
-    )
+    device.midiOutMsg(midi.MIDI_NOTEON, channel, note, velocity)
 
 
 def _midi_out_msg_control_change(
@@ -68,12 +63,7 @@ def _midi_out_msg_control_change(
     Returns:
         None
     """
-    device.midiOutMsg(
-        midi.MIDI_CONTROLCHANGE,
-        channel,
-        control,
-        value,
-    )
+    device.midiOutMsg(midi.MIDI_CONTROLCHANGE, channel, control, value)
 
 
 def _on_off(condition: bool) -> int:
