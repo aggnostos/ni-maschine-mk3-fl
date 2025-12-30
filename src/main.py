@@ -34,6 +34,10 @@ def OnRefresh(flags: int) -> None:
 
     Args:
         flags (int): flags to represent the changes in FL Studio's state.
+
+    Note:
+        flags` is a bitmask — a single integer where each bit represents a different type of state change,
+        allowing multiple updates to be signaled at once.
     """
     controller.on_refresh(flags)
 
