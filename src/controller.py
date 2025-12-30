@@ -160,35 +160,6 @@ class Controller:
             if self._touch_strip_mode == TouchStripMode.TRANSPORT:
                 self._sync_song_position()
 
-        # # Debugging output for refresh flags
-        # if flags & midi.HW_Dirty_Mixer_Sel:
-        #     print("HW_Dirty_Mixer_Sel")
-        # if flags & midi.HW_Dirty_Mixer_Display:
-        #     print("HW_Dirty_Mixer_Display")
-        # if flags & midi.HW_Dirty_Mixer_Controls:
-        #     print("HW_Dirty_Mixer_Controls")
-        # if flags & midi.HW_Dirty_FocusedWindow:
-        #     print("HW_Dirty_FocusedWindow")
-        # if flags & midi.HW_Dirty_Performance:
-        #     print("HW_Dirty_Performance")
-        # if flags & midi.HW_Dirty_LEDs:
-        #     print("HW_Dirty_LEDs")
-        # if flags & midi.HW_Dirty_Patterns:
-        #     print("HW_Dirty_Patterns")
-        # if flags & midi.HW_Dirty_Tracks:
-        #     print("HW_Dirty_Tracks")
-        # if flags & midi.HW_Dirty_ControlValues:
-        #     print("HW_Dirty_ControlValues")
-        # if flags & midi.HW_Dirty_Colors:
-        #     print("HW_Dirty_Colors")
-        # if flags & midi.HW_Dirty_Names:
-        #     print("HW_Dirty_Names")
-        # if flags & midi.HW_Dirty_ChannelRackGroup:
-        #     print("HW_Dirty_ChannelRackGroup")
-        # if flags & midi.HW_ChannelEvent:
-        #     print("HW_ChannelEvent")
-        # print("----")
-
     def on_control_change(self, msg: FlMidiMsg) -> None:
         cc_num, cc_val = msg.controlNum, msg.controlVal
 
@@ -636,20 +607,6 @@ class Controller:
         self._pad_leds_off()
 
     @staticmethod
-    def _cc_leds_off() -> None:
-        """Turns off all CC LED states on the Maschine MK3 device"""
-
-        for cc in range(CC_COUNT):
-            _midi_out_msg_control_change(cc, ControllerColor.BLACK_0)
-
-    @staticmethod
-    def _pad_leds_off() -> None:
-        """Turns off all pad LEDs on the Maschine MK3 device"""
-
-        for pad in range(PAD_COUNT):
-            _midi_out_msg_note_on(pad, ControllerColor.BLACK_0)
-
-    @staticmethod
     def _sync_cc_leds() -> None:
         """Syncs the CC LED states with the current FL Studio state"""
 
@@ -665,76 +622,6 @@ class Controller:
         _midi_out_msg_control_change(CC.REC,      _on_off(transport.isRecording()))
         _midi_out_msg_control_change(CC.STOP,     _on_off(not transport.isPlaying()))
         # fmt: on
-
-    def _sync_active_channel(self) -> None:
-        """Syncs the selected channel index with the current FL Studio selected channel"""
-        self._active_channel = channels.selectedChannel()
-
-    def _sync_active_track(self) -> None:
-        """Syncs the selected mixer track index with the current FL Studio selected mixer track"""
-        self._active_track = mixer.trackNumber()
-
-    def _sync_active_group(self, group_idx: int) -> None:
-        """Syncs the selected pad group with the current FL Studio selected channel group"""
-        self._active_group = PadGroup(group_idx)
-
-    def _toggle_pad_mode(self, cc_num: int) -> None:
-        for cc in (
-            CC.PAD_MODE,
-            CC.KEYBOARD_MODE,
-            CC.CHORDS_MODE,
-            CC.STEP_MODE,
-            CC.SOLO,
-            CC.MUTE,
-        ):
-            _midi_out_msg_control_change(cc, _on_off(cc == cc_num))
-
-        active_group = PadGroup.A
-
-        match cc_num:
-            case CC.PAD_MODE:
-                if self._pad_mode & PadMode.PAD:
-                    self._pad_mode = PadMode.OMNI
-                    self._pad_mode_color = PadModeColor.OMNI
-                else:
-                    self._pad_mode = PadMode.PAD
-                    self._pad_mode_color = PadModeColor.PAD
-                active_group += self._channel_page
-
-            case CC.KEYBOARD_MODE:
-                self._pad_mode = PadMode.KEYBOARD
-                self._pad_mode_color = PadModeColor.KEYBOARD
-                active_group += self._active_scale
-
-            case CC.CHORDS_MODE:
-                self._pad_mode = PadMode.CHORDS
-                self._pad_mode_color = PadModeColor.CHORDS
-                active_group += self._active_chordset
-
-            case CC.STEP_MODE:
-                self._pad_mode = PadMode.STEP
-                self._pad_mode_color = PadModeColor.STEP
-                active_group += self._step_page
-
-            case CC.SOLO:
-                self._pad_mode = PadMode.SOLO
-                self._pad_mode_color = PadModeColor.SOLO
-                active_group += self._channel_page
-
-            case CC.MUTE:
-                self._pad_mode = PadMode.MUTE
-                self._pad_mode_color = PadModeColor.MUTE
-                active_group += self._channel_page
-
-            case _:
-                pass
-
-        self._sync_active_group(active_group)
-        self._sync_group_leds()
-
-        self._sync_pad_leds()
-
-        self._notes_off()
 
     def _sync_pad_leds(self) -> None:
         """Syncs the pad LEDs on the Maschine MK3 device"""
@@ -856,60 +743,6 @@ class Controller:
         _midi_out_msg_control_change(CC.MUTE, _on_off(mixer.isTrackMuted(self._active_track)))
         # fmt: on
 
-    def _toggle_encoder_mode(self, cc_num: int) -> None:
-        """Toggles the 4D encoder mode based on the given control change number"""
-
-        mode = FourDEncoderMode(cc_num)
-        mode = mode if self._encoder_mode != mode else FourDEncoderMode.JOG
-
-        for cc in (CC.ENCODER_VOLUME, CC.ENCODER_SWING, CC.ENCODER_TEMPO):
-            _midi_out_msg_control_change(
-                cc, _on_off(cc == cc_num and mode != FourDEncoderMode.JOG)
-            )
-
-        self._encoder_mode = mode
-
-    def _toggle_touch_strip_mode(self, cc_num: int) -> None:
-        """Toggles the touch strip mode based on the given control change number"""
-
-        mode = TouchStripMode(cc_num)
-        mode = mode if self._touch_strip_mode != mode else TouchStripMode.TRANSPORT
-
-        for cc in (
-            CC.TOUCH_STRIP_PITCH,
-            CC.TOUCH_STRIP_MOD,
-            CC.TOUCH_STRIP_PERFORM,
-            CC.TOUCH_STRIP_NOTES,
-        ):
-            _midi_out_msg_control_change(
-                cc, _on_off(cc == cc_num and mode != TouchStripMode.TRANSPORT)
-            )
-
-        self._touch_strip_mode = mode
-
-    def _sync_touch_strip(self) -> None:
-        """Syncs the touch strip value on the Maschine MK3 device with the current FL Studio state based on the given mode"""
-
-        match self._touch_strip_mode:
-            case TouchStripMode.TRANSPORT:
-                self._sync_song_position()
-            case TouchStripMode.PITCH:
-                _midi_out_msg_control_change(
-                    CC.TOUCH_STRIP,
-                    _bipolar_to_percent(channels.getChannelPitch(self._active_channel)),
-                )
-            case TouchStripMode.MOD:
-                pass  # TODO
-            case TouchStripMode.PERFORM:
-                pass  # TODO
-            case TouchStripMode.NOTES:
-                pass  # TODO
-
-    @staticmethod
-    def _sync_song_position() -> None:
-        """Syncs the touch strip song position value on the Maschine MK3 device"""
-        _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 100))
-
     def _sync_group_leds(self) -> None:
         """Updates the group button colors based on the current pad mode"""
 
@@ -942,9 +775,143 @@ class Controller:
 
             _midi_out_msg_control_change(cc, color)
 
+    def _sync_touch_strip(self) -> None:
+        """Syncs the touch strip value on the Maschine MK3 device with the current FL Studio state based on the given mode"""
+
+        match self._touch_strip_mode:
+            case TouchStripMode.TRANSPORT:
+                self._sync_song_position()
+            case TouchStripMode.PITCH:
+                _midi_out_msg_control_change(
+                    CC.TOUCH_STRIP,
+                    _bipolar_to_percent(channels.getChannelPitch(self._active_channel)),
+                )
+            case TouchStripMode.MOD:
+                pass  # TODO
+            case TouchStripMode.PERFORM:
+                pass  # TODO
+            case TouchStripMode.NOTES:
+                pass  # TODO
+
+    def _sync_active_channel(self) -> None:
+        """Syncs the selected channel index with the current FL Studio selected channel"""
+        self._active_channel = channels.selectedChannel()
+
+    def _sync_active_track(self) -> None:
+        """Syncs the selected mixer track index with the current FL Studio selected mixer track"""
+        self._active_track = mixer.trackNumber()
+
+    def _sync_active_group(self, group_idx: int) -> None:
+        """Syncs the selected pad group with the current FL Studio selected channel group"""
+        self._active_group = PadGroup(group_idx)
+
+    @staticmethod
+    def _sync_song_position() -> None:
+        """Syncs the touch strip song position value on the Maschine MK3 device"""
+        _midi_out_msg_control_change(CC.TOUCH_STRIP, int(transport.getSongPos() * 100))
+
+    def _toggle_pad_mode(self, cc_num: int) -> None:
+        for cc in (
+            CC.PAD_MODE,
+            CC.KEYBOARD_MODE,
+            CC.CHORDS_MODE,
+            CC.STEP_MODE,
+            CC.SOLO,
+            CC.MUTE,
+        ):
+            _midi_out_msg_control_change(cc, _on_off(cc == cc_num))
+
+        active_group = PadGroup.A
+
+        match cc_num:
+            case CC.PAD_MODE:
+                if self._pad_mode & PadMode.PAD:
+                    self._set_pad_mode(PadMode.OMNI)
+                else:
+                    self._set_pad_mode(PadMode.PAD)
+                active_group += self._channel_page
+
+            case CC.KEYBOARD_MODE:
+                self._set_pad_mode(PadMode.KEYBOARD)
+                active_group += self._active_scale
+
+            case CC.CHORDS_MODE:
+                self._set_pad_mode(PadMode.CHORDS)
+                active_group += self._active_chordset
+
+            case CC.STEP_MODE:
+                self._set_pad_mode(PadMode.STEP)
+                active_group += self._step_page
+
+            case CC.SOLO:
+                self._set_pad_mode(PadMode.SOLO)
+                active_group += self._channel_page
+
+            case CC.MUTE:
+                self._set_pad_mode(PadMode.MUTE)
+                active_group += self._channel_page
+
+            case _:
+                pass
+
+        self._sync_active_group(active_group)
+        self._sync_group_leds()
+
+        self._sync_pad_leds()
+
+        self._notes_off()
+
+    def _toggle_encoder_mode(self, cc_num: int) -> None:
+        """Toggles the 4D encoder mode based on the given control change number"""
+
+        mode = FourDEncoderMode(cc_num)
+        mode = mode if self._encoder_mode != mode else FourDEncoderMode.JOG
+
+        for cc in (CC.ENCODER_VOLUME, CC.ENCODER_SWING, CC.ENCODER_TEMPO):
+            _midi_out_msg_control_change(
+                cc, _on_off(cc == cc_num and mode != FourDEncoderMode.JOG)
+            )
+
+        self._encoder_mode = mode
+
+    def _toggle_touch_strip_mode(self, cc_num: int) -> None:
+        """Toggles the touch strip mode based on the given control change number"""
+
+        mode = TouchStripMode(cc_num)
+        mode = mode if self._touch_strip_mode != mode else TouchStripMode.TRANSPORT
+
+        for cc in (
+            CC.TOUCH_STRIP_PITCH,
+            CC.TOUCH_STRIP_MOD,
+            CC.TOUCH_STRIP_PERFORM,
+            CC.TOUCH_STRIP_NOTES,
+        ):
+            _midi_out_msg_control_change(
+                cc, _on_off(cc == cc_num and mode != TouchStripMode.TRANSPORT)
+            )
+
+        self._touch_strip_mode = mode
+
+    def _set_pad_mode(self, mode: PadMode) -> None:
+        """Sets the current pad mode and updates the pad mode color accordingly"""
+        self._pad_mode = mode
+        self._pad_mode_color = PadModeColor[str(mode.name)]
+
     def _get_semi_offset(self) -> int:
         """Returns the current semitone offset"""
         return self._semi_offset + SEMITONES_IN_OCTAVE
+
+    @staticmethod
+    def _cc_leds_off() -> None:
+        """Turns off all CC LED states on the Maschine MK3 device"""
+        for cc in range(CC_COUNT):
+            _midi_out_msg_control_change(cc, ControllerColor.BLACK_0)
+
+    @staticmethod
+    def _pad_leds_off() -> None:
+        """Turns off all pad LEDs on the Maschine MK3 device"""
+        for pad in range(PAD_COUNT):
+            _midi_out_msg_note_on(pad, ControllerColor.BLACK_0)
 
     @staticmethod
     def _notes_off() -> None:

@@ -9,7 +9,6 @@ from enums import ControllerColor
 from pads import PadMode, PadModeColor
 
 __all__ = [
-    "_get_channel_color",
     "_midi_out_msg_note_on",
     "_midi_out_msg_control_change",
     "_on_off",
@@ -17,30 +16,9 @@ __all__ = [
     "_bipolar_to_percent",
     "_is_enum_value",
     "_get_grid",
+    "_get_channel_color",
+    "_print_on_refresh_flags",
 ]
-
-
-def _get_channel_color(
-    channel: int,
-    pad_mode: PadMode,
-    highlighted: bool,
-) -> int:
-    """
-    Return the LED color for a channel or plugin pad.
-
-    Args:
-        channel: Channel index to test for plugin validity.
-        pad_mode: Current pad mode.
-        highlighted: Whether the pad should use the highlighted color.
-
-    Returns:
-        MIDI color value for the pad LED.
-    """
-    if plugins.isValid(channel):
-        color = PadModeColor[str(pad_mode.name)]
-    else:
-        color = ControllerColor.WHITE_2
-    return color if highlighted else color - 2  # type: ignore[attr-defined]
 
 
 def _midi_out_msg_note_on(
@@ -131,3 +109,57 @@ def _get_grid(page: int) -> range:
     """Get the step grid range for a given offset (page)"""
     lower_step = page * PAD_COUNT
     return range(lower_step, lower_step + PAD_COUNT)
+
+
+def _get_channel_color(
+    channel: int,
+    pad_mode: PadMode,
+    highlighted: bool,
+) -> int:
+    """
+    Return the LED color for a channel or plugin pad.
+
+    Args:
+        channel: Channel index to test for plugin validity.
+        pad_mode: Current pad mode.
+        highlighted: Whether the pad should use the highlighted color.
+
+    Returns:
+        MIDI color value for the pad LED.
+    """
+    if plugins.isValid(channel):
+        color = PadModeColor[str(pad_mode.name)]
+    else:
+        color = ControllerColor.WHITE_2
+    return color if highlighted else color - 2
+
+
+def _print_on_refresh_flags(flags: int) -> None:
+    """Print debugging output for refresh flags"""
+
+    if flags & midi.HW_Dirty_Mixer_Sel:
+        print("HW_Dirty_Mixer_Sel")
+    if flags & midi.HW_Dirty_Mixer_Display:
+        print("HW_Dirty_Mixer_Display")
+    if flags & midi.HW_Dirty_Mixer_Controls:
+        print("HW_Dirty_Mixer_Controls")
+    if flags & midi.HW_Dirty_FocusedWindow:
+        print("HW_Dirty_FocusedWindow")
+    if flags & midi.HW_Dirty_Performance:
+        print("HW_Dirty_Performance")
+    if flags & midi.HW_Dirty_LEDs:
+        print("HW_Dirty_LEDs")
+    if flags & midi.HW_Dirty_Patterns:
+        print("HW_Dirty_Patterns")
+    if flags & midi.HW_Dirty_Tracks:
+        print("HW_Dirty_Tracks")
+    if flags & midi.HW_Dirty_ControlValues:
+        print("HW_Dirty_ControlValues")
+    if flags & midi.HW_Dirty_Colors:
+        print("HW_Dirty_Colors")
+    if flags & midi.HW_Dirty_Names:
+        print("HW_Dirty_Names")
+    if flags & midi.HW_Dirty_ChannelRackGroup:
+        print("HW_Dirty_ChannelRackGroup")
+    if flags & midi.HW_ChannelEvent:
+        print("HW_ChannelEvent")
